@@ -49,3 +49,19 @@ function getDocTypesForIndustry(industry) {
            DOC_TYPE_LIBRARY[key].industries.includes(industry)
   );
 }
+
+function getDocTypesForSubindustry(subindustry) {
+  return Object.keys(DOC_TYPE_LIBRARY).filter(
+    key => DOC_TYPE_LIBRARY[key].subindustries.includes("All") ||
+           DOC_TYPE_LIBRARY[key].subindustries.includes(subindustry)
+  );
+}
+
+function getIndustryFromSubindustry(subindustry) {
+  for (const [industry, subindustries] of Object.entries(SUBINDUSTRIES)) {
+    if (subindustries.includes(subindustry)) {
+      return industry;
+    }
+  }
+  return "Technology"; // Default fallback
+}

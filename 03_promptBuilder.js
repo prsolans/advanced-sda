@@ -404,13 +404,32 @@ Termination Terms: This section outlines the timeline for termination, including
 Signatures: This section provides space for authorized representatives of both parties to sign, confirming their agreement to the terms of termination. The signature lines should include the name, title, and date of the signatories, ensuring both parties are legally bound by the termination terms.`;
             break;
         default:
-            specificRequirements = `General Document Structure:
-  Introduction: Provide a brief overview of the document's purpose and the parties involved.
-  Parties and Background: Identify the parties involved and provide relevant background information.
-  Key Terms and Conditions: Outline the main terms and conditions applicable to the document.
-  Obligations of the Parties: Detail the responsibilities and obligations of each party.
-  Termination Clause: Specify the conditions under which the document can be terminated.
-  Signatures: Include space for the authorized representatives of both parties to sign, confirming their agreement to the terms.`;
+            const meta = getDocMetaByName(agreementType);
+            if (meta && meta.obligations) {
+                let specificRequirements = `Document Type: ${agreementType}\n`;
+                specificRequirements += `Description: ${meta.description}\n`;
+                specificRequirements += `Industry Category: ${meta.category}\n\n`;
+
+                specificRequirements += `Key Legal Requirements:\n`;
+                meta.obligations.forEach(obligation => {
+                    if (OBL_TEXT[obligation]) {
+                        specificRequirements += `• ${OBL_TEXT[obligation]}\n`;
+                    }
+                });
+
+                specificRequirements += `\nEnsure this ${agreementType} includes comprehensive terms specific to ${industry} operations and incorporates all relevant regulatory requirements for ${meta.category.replace('-Specific', '')} businesses.\n`;
+
+                return specificRequirements;
+            }
+
+            // Final fallback for any edge cases
+            return `General Document Structure:
+    Introduction: Provide a brief overview of the document's purpose and the parties involved.
+    Parties and Background: Identify the parties involved and provide relevant background information.
+    Key Terms and Conditions: Outline the main terms and conditions applicable to the document.
+    Obligations of the Parties: Detail the responsibilities and obligations of each party.
+    Termination Clause: Specify the conditions under which the document can be terminated.
+    Signatures: Include space for the authorized representatives of both parties to sign, confirming their agreement to the terms.`;
             break;
     }
     return specificRequirements;
@@ -444,4 +463,17 @@ After the header, follow a logical agreement structure using clearly labeled hea
 - Monetary values and dates must follow local formatting rules for the specified [country].
 
 Ensure the HTML is clean and ready to convert to a Google Doc or Word file with correct structure and styling.`;
+}
+
+function getObligationsText(agreementType) {
+    const meta = getDocMetaByName(agreementType);
+    if (!meta || !meta.obligations) return "";
+
+    let obligationsText = "\n\nSpecific Legal Obligations to Include:\n";
+    meta.obligations.forEach(obligation => {
+        if (OBL_TEXT[obligation]) {
+            obligationsText += `• ${OBL_TEXT[obligation]}\n`;
+        }
+    });
+    return obligationsText;
 }
