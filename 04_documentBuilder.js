@@ -100,8 +100,38 @@ function generateRandomDocumentRow(requestData) {
     const addDays = (date, days) => new Date(date.getTime() + days * 24 * 60 * 60 * 1000);
     const fmt = date => Utilities.formatDate(date, Session.getScriptTimeZone(), "MM/dd/yyyy");
 
+    const customConfig = parseCustomInstructions(requestData.specialInstructions);
+    if (customConfig.documentType) {
+        // Override the document type selection
+        const firstParty = requestData.firstParty;
+        const counterparty = pick(COUNTERPARTIES);
+        const agreementType = customConfig.documentType; // Use override type
+        const contractNumber = generateContractNumber(agreementType);
+        const detailsObject = buildAgreementDetails(agreementType, contractNumber);
+
+        return {
+            email: requestData.email,
+            language: requestData.language,
+            firstParty,
+            counterparty,
+            agreementType,
+            industry: "Healthcare", // Force to healthcare for custom types
+            subindustry: "Custom",
+            geography: requestData.geography || "NAMER",
+            specialInstructions: requestData.specialInstructions,
+            effectiveDate: detailsObject.effectiveDate,
+            contractNumber
+        };
+    }
+
     const firstParty = requestData.firstParty;
     const counterparty = pick(COUNTERPARTIES);
+
+    // Check for document type override in special instructions
+    const docTypeOverride = parseDocumentTypeOverride(requestData.specialInstructions);
+    if (docTypeOverride) {
+        return generateCustomDocumentRow(requestData, docTypeOverride);
+    }
 
     const validTypes = getDocTypesForSubindustry(requestData.subindustry);
 
@@ -148,6 +178,43 @@ function generateRandomDocumentRow(requestData) {
         geography: requestData.geography || "NAMER",
         specialInstructions: parts.join(", "),
         effectiveDate: detailsObject.effectiveDate,
+        contractNumber
+    };
+}
+
+function parseDocumentTypeOverride(specialInstructions) {
+    if (!specialInstructions) return null;
+
+    // Check for document type commands
+    if (specialInstructions.includes("DOC_TYPE: Client Agreement") ||
+        specialInstructions.includes("CLIENT_AGREEMENT")) {
+        return "Client Agreement";
+    }
+
+    if (specialInstructions.includes("DOC_TYPE: Provider Agreement") ||
+        specialInstructions.includes("PROVIDER_AGREEMENT")) {
+        return "Provider Agreement";
+    }
+
+    return null;
+}
+
+function generateCustomDocumentRow(requestData, documentType) {
+    const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+    const counterparty = pick(COUNTERPARTIES);
+    const contractNumber = generateContractNumber(documentType);
+
+    return {
+        email: requestData.email,
+        language: requestData.language,
+        firstParty: requestData.firstParty,
+        counterparty,
+        agreementType: documentType,  // Override with custom type
+        industry: "Healthcare",       // Force to healthcare
+        subindustry: "Custom",        // Mark as custom
+        geography: requestData.geography || "NAMER",
+        specialInstructions: requestData.specialInstructions, // Pass through for prompt building
+        effectiveDate: new Date(),
         contractNumber
     };
 }

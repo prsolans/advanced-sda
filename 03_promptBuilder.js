@@ -32,9 +32,16 @@ function createPrompt(docData) {
     const outputFormat = getPromptOutputFormat(firstParty, industry, counterparty);
     const specificRequirements = getPromptSpecifics(agreementType, firstParty, industry, counterparty);
 
+    // Parse and integrate custom instructions
+    const customConfig = parseCustomInstructions(docData.specialInstructions);
+    const customRequirements = buildCustomRequirements(customConfig, agreementType);
+
+
+
     // --- Assemble the final prompt ---
     const documentSpecificRequirements = `Document-Specific Requirements:
 ${specificRequirements}
+${customRequirements}
 For each document type, ensure that all sections are written as complete paragraphs, with no bullet points or numbered lists. Each section should flow naturally, fully explaining the legal concepts and providing clarity to the terms. Each document should reflect ${firstParty} business and legal requirements as outlined. 
 `;
 
@@ -563,4 +570,209 @@ function getSubindustryExamples(subindustry) {
     };
 
     return examples[subindustry] || `${subindustry.toLowerCase()} services and solutions`;
+}
+
+// ========================================
+// CUSTOM INSTRUCTION PARSING
+// ========================================
+function parseCustomInstructions(specialInstructions) {
+    const customConfig = {
+        documentType: null,
+        fields: [],
+        obligations: [],
+        customObligations: [],
+        style: [],
+        parentReference: null,
+        vendors: [],
+        defaults: {}
+    };
+
+    if (!specialInstructions) return customConfig;
+
+    // Convert to string and clean up
+    const instructions = specialInstructions.toString().trim();
+
+    // Detect document type override
+    if (instructions.includes("CLIENT_AGREEMENT") ||
+        instructions.includes("DOC_TYPE: Client Agreement")) {
+        customConfig.documentType = "Client Agreement";
+    } else if (instructions.includes("PROVIDER_AGREEMENT") ||
+        instructions.includes("DOC_TYPE: Provider Agreement")) {
+        customConfig.documentType = "Provider Agreement";
+    }
+
+    // Parse FIELDS command - handles both single line and multi-line
+    const fieldsMatch = instructions.match(/FIELDS:\s*([^]*?)(?=\n[A-Z_]+:|$)/i);
+    if (fieldsMatch) {
+        // Split by commas and clean up each field
+        customConfig.fields = fieldsMatch[1]
+            .split(',')
+            .map(f => f.trim())
+            .filter(f => f.length > 0)
+            .map(f => f.replace(/\n/g, ' ').trim()); // Handle multi-line fields
+    }
+
+    // Parse OBLIGATIONS command (existing framework obligations)
+    const obligationsMatch = instructions.match(/OBLIGATIONS:\s*([^]*?)(?=\n[A-Z_]+:|$)/i);
+    if (obligationsMatch) {
+        customConfig.obligations = obligationsMatch[1]
+            .split(',')
+            .map(o => o.trim())
+            .filter(o => o.length > 0);
+    }
+
+    // Parse CUSTOM_OBLIGATIONS command (new obligations not in framework)
+    const customObligationsMatch = instructions.match(/CUSTOM_OBLIGATIONS:\s*([^]*?)(?=\n[A-Z_]+:|$)/i);
+    if (customObligationsMatch) {
+        customConfig.customObligations = customObligationsMatch[1]
+            .split(',')
+            .map(o => o.trim())
+            .filter(o => o.length > 0);
+    }
+
+    // Parse STYLE command
+    const styleMatch = instructions.match(/STYLE:\s*([^]*?)(?=\n[A-Z_]+:|$)/i);
+    if (styleMatch) {
+        customConfig.style = styleMatch[1]
+            .split(',')
+            .map(s => s.trim())
+            .filter(s => s.length > 0);
+    }
+
+    // Parse PARENT reference
+    const parentMatch = instructions.match(/PARENT:\s*([^\n]+)/i);
+    if (parentMatch) {
+        customConfig.parentReference = parentMatch[1].trim();
+    }
+
+    // Parse VENDORS (for provider agreements)
+    const vendorsMatch = instructions.match(/VENDORS:\s*([^]*?)(?=\n[A-Z_]+:|$)/i);
+    if (vendorsMatch) {
+        customConfig.vendors = vendorsMatch[1]
+            .split(',')
+            .map(v => v.trim())
+            .filter(v => v.length > 0);
+    } else if (customConfig.documentType === "Provider Agreement") {
+        // Default CHG vendors if not specified
+        customConfig.vendors = ["CompHealth", "Weatherby", "GlobalMedical", "Locumsmart"];
+    }
+
+    // Parse DEFAULTS for field default values
+    const defaultsMatch = instructions.match(/DEFAULTS:\s*([^]*?)(?=\n[A-Z_]+:|$)/i);
+    if (defaultsMatch) {
+        // Parse key=value pairs
+        const defaultPairs = defaultsMatch[1].split(',');
+        defaultPairs.forEach(pair => {
+            const [key, value] = pair.split('=').map(s => s.trim());
+            if (key && value) {
+                customConfig.defaults[key] = value;
+            }
+        });
+    }
+
+    // Set document-specific defaults if not already specified
+    if (customConfig.documentType === "Client Agreement") {
+        const randomizedDefaults = getRandomizedDefaults("Client Agreement");
+        customConfig.defaults = {
+            ...randomizedDefaults, // Randomized defaults first
+            ...customConfig.defaults // User-specified defaults override randomization
+        };
+    } else if (customConfig.documentType === "Provider Agreement") {
+        const randomizedDefaults = getRandomizedDefaults("Provider Agreement");
+        customConfig.defaults = {
+            ...randomizedDefaults,
+            expenseReimbursement: "Within 30 days", // This one stays static
+            ...customConfig.defaults // User-specified defaults override
+        };
+    }
+
+
+    return customConfig;
+}
+
+function buildCustomRequirements(customConfig, agreementType) {
+    let customText = "";
+
+    if (customConfig.fields && customConfig.fields.length > 0) {
+        customText += `\nCUSTOM FIELD REQUIREMENTS:\n`;
+        customText += `This ${agreementType} must include clearly labeled sections for the following specific fields:\n`;
+        customConfig.fields.forEach(field => {
+            let fieldRequirement = `• ${field}`;
+
+            // Add default values if available
+            const fieldKey = field.toLowerCase().replace(/[^a-z]/g, '');
+            if (fieldKey.includes('insurance') && customConfig.defaults.insurance) {
+                fieldRequirement += ` (${customConfig.defaults.insurance})`;
+            } else if (fieldKey.includes('payment') && customConfig.defaults.paymentTerms) {
+                fieldRequirement += ` (${customConfig.defaults.paymentTerms})`;
+            } else if (fieldKey.includes('termination') && customConfig.defaults.terminationNotice) {
+                fieldRequirement += ` (${customConfig.defaults.terminationNotice} written notice)`;
+            } else if (fieldKey.includes('renewal') && customConfig.defaults.renewalTerm) {
+                fieldRequirement += ` (${customConfig.defaults.renewalTerm} automatic renewal)`;
+            } else if (fieldKey.includes('governing') && customConfig.defaults.governingLaw) {
+                fieldRequirement += ` (${customConfig.defaults.governingLaw} state law)`;
+            }
+
+            customText += fieldRequirement + `\n`;
+        });
+        customText += `Format these fields for easy identification and data extraction, using the specific values indicated in parentheses.\n`;
+    }
+
+    if (customConfig.customObligations && customConfig.customObligations.length > 0) {
+        customText += `\nADDITIONAL CUSTOM OBLIGATIONS:\n`;
+        customConfig.customObligations.forEach(obligation => {
+            customText += `• ${obligation}: Include comprehensive provisions addressing this requirement.\n`;
+        });
+    }
+
+    return customText;
+}
+
+// Handle randomized defaults:
+function getRandomizedDefaults(documentType) {
+    const random = Math.random();
+
+    const defaults = {};
+
+    // Insurance Coverage Total (80% standard, 20% variants)
+    if (random < 0.8) {
+        defaults.insurance = "$3,000,000"; // Standard
+    } else {
+        const variants = ["$1,000,000", "$2,000,000", "$5,000,000", "$10,000,000"];
+        defaults.insurance = variants[Math.floor(Math.random() * variants.length)];
+    }
+
+    // Payment Terms (80% standard, 20% variants)
+    if (Math.random() < 0.8) {
+        defaults.paymentTerms = "30 days"; // Standard
+    } else {
+        const variants = ["15 days", "45 days", "60 days", "Net 15", "Net 45"];
+        defaults.paymentTerms = variants[Math.floor(Math.random() * variants.length)];
+    }
+
+    // Termination Notice (80% standard, 20% variants)
+    if (Math.random() < 0.8) {
+        defaults.terminationNotice = "30 days"; // Standard
+    } else {
+        const variants = ["15 days", "45 days", "60 days", "90 days"];
+        defaults.terminationNotice = variants[Math.floor(Math.random() * variants.length)];
+    }
+
+    // Renewal Term (80% standard, 20% variants)
+    if (Math.random() < 0.8) {
+        defaults.renewalTerm = "1 year"; // Standard
+    } else {
+        const variants = ["6 months", "2 years", "3 years", "5 years"];
+        defaults.renewalTerm = variants[Math.floor(Math.random() * variants.length)];
+    }
+
+    // Governing Law (80% Utah, 20% variants)
+    if (Math.random() < 0.8) {
+        defaults.governingLaw = "Utah"; // Standard
+    } else {
+        const variants = ["Delaware", "New York", "California", "Texas", "Florida"];
+        defaults.governingLaw = variants[Math.floor(Math.random() * variants.length)];
+    }
+
+    return defaults;
 }

@@ -1102,6 +1102,34 @@ const DOC_TYPE_LIBRARY = {
     obligations: ["Public Procurement", "Environmental Impact", "Regulatory Approvals", "Community Benefits"],
     noTerm: false,
     category: "Real Estate-Specific"
+  },
+  // ========================================
+  // CUSTOM DOCUMENT TYPES - Healthcare  
+  // ========================================
+
+  /**
+   * CUSTOM: Healthcare-specific document types for extraction
+   * Added for CHG client/provider agreement generation
+   */
+  "Client Agreement": {
+    key: "CLIENT",
+    description: "Healthcare client service agreement with extraction-ready fields",
+    controlledType: "Client Agreement",
+    industries: ["Healthcare"],
+    subindustries: ["Custom"],
+    obligations: ["Service Levels", "Insurance", "Payment Terms", "Governing Law"],
+    noTerm: false,
+    category: "Healthcare-Specific"
+  },
+  "Provider Agreement": {
+    key: "PROVIDER",
+    description: "Healthcare provider services agreement with vendor integration",
+    controlledType: "Provider Agreement",
+    industries: ["Healthcare"],
+    subindustries: ["Custom"],
+    obligations: ["Professional Standards", "Insurance", "Vendor Management", "JDE Integration"],
+    noTerm: false,
+    category: "Healthcare-Specific"
   }
 };
 
@@ -1130,7 +1158,7 @@ const OBL_TEXT = {
   Insurance: "Insurance: Contractor shall maintain general liability ($1M per occurrence), professional liability ($2M aggregate) and workers' comp coverage as required by law.",
   "Limitation of Liability": "Limitation of Liability: Neither party's aggregate liability will exceed the total fees paid under this agreement, except for willful misconduct or gross negligence.",
   "Service Levels": "Service Levels: Provider guarantees 99.9% uptime and will credit fees for any monthly downtime exceeding SLA targets.",
-  
+
   // Technology-specific obligations
   "IP Protection": "IP Protection: All intellectual property rights remain with the original owner, with limited usage rights granted only as specified herein.",
   "Data Privacy": "Data Privacy: Personal data will be processed in accordance with GDPR, CCPA and other applicable privacy regulations.",
@@ -1151,7 +1179,7 @@ const OBL_TEXT = {
   "Refund Policy": "Refund Policy: Clear terms for customer refunds, chargebacks, and dispute resolution procedures.",
   "Age Verification": "Age Verification: Appropriate controls to verify user age for age-restricted content and purchases.",
   "Platform Fees": "Platform Fees: Applicable fees charged by distribution platforms and payment processors will be clearly disclosed.",
-  
+
   // Healthcare-specific obligations
   "HIPAA Compliance": "HIPAA Compliance: All handling of PHI must comply with HIPAA Security and Privacy Rules, including administrative, physical and technical safeguards.",
   "FDA Compliance": "FDA Compliance: All activities must comply with FDA regulations for medical devices, including QSR requirements and adverse event reporting.",
@@ -1169,7 +1197,7 @@ const OBL_TEXT = {
   "Data Minimization": "Data Minimization: Collection and processing of only necessary personal data for specified purposes.",
   "Purpose Limitation": "Purpose Limitation: Personal data used only for stated purposes with additional consent required for new uses.",
   "User Rights": "User Rights: Support for individual rights including access, rectification, erasure, and data portability.",
-  
+
   // Financial-specific obligations
   "PCI Compliance": "PCI Compliance: Payment card data must be handled in accordance with PCI DSS standards and undergo regular security assessments.",
   "Fiduciary Duty": "Fiduciary Duty: Investment advisor must act in client's best interest with loyalty, care, and good faith.",
@@ -1184,7 +1212,7 @@ const OBL_TEXT = {
   "Interest Calculation": "Interest Calculation: Clear formulas for calculating interest, fees, and payment schedules.",
   "Default Procedures": "Default Procedures: Detailed procedures for handling payment defaults and collection activities.",
   "Collateral Terms": "Collateral Terms: Requirements for loan collateral, valuation, and release procedures.",
-  
+
   // Manufacturing-specific obligations
   "Quality Standards": "Quality Standards: All products must meet specified quality criteria and industry standards, subject to inspection and testing.",
   "Delivery Schedules": "Delivery Schedules: Firm delivery commitments with penalties for delays and expediting procedures for rush orders.",
@@ -1199,7 +1227,7 @@ const OBL_TEXT = {
   "ISO Compliance": "ISO Compliance: Adherence to relevant ISO standards for quality management and industry-specific requirements.",
   "Testing Procedures": "Testing Procedures: Comprehensive testing protocols including incoming inspection, in-process, and final testing.",
   "Corrective Actions": "Corrective Actions: Systematic approach to identifying, investigating, and correcting quality issues.",
-  
+
   // Energy-specific obligations
   "Energy Delivery": "Energy Delivery: Seller shall deliver contracted energy quantities according to the delivery schedule, with penalties for shortfalls.",
   "Price Escalation": "Price Escalation: Transparent pricing mechanisms with inflation adjustments and market-based pricing updates.",
@@ -1213,7 +1241,7 @@ const OBL_TEXT = {
   "Measurement & Verification": "Measurement & Verification: Independent verification of energy savings and performance metrics.",
   "Shared Savings": "Shared Savings: Equitable sharing of energy cost savings between provider and customer.",
   "Equipment Maintenance": "Equipment Maintenance: Regular maintenance schedules to ensure optimal equipment performance and longevity.",
-  
+
   // Real Estate-specific obligations
   "Rent Escalation": "Rent Escalation: Annual rent increases based on CPI adjustments or fixed percentage increases as specified.",
   "Maintenance Responsibilities": "Maintenance Responsibilities: Clear allocation of maintenance duties between landlord and tenant for different building systems.",
@@ -1230,7 +1258,7 @@ const OBL_TEXT = {
   "Completion Timeline": "Completion Timeline: Firm construction schedules with milestone payments and penalty clauses for delays.",
   "Change Orders": "Change Orders: Procedures for handling changes to construction scope with cost and schedule impact analysis.",
   "Lien Waivers": "Lien Waivers: Required lien waivers from contractors and suppliers to protect property from construction liens.",
-  
+
   // HR-specific obligations
   "At-Will Employment": "At-Will Employment: Employment may be terminated by either party at any time, with or without cause or notice.",
   "Non-Solicitation": "Non-Solicitation: For 12 months post-termination, neither party will solicit or hire the other's employees or contractors.",
