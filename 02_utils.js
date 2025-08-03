@@ -51,10 +51,11 @@ function getDocTypesForIndustry(industry) {
 }
 
 function getDocTypesForSubindustry(subindustry) {
-  return Object.keys(DOC_TYPE_LIBRARY).filter(
-    key => DOC_TYPE_LIBRARY[key].subindustries.includes("All") ||
-           DOC_TYPE_LIBRARY[key].subindustries.includes(subindustry)
-  );
+  return Object.keys(DOC_TYPE_LIBRARY).filter(key => {
+    const doc = DOC_TYPE_LIBRARY[key];
+    return (doc.subindustries.includes("All") || doc.subindustries.includes(subindustry)) &&
+           !doc.category.includes("HR-Cross-Industry"); // EXCLUDE HR DOCS
+  });
 }
 
 function getIndustryFromSubindustry(subindustry) {
@@ -64,4 +65,19 @@ function getIndustryFromSubindustry(subindustry) {
     }
   }
   return "Technology"; // Default fallback
+}
+
+function parseSubindustrySelection(selection) {
+  if (selection && selection.includes(' - ')) {
+    const [industry, subindustry] = selection.split(' - ');
+    return { 
+      industry: industry.trim(), 
+      subindustry: subindustry.trim() 
+    };
+  }
+  // Fallback for any legacy entries
+  return { 
+    industry: "Technology", 
+    subindustry: selection || "SaaS" 
+  };
 }

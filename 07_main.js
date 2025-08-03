@@ -34,6 +34,7 @@ function submitSampleRequest(e) {
         const properties = PropertiesService.getScriptProperties();
         const rootFolderId = properties.getProperty("ROOT_FOLDER_ID");
         const subindustry = sheet.getRange(firstRow, COLUMN_MAP.SUBINDUSTRY).getValue() || "SaaS";
+        const parsed = parseSubindustrySelection(subindustry);
 
         if (!rootFolderId) throw new Error("ROOT_FOLDER_ID is not set in Script Properties.");
 
@@ -45,8 +46,8 @@ function submitSampleRequest(e) {
             language: sheet.getRange(firstRow, COLUMN_MAP.LANGUAGE).getValue(),
             geography: sheet.getRange(firstRow, COLUMN_MAP.GEOGRAPHY).getValue() || "NAMER",
             firstParty: (sheet.getRange(firstRow, COLUMN_MAP.FIRST_PARTY).getValue() || "").toString().trim() || "Fontara",
-            subindustry: sheet.getRange(firstRow, COLUMN_MAP.SUBINDUSTRY).getValue() || "SaaS",
-            industry: getIndustryFromSubindustry(subindustry) || sheet.getRange(firstRow, COLUMN_MAP.INDUSTRY).getValue() || "Technology",
+            industry: parsed.industry,
+            subindustry: parsed.subindustry,
             createSets: sheet.getRange(firstRow, COLUMN_MAP.CREATE_SETS).getValue() === true,
         };
 
