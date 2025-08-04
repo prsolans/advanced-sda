@@ -56,7 +56,7 @@ function submitSampleRequest(e) {
         }
 
         const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-        const folderName = `${requestData.email}_${timestamp}`;
+        const folderName = `${requestData.email}_${subindustry}(${requestData.quantity})_${timestamp}`;
         const rootFolder = DriveApp.getFolderById(rootFolderId);
         const subfolder = rootFolder.createFolder(folderName);
 
