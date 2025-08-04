@@ -1112,7 +1112,7 @@ const DOC_TYPE_LIBRARY = {
    * Added for CHG client/provider agreement generation
    */
   "Client Agreement": {
-    key: "CLIENT",
+    key: "CA",
     description: "Healthcare client service agreement with extraction-ready fields",
     controlledType: "Client Agreement",
     industries: ["Healthcare"],
@@ -1122,7 +1122,7 @@ const DOC_TYPE_LIBRARY = {
     category: "Healthcare-Specific"
   },
   "Provider Agreement": {
-    key: "PROVIDER",
+    key: "PA",
     description: "Healthcare provider services agreement with vendor integration",
     controlledType: "Provider Agreement",
     industries: ["Healthcare"],

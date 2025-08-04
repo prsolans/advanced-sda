@@ -100,6 +100,8 @@ function generateRandomDocumentRow(requestData) {
     const addDays = (date, days) => new Date(date.getTime() + days * 24 * 60 * 60 * 1000);
     const fmt = date => Utilities.formatDate(date, Session.getScriptTimeZone(), "MM/dd/yyyy");
 
+    // CUSTOM: Check for document type override first
+    // Handles CLIENT_AGREEMENT and PROVIDER_AGREEMENT special instructions
     const customConfig = parseCustomInstructions(requestData.specialInstructions);
     if (customConfig.documentType) {
         // Override the document type selection
@@ -181,6 +183,21 @@ function generateRandomDocumentRow(requestData) {
         contractNumber
     };
 }
+// ========================================
+// CUSTOM DOCUMENT TYPES - Healthcare
+// ========================================
+// Functions for generating custom healthcare documents
+// with specific field requirements for extraction tools
+// Added for CHG client/provider agreement generation
+
+/**
+ * CUSTOM: Detects if special instructions contain custom document type override
+ * @param {string} specialInstructions - Raw special instructions from spreadsheet
+ * @returns {string|null} - Document type name or null if no override detected
+ * 
+ * Checks for: CLIENT_AGREEMENT, PROVIDER_AGREEMENT keywords
+ * Added: [DATE] for CHG healthcare document extraction requirements
+ */
 
 function parseDocumentTypeOverride(specialInstructions) {
     if (!specialInstructions) return null;
@@ -193,12 +210,20 @@ function parseDocumentTypeOverride(specialInstructions) {
 
     if (specialInstructions.includes("DOC_TYPE: Provider Agreement") ||
         specialInstructions.includes("PROVIDER_AGREEMENT")) {
-        return "Provider Agreement";
+        return "Physician Professional Services Agreement";
     }
 
     return null;
 }
-
+/**
+ * CUSTOM: Generate custom healthcare documents with extraction-ready fields
+ * @param {Object} requestData - Request data from spreadsheet
+ * @param {string} documentType - Custom document type (Client Agreement, Provider Agreement)
+ * @returns {Object} - Document data object for prompt generation
+ * 
+ * Creates documents with specific field requirements for AI extraction tools
+ * Added: [DATE] for CHG healthcare document extraction requirements
+ */
 function generateCustomDocumentRow(requestData, documentType) {
     const pick = arr => arr[Math.floor(Math.random() * arr.length)];
     const counterparty = pick(COUNTERPARTIES);

@@ -354,17 +354,15 @@ function getPromptOutputFormat(firstParty, counterparty, subindustry, geography)
 The output must be formatted as valid, professional-grade HTML that mirrors the quality of documents produced by top-tier law firms specializing in ${subindustry} transactions. Use semantic markup with Arial font, size 11, and sophisticated document structure.
 
 ### Document Header (Critical)
-Every document must begin with a professionally styled header:
-
-<div style="text-align: center; margin-bottom: 30px; page-break-inside: avoid;">
-<h1 style="font-family: Arial; font-size: 16px; font-weight: bold; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px;">[DOCUMENT TYPE]</h1>
-<h2 style="font-family: Arial; font-size: 12px; font-weight: normal; margin-bottom: 20px; color: #666;">[CONTRACT NUMBER]</h2>
+<div style="text-align: center; margin-bottom: 30pt; page-break-inside: avoid;">
+<h1 style="font-family: Arial; font-size: 14pt; font-weight: bold; margin-bottom: 8pt; text-transform: uppercase; letter-spacing: 1pt;">[DOCUMENT TYPE]</h1>
+<h2 style="font-family: Arial; font-size: 11pt; font-weight: normal; margin-bottom: 16pt; color: #666;">[CONTRACT NUMBER]</h2>
 </div>
 
 Example:
-<div style="text-align: center; margin-bottom: 30px;">
-<h1 style="font-family: Arial; font-size: 16px; font-weight: bold; margin-bottom: 10px;">INVESTMENT ADVISORY AGREEMENT</h1>
-<h2 style="font-family: Arial; font-size: 12px; font-weight: normal; color: #666;">IAA-49213</h2>
+<div style="text-align: center; margin-bottom: 30pt; page-break-inside: avoid;">
+<h1 style="font-family: Arial; font-size: 14pt; font-weight: bold; margin-bottom: 8pt; text-transform: uppercase; letter-spacing: 1pt;">INVESTMENT ADVISORY AGREEMENT</h1>
+<h2 style="font-family: Arial; font-size: 11pt; font-weight: normal; margin-bottom: 16pt; color: #666;">IAA-49213</h2>
 </div>
 
 ### Professional Document Architecture
@@ -394,11 +392,13 @@ Structure the agreement using sophisticated legal document conventions:
 
 ### Advanced Formatting Standards
 
-**Typography & Spacing:**
-- 1.15 line spacing for readability
-- 12pt spacing between paragraphs
-- 18pt spacing between major sections
-- Consistent margins throughout
+### Typography & Spacing:
+- Body text: 11pt Arial
+- Section headers: 12pt Arial, bold
+- Document title: 14pt Arial, bold, uppercase
+- Line spacing: 1.15 (or 14pt line-height for 11pt text)
+- Paragraph spacing: 12pt between paragraphs
+- Section spacing: 18pt between major sections
 
 **Legal Language Requirements:**
 - Use formal legal terminology appropriate for ${subindustry} transactions
@@ -692,29 +692,41 @@ function parseCustomInstructions(specialInstructions) {
 
 function buildCustomRequirements(customConfig, agreementType) {
     let customText = "";
-
+    
     if (customConfig.fields && customConfig.fields.length > 0) {
         customText += `\nCUSTOM FIELD REQUIREMENTS:\n`;
         customText += `This ${agreementType} must include clearly labeled sections for the following specific fields:\n`;
+
         customConfig.fields.forEach(field => {
             let fieldRequirement = `• ${field}`;
 
-            // Add default values if available
-            const fieldKey = field.toLowerCase().replace(/[^a-z]/g, '');
-            if (fieldKey.includes('insurance') && customConfig.defaults.insurance) {
+            // CUSTOM: Handle automatic field generation
+            const fieldLower = field.toLowerCase();
+
+            if (fieldLower.includes('physician name')) {
+                const randomName = generateRandomPhysicianName();
+                fieldRequirement += ` (use: ${randomName})`;
+            } else if (fieldLower.includes('license number')) {
+                const licenseNumber = generateMedicalLicenseNumber();
+                fieldRequirement += ` (use: ${licenseNumber})`;
+            } else if (fieldLower.includes('jde')) {
+                const jdeNumber = generateJDENumber();
+                fieldRequirement += ` (use: ${jdeNumber})`;
+            } else if (fieldLower.includes('insurance') && customConfig.defaults?.insurance) {
                 fieldRequirement += ` (${customConfig.defaults.insurance})`;
-            } else if (fieldKey.includes('payment') && customConfig.defaults.paymentTerms) {
+            } else if (fieldLower.includes('payment') && customConfig.defaults?.paymentTerms) {
                 fieldRequirement += ` (${customConfig.defaults.paymentTerms})`;
-            } else if (fieldKey.includes('termination') && customConfig.defaults.terminationNotice) {
+            } else if (fieldLower.includes('termination') && customConfig.defaults?.terminationNotice) {
                 fieldRequirement += ` (${customConfig.defaults.terminationNotice} written notice)`;
-            } else if (fieldKey.includes('renewal') && customConfig.defaults.renewalTerm) {
+            } else if (fieldLower.includes('renewal') && customConfig.defaults?.renewalTerm) {
                 fieldRequirement += ` (${customConfig.defaults.renewalTerm} automatic renewal)`;
-            } else if (fieldKey.includes('governing') && customConfig.defaults.governingLaw) {
+            } else if (fieldLower.includes('governing') && customConfig.defaults?.governingLaw) {
                 fieldRequirement += ` (${customConfig.defaults.governingLaw} state law)`;
             }
 
             customText += fieldRequirement + `\n`;
         });
+
         customText += `Format these fields for easy identification and data extraction, using the specific values indicated in parentheses.\n`;
     }
 
@@ -776,3 +788,4 @@ function getRandomizedDefaults(documentType) {
 
     return defaults;
 }
+
