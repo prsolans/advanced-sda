@@ -167,13 +167,6 @@ function generateRandomPhysicianName() {
   
   return `Dr. ${firstName} ${lastName}`;
 }
-
-// Example usage:
-console.log("Sample physician names:");
-for (let i = 0; i < 10; i++) {
-  console.log(generateRandomPhysicianName());
-}
-
 /**
  * CUSTOM: Generate random medical license number
  * @param {string} state - Optional state abbreviation (default: random)

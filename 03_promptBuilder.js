@@ -243,7 +243,6 @@ function getSubindustryExamples(subindustry) {
 }
 
 function getPromptGeneralRequirements(firstParty, industry, counterparty, subindustry, geography = "NAMER") {
-    Logger.log(`getPromptGeneralRequirements called with: firstParty=${firstParty}, industry=${industry}, counterparty=${counterparty}, subindustry=${subindustry}, geography=${geography}`);
 
     const subindustryGuidance = getSubindustrySpecificGuidance(subindustry);
     const regulatoryContext = getRegulatoryContext(subindustry, geography);

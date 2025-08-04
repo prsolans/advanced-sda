@@ -1,0 +1,387 @@
+<!-- chatInterface.html - Main chat interface for users -->
+<!DOCTYPE html>
+<html>
+<head>
+    <base target="_top">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Document Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 800px;
+            height: 600px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+
+        .messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background: #f8f9fa;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .message.user {
+            align-self: flex-end;
+            background: #667eea;
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .message.agent {
+            align-self: flex-start;
+            background: white;
+            border: 1px solid #e9ecef;
+            border-bottom-left-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .questions ul {
+            margin: 8px 0;
+            padding-left: 20px;
+        }
+
+        .examples {
+            padding: 15px;
+            background: #f1f3f4;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+
+        .examples h4 {
+            margin-bottom: 8px;
+            color: #333;
+            font-size: 0.9rem;
+        }
+
+        .example-item {
+            background: white;
+            padding: 8px 12px;
+            margin: 4px 0;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            font-size: 0.85rem;
+            border-left: 3px solid #667eea;
+        }
+
+        .example-item:hover {
+            background: #e8f0fe;
+        }
+
+        .folder-link {
+            display: inline-block;
+            background: #4285f4;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            text-decoration: none;
+            margin-top: 8px;
+            font-size: 0.9rem;
+            transition: background-color 0.2s;
+        }
+
+        .folder-link:hover {
+            background: #3367d6;
+        }
+
+        .input-area {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .input-field {
+            flex: 1;
+            min-height: 44px;
+            max-height: 120px;
+            padding: 12px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 22px;
+            font-size: 1rem;
+            resize: none;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .input-field:focus {
+            border-color: #667eea;
+        }
+
+        .send-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+            font-size: 1.2rem;
+        }
+
+        .send-button:hover {
+            transform: scale(1.05);
+        }
+
+        .send-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #667eea;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes typing {
+            0%, 80%, 100% {
+                transform: scale(0);
+            }
+            40% {
+                transform: scale(1);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 AI Document Generator</h1>
+            <p>Ask me to create legal documents for your customers</p>
+        </div>
+        
+        <div class="messages" id="messages">
+            <div class="message agent">
+                <div>Hello! I'm your AI document assistant. I can help you create legal documents for your customers.</div>
+                
+                <div class="examples">
+                    <h4>Try saying:</h4>
+                    <div class="example-item" onclick="sendExample('Create an NDA and MSA for Acme Corporation')">
+                        "Create an NDA and MSA for Acme Corporation"
+                    </div>
+                    <div class="example-item" onclick="sendExample('I need documents for TechStart Inc - they are a SaaS company')">
+                        "I need documents for TechStart Inc - they're a SaaS company"
+                    </div>
+                    <div class="example-item" onclick="sendExample('Generate a complete document set for Global Manufacturing Ltd')">
+                        "Generate a complete document set for Global Manufacturing Ltd"
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="input-area">
+            <div class="input-container">
+                <textarea 
+                    id="messageInput" 
+                    class="input-field" 
+                    placeholder="Ask me to create documents for your customer..."
+                    rows="1"
+                ></textarea>
+                <button id="sendButton" class="send-button" onclick="sendMessage()">
+                    ➤
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isProcessing = false;
+        const messagesContainer = document.getElementById('messages');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        const userId = 'user-' + Math.random().toString(36).substr(2, 9); // Generate user ID
+
+        // Auto-resize textarea
+        messageInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+        });
+
+        // Send message on Enter
+        messageInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        function sendExample(text) {
+            messageInput.value = text;
+            sendMessage();
+        }
+
+        async function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message || isProcessing) return;
+
+            addMessage(message, 'user');
+            messageInput.value = '';
+            messageInput.style.height = 'auto';
+
+            const typingId = showTypingIndicator();
+            
+            try {
+                isProcessing = true;
+                sendButton.disabled = true;
+
+                // Call Google Apps Script function
+                const response = await new Promise((resolve, reject) => {
+                    google.script.run
+                        .withSuccessHandler(resolve)
+                        .withFailureHandler(reject)
+                        .processAgenticRequest(userId, message);
+                });
+                
+                removeMessage(typingId);
+                handleAgentResponse(response);
+
+            } catch (error) {
+                removeMessage(typingId);
+                addMessage("Sorry, I encountered an error. Please try again.", 'agent');
+                console.error('Error:', error);
+            } finally {
+                isProcessing = false;
+                sendButton.disabled = false;
+            }
+        }
+
+        function addMessage(content, type, id = null) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            if (id) messageDiv.id = id;
+            
+            messageDiv.innerHTML = content.replace(/\n/g, '<br>');
+            
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            return messageDiv;
+        }
+
+        function removeMessage(id) {
+            const element = document.getElementById(id);
+            if (element) element.remove();
+        }
+
+        function showTypingIndicator() {
+            const typingDiv = `
+                <div style="display: flex; align-items: center; gap: 8px; color: #666;">
+                    <div class="typing-indicator">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
+                    <span>AI is thinking...</span>
+                </div>
+            `;
+            
+            const id = 'typing-' + Date.now();
+            return addMessage(typingDiv, 'agent', id).id;
+        }
+
+        function handleAgentResponse(response) {
+            if (response.needsClarification) {
+                let content = response.message;
+                if (response.questions && response.questions.length > 0) {
+                    content += '<div class="questions"><ul>';
+                    response.questions.forEach(q => content += `<li>${q}</li>`);
+                    content += '</ul></div>';
+                }
+                addMessage(content, 'agent');
+            } else if (response.success) {
+                let content = response.message;
+                
+                // Add folder link if available
+                if (response.folderUrl) {
+                    content += `<br><a href="${response.folderUrl}" target="_blank" class="folder-link">📁 Open Document Folder</a>`;
+                }
+                
+                addMessage(content, 'agent');
+            } else {
+                addMessage(response.message || "Something went wrong. Please try again.", 'agent');
+            }
+        }
+    </script>
+</body>
+</html>
