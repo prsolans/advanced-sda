@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <base target="_top">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Generation Request Form</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .form-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            width: 100%;
+            max-width: 600px;
+            transform: translateY(0);
+            transition: transform 0.3s ease;
+        }
+
+        h1 {
+            color: #2d3748;
+            margin-bottom: 10px;
+            font-size: 32px;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: #718096;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            color: #4a5568;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .helper-text {
+            font-size: 12px;
+            color: #718096;
+            font-weight: 400;
+            text-transform: none;
+            letter-spacing: normal;
+            margin-top: 2px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background-color: #f7fafc;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            background-color: #fff;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 20px;
+            padding-right: 40px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 14px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 10px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .progress-container {
+            margin-top: 20px;
+            display: none;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background-color: #e2e8f0;
+            border-radius: 3px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.3),
+                transparent
+            );
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .progress-message {
+            margin-top: 12px;
+            text-align: center;
+            color: #4a5568;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .progress-details {
+            margin-top: 6px;
+            text-align: center;
+            color: #718096;
+            font-size: 12px;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 16px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+
+        .notification.success {
+            background: #48bb78;
+            color: white;
+        }
+
+        .notification.error {
+            background: #f56565;
+            color: white;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h1>Document Generation Request</h1>
+        <p class="subtitle">Fill out the form below to generate your custom legal documents</p>
+        
+        <form id="documentForm">
+            <div class="form-group">
+                <label for="email">
+                    Email Address
+                    <span class="helper-text">We'll notify you when your documents are ready</span>
+                </label>
+                <input type="email" id="email" name="email" required placeholder="your@email.com">
+            </div>
+
+            <div class="form-group">
+                <label for="firstParty">
+                    First Party Name
+                    <span class="helper-text">The primary party in all agreements (defaults to Fontara)</span>
+                </label>
+                <input type="text" id="firstParty" name="firstParty" placeholder="Fontara">
+            </div>
+
+            <div class="form-group">
+                <label for="geography">
+                    Geography
+                    <span class="helper-text">Determines the business center locations in agreements</span>
+                </label>
+                <select id="geography" name="geography" required>
+                    <option value="">Select a region</option>
+                    <option value="NAMER">NAMER (North America)</option>
+                    <option value="EMEA">EMEA (Europe, Middle East, Africa)</option>
+                    <option value="LATAM">LATAM (Latin America)</option>
+                    <option value="APAC">APAC (Asia-Pacific)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="industry">
+                    Industry
+                    <span class="helper-text">Select your primary industry sector</span>
+                </label>
+                <select id="industry" name="industry" required>
+                    <option value="">Select an industry</option>
+                    <option value="Technology">Technology</option>
+                    <option value="Healthcare">Healthcare</option>
+                    <option value="Financial Services">Financial Services</option>
+                    <option value="Manufacturing">Manufacturing</option>
+                    <option value="Energy">Energy</option>
+                    <option value="HR">Human Resources</option>
+                    <option value="Real Estate">Real Estate</option>
+                </select>
+            </div>
+
+            <div class="form-group hidden" id="subindustryGroup">
+                <label for="subindustry">
+                    Subindustry
+                    <span class="helper-text">Choose a specific sector within your industry</span>
+                </label>
+                <select id="subindustry" name="subindustry" required>
+                    <option value="">Select a subindustry</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="quantity">
+                    Quantity
+                    <span class="helper-text">Number of documents to generate (1-50)</span>
+                </label>
+                <input type="number" id="quantity" name="quantity" min="1" max="50" required placeholder="5">
+            </div>
+
+            <button type="submit" class="submit-btn">Generate Documents</button>
+            
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-message" id="progressMessage">Submitting your request...</div>
+                <div class="progress-details" id="progressDetails"></div>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // Subindustry mapping
+        const subindustries = {
+            "Technology": ["SaaS", "Enterprise Software", "Mobile Apps", "Gaming", "Cloud Infrastructure", "Fintech", "E-commerce", "Marketing Tech", "HR Tech", "Data Analytics"],
+            "Healthcare": ["Digital Health", "Medical Devices", "Telehealth", "Healthcare IT", "Pharmaceuticals", "Biotechnology", "Diagnostics", "Surgical Equipment"],
+            "Financial Services": ["Banking", "Credit Unions", "Alternative Lending", "Wealth Management", "Investment Banking", "Asset Management", "Fintech", "Payment Processors", "Insurance", "Insurtech", "Risk Management"],
+            "Manufacturing": ["Automotive", "Aerospace", "Consumer Goods", "Industrial Equipment", "Contract Manufacturing", "Private Label", "Electronics", "Industrial Products", "Food & Beverage"],
+            "Energy": ["Renewable Energy", "Solar", "Wind", "Utilities", "Oil & Gas", "Exploration", "Production", "Energy Management", "Smart Grid", "Energy Storage"],
+            "HR": ["All"],
+            "Real Estate": ["Office", "Retail", "Industrial", "Warehouse", "Commercial", "Residential", "Investment", "Development", "Mixed-Use", "REITs", "Construction", "Infrastructure"]
+        };
+
+        // Get DOM elements
+        const industrySelect = document.getElementById('industry');
+        const subindustrySelect = document.getElementById('subindustry');
+        const subindustryGroup = document.getElementById('subindustryGroup');
+        const firstPartyInput = document.getElementById('firstParty');
+
+        // Handle industry change
+        industrySelect.addEventListener('change', function() {
+            const selectedIndustry = this.value;
+            
+            // Clear subindustry options
+            subindustrySelect.innerHTML = '<option value="">Select a subindustry</option>';
+            
+            if (selectedIndustry && subindustries[selectedIndustry]) {
+                // Show subindustry dropdown
+                subindustryGroup.classList.remove('hidden');
+                
+                // Populate subindustry options
+                subindustries[selectedIndustry].forEach(sub => {
+                    const option = document.createElement('option');
+                    option.value = sub;
+                    option.textContent = sub;
+                    subindustrySelect.appendChild(option);
+                });
+                
+                // If there's only one option (like HR -> All), select it automatically
+                if (subindustries[selectedIndustry].length === 1) {
+                    subindustrySelect.value = subindustries[selectedIndustry][0];
+                }
+            } else {
+                // Hide subindustry dropdown
+                subindustryGroup.classList.add('hidden');
+            }
+        });
+
+        // Handle form submission
+        document.getElementById('documentForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Get form elements
+            const submitBtn = document.querySelector('.submit-btn');
+            const progressContainer = document.getElementById('progressContainer');
+            const progressFill = document.getElementById('progressFill');
+            const progressMessage = document.getElementById('progressMessage');
+            const progressDetails = document.getElementById('progressDetails');
+            
+            // Disable submit button and show progress
+            const originalText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Processing...';
+            progressContainer.style.display = 'block';
+            
+            // Collect form data
+            const formData = {
+                email: document.getElementById('email').value,
+                firstParty: firstPartyInput.value || 'Fontara',
+                geography: document.getElementById('geography').value,
+                industry: document.getElementById('industry').value,
+                subindustry: document.getElementById('subindustry').value,
+                quantity: parseInt(document.getElementById('quantity').value)
+            };
+            
+            // Start progress animation
+            let progress = 0;
+            const estimatedTime = Math.max(15, formData.quantity * 3); // Estimate 3 seconds per document, minimum 15 seconds
+            const messages = [
+                { at: 0, text: "Submitting your request...", detail: "Initializing document generation" },
+                { at: 20, text: "Processing your requirements...", detail: `Preparing ${formData.quantity} ${formData.industry} documents` },
+                { at: 40, text: "Generating documents...", detail: "Creating customized legal agreements" },
+                { at: 60, text: "Applying industry standards...", detail: `Tailoring for ${formData.subindustry || formData.industry}` },
+                { at: 80, text: "Finalizing documents...", detail: "Almost complete" },
+                { at: 95, text: "Saving to Google Drive...", detail: "Organizing your documents" }
+            ];
+            
+            let currentMessageIndex = 0;
+            
+            // Progress animation
+            const progressInterval = setInterval(() => {
+                if (progress < 95) {
+                    progress += (95 / estimatedTime); // Progress to 95% over estimated time
+                    progressFill.style.width = Math.min(progress, 95) + '%';
+                    
+                    // Update message based on progress
+                    while (currentMessageIndex < messages.length - 1 && 
+                           progress >= messages[currentMessageIndex + 1].at) {
+                        currentMessageIndex++;
+                        progressMessage.textContent = messages[currentMessageIndex].text;
+                        progressDetails.textContent = messages[currentMessageIndex].detail;
+                    }
+                }
+            }, 1000);
+            
+            // Use Google Apps Script API
+            google.script.run
+                .withSuccessHandler(function(result) {
+                    // Complete the progress bar
+                    clearInterval(progressInterval);
+                    progressFill.style.width = '100%';
+                    progressMessage.textContent = 'Success!';
+                    progressDetails.textContent = 'Your documents have been generated';
+                    
+                    // Show success notification
+                    setTimeout(() => {
+                        showNotification(result.message || 'Documents generated successfully!', 'success');
+                        
+                        // Reset form
+                        document.getElementById('documentForm').reset();
+                        subindustryGroup.classList.add('hidden');
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = originalText;
+                        
+                        // Hide progress after a delay
+                        setTimeout(() => {
+                            progressContainer.style.display = 'none';
+                            progressFill.style.width = '0%';
+                        }, 2000);
+                    }, 500);
+                })
+                .withFailureHandler(function(error) {
+                    clearInterval(progressInterval);
+                    progressFill.style.width = '100%';
+                    progressFill.style.background = '#f56565';
+                    progressMessage.textContent = 'Error occurred';
+                    progressDetails.textContent = error.toString();
+                    
+                    showNotification('Error: ' + error.toString(), 'error');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
+                    
+                    setTimeout(() => {
+                        progressContainer.style.display = 'none';
+                        progressFill.style.width = '0%';
+                        progressFill.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                    }, 3000);
+                })
+                .processFormSubmission(formData);
+        });
+
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = 'notification ' + type;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
