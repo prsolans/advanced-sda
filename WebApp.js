@@ -10,7 +10,7 @@ function doPost(e) {
   try {
     const data = JSON.parse(e.postData.contents);
     const result = processFormSubmission(data);
-    
+
     return ContentService
       .createTextOutput(JSON.stringify({
         status: 'success',
@@ -32,11 +32,11 @@ function processFormSubmission(formData) {
   // Get the spreadsheet
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = spreadsheet.getSheetByName('Requests');
-  
+
   if (!sheet) {
     throw new Error('Requests sheet not found');
   }
-  
+
   // Prepare the row data based on your column structure
   const rowData = [
     new Date(), // Timestamp (Column A)
@@ -52,7 +52,7 @@ function processFormSubmission(formData) {
     false, // Create Sets (Column K) - default to false for now
     'Pending' // Status (Column L)
   ];
-  
+
   // If subindustry is provided, we need to determine appropriate doc types
   if (formData.subindustry && formData.subindustry !== 'All') {
     // Get relevant doc types for the industry/subindustry combination
@@ -63,11 +63,11 @@ function processFormSubmission(formData) {
     const generalDocTypes = getGeneralDocTypesForIndustry(formData.industry);
     rowData[4] = generalDocTypes;
   }
-  
+
   // Append the row
   const newRow = sheet.appendRow(rowData);
   const rowNumber = sheet.getLastRow();
-  
+
   // Process the row directly
   try {
     processRowDirectly(sheet, rowNumber, formData);
@@ -84,7 +84,7 @@ function processFormSubmission(formData) {
 
 function processRowDirectly(sheet, rowNumber, formData) {
   const pick = arr => arr[Math.floor(Math.random() * arr.length)];
-  
+
   try {
     const statusRange = sheet.getRange(rowNumber, 12); // Column L
     statusRange.setValue("Processing...");
@@ -118,6 +118,14 @@ function processRowDirectly(sheet, rowNumber, formData) {
 
     let successMessage = "";
 
+    // Generate the reference document first
+    try {
+      createSubindustryReferenceDoc(requestData, subfolder);
+      Logger.log("Reference document created successfully");
+    } catch (refError) {
+      Logger.log("Could not create reference document: " + refError.message);
+    }
+
     if (requestData.createSets === true) {
       // Document sets logic
       const numSets = Math.floor(requestData.quantity / 5);
@@ -150,37 +158,37 @@ function processRowDirectly(sheet, rowNumber, formData) {
     } else {
       // Individual documents
       const docCount = requestData.quantity;
-      
+
       // Get valid document types for this industry/subindustry
       const validDocTypes = [];
       for (const [docType, meta] of Object.entries(DOC_TYPE_LIBRARY)) {
         const industryMatch = meta.industries.includes(requestData.industry) || meta.industries.includes('All');
-        const subindustryMatch = !requestData.subindustry || 
-                                meta.subindustries.includes(requestData.subindustry) || 
-                                meta.subindustries.includes('All');
-        
+        const subindustryMatch = !requestData.subindustry ||
+          meta.subindustries.includes(requestData.subindustry) ||
+          meta.subindustries.includes('All');
+
         if (industryMatch && subindustryMatch) {
           validDocTypes.push(docType);
         }
       }
-      
+
       Logger.log(`Found ${validDocTypes.length} valid doc types for ${requestData.industry}/${requestData.subindustry}`);
-      
+
       if (validDocTypes.length === 0) {
         throw new Error(`No document types found for ${requestData.industry}/${requestData.subindustry}`);
       }
-      
+
       // Generate documents
       for (let i = 0; i < docCount; i++) {
         const counterparty = pick(COUNTERPARTIES);
         const agreementType = pick(validDocTypes);
-        
+
         Logger.log(`Creating document ${i + 1}: ${agreementType}`);
-        
+
         // Create document data directly
         const contractNumber = generateContractNumber(agreementType);
         const detailsObject = buildAgreementDetails(agreementType, contractNumber);
-        
+
         // THIS IS WHERE docData IS CREATED
         const docData = {
           email: requestData.email,
@@ -195,7 +203,7 @@ function processRowDirectly(sheet, rowNumber, formData) {
           effectiveDate: detailsObject.effectiveDate,
           contractNumber: contractNumber
         };
-        
+
         // Add any special fields for SOWs
         if (agreementType.includes("SOW")) {
           const today = new Date();
@@ -204,12 +212,12 @@ function processRowDirectly(sheet, rowNumber, formData) {
           const oneTimeAmount = Math.floor(Math.random() * 40000) + 10000;
           const depositDue = new Date(today.getTime() + Math.floor(Math.random() * 180) * 24 * 60 * 60 * 1000);
           const oneTimeDue = new Date(today.getTime() + Math.floor(Math.random() * 180) * 24 * 60 * 60 * 1000);
-          
+
           docData.specialInstructions += `, Total Contract Value: $${totalValue.toLocaleString()} USD`;
           docData.specialInstructions += `, Deposit Amount: $${depositAmount.toLocaleString()} USD, Deposit Due: ${Utilities.formatDate(depositDue, Session.getScriptTimeZone(), "MM/dd/yyyy")}`;
           docData.specialInstructions += `, One-Time Payment: $${oneTimeAmount.toLocaleString()} USD, Due: ${Utilities.formatDate(oneTimeDue, Session.getScriptTimeZone(), "MM/dd/yyyy")}`;
         }
-        
+
         // Add obligations
         const meta = getDocMetaByName(agreementType);
         if (meta && meta.obligations) {
@@ -221,11 +229,11 @@ function processRowDirectly(sheet, rowNumber, formData) {
             }
           });
         }
-        
+
         Logger.log(`Processing document with data: ${JSON.stringify(docData)}`);
         processAndCreateFile(docData, subfolder);
       }
-      
+
       successMessage = `Success! ${docCount} individual documents created.`;
     }
 
@@ -242,24 +250,24 @@ function processRowDirectly(sheet, rowNumber, formData) {
 
 function getDocTypesForSubindustry(industry, subindustry) {
   const relevantTypes = [];
-  
+
   // Iterate through DOC_TYPE_LIBRARY to find matches
   for (const [docType, meta] of Object.entries(DOC_TYPE_LIBRARY)) {
     const industryMatch = meta.industries.includes(industry) || meta.industries.includes('All');
     const subindustryMatch = meta.subindustries.includes(subindustry) || meta.subindustries.includes('All');
-    
+
     if (industryMatch && subindustryMatch) {
       relevantTypes.push(docType);
     }
   }
-  
+
   Logger.log(`Found ${relevantTypes.length} doc types for ${industry}/${subindustry}: ${relevantTypes.join(', ')}`);
-  
+
   // Format as groups for the spreadsheet display
   if (relevantTypes.length > 0) {
     const general = relevantTypes.filter(t => DOC_TYPE_LIBRARY[t].category === 'General' || DOC_TYPE_LIBRARY[t].category === 'HR-Cross-Industry');
     const specific = relevantTypes.filter(t => !general.includes(t));
-    
+
     let formattedString = '';
     if (general.length > 0) {
       formattedString += `General (${general.join(', ')})`;
@@ -268,25 +276,25 @@ function getDocTypesForSubindustry(industry, subindustry) {
       if (formattedString) formattedString += ', ';
       formattedString += `${industry}-Specific (${specific.join(', ')})`;
     }
-    
+
     return formattedString;
   }
-  
+
   return `General (Non-Disclosure Agreement (NDA), Master Service Agreement (MSA))`;
 }
 
 function getGeneralDocTypesForIndustry(industry) {
   const generalTypes = [];
-  
+
   for (const [docType, meta] of Object.entries(DOC_TYPE_LIBRARY)) {
     if ((meta.industries.includes(industry) || meta.industries.includes('All')) &&
-        (meta.category === 'General' || meta.category === 'HR-Cross-Industry')) {
+      (meta.category === 'General' || meta.category === 'HR-Cross-Industry')) {
       generalTypes.push(docType);
     }
   }
-  
-  return generalTypes.length > 0 ? 
-    `General (${generalTypes.join(', ')})` : 
+
+  return generalTypes.length > 0 ?
+    `General (${generalTypes.join(', ')})` :
     `General (Non-Disclosure Agreement (NDA), Master Service Agreement (MSA))`;
 }
 
@@ -310,7 +318,7 @@ function testWebApp() {
     subindustry: 'SaaS',
     quantity: 5
   };
-  
+
   const result = processFormSubmission(testData);
   Logger.log(result);
 }
