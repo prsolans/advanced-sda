@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document Generation Request Form</title>
+    <title>Sample Document Assistant</title>
     <style>
         * {
             margin: 0;
@@ -14,12 +14,52 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-image: url(https://cdn.bfldr.com/HIN7H4LI/at/bv474f4fm59w3x3sth29wqn7/hero_background_color.png?auto=webp&format=webp&quality=90);
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.98);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px 40px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .header-content {
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        #theme-logo {
+            height: 30px;
+            width: auto;
+        }
+
+        .header-title {
+            color: #2d3748;
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .main-container {
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            padding: 100px 20px 20px; /* Extra top padding for fixed header */
         }
 
         .form-container {
@@ -234,9 +274,19 @@
     </style>
 </head>
 <body>
-    <div class="form-container">
-        <h1>Document Generation Request</h1>
-        <p class="subtitle">Fill out the form below to generate your custom legal documents</p>
+    <header class="header">
+        <div class="header-content">
+            <img src="https://catalog2.agreementsdemo.com/images/Docusign_Horizontal_Black.png" 
+                 id="theme-logo" 
+                 alt="Docusign Logo">
+            <h1 class="header-title">Sample Document Assistant</h1>
+        </div>
+    </header>
+    
+    <div class="main-container">
+        <div class="form-container">
+            <h1>Sample Document Assistant</h1>
+            <p class="subtitle">Fill out the form below to generate your custom legal documents</p>
         
         <form id="documentForm">
             <div class="form-group">
@@ -399,7 +449,7 @@
                 { at: 40, text: "Generating documents...", detail: "Creating customized legal agreements" },
                 { at: 60, text: "Applying industry standards...", detail: `Tailoring for ${formData.subindustry || formData.industry}` },
                 { at: 80, text: "Finalizing documents...", detail: "Almost complete" },
-                { at: 95, text: "Saving to Google Drive...", detail: "Organizing your documents" }
+                { at: 95, text: "Saving to Google Drive...", detail: "You will get a Slack message when docs are complete" }
             ];
             
             let currentMessageIndex = 0;
@@ -477,6 +527,17 @@
                 setTimeout(() => notification.remove(), 300);
             }, 5000);
         }
+
+        // Prefill email when page loads
+        window.addEventListener('DOMContentLoaded', function() {
+            google.script.run
+                .withSuccessHandler(function(email) {
+                    if (email) {
+                        document.getElementById('email').value = email;
+                    }
+                })
+                .getCurrentUserEmail();
+        });
     </script>
 </body>
 </html>

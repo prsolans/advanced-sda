@@ -290,6 +290,16 @@ function getGeneralDocTypesForIndustry(industry) {
     `General (Non-Disclosure Agreement (NDA), Master Service Agreement (MSA))`;
 }
 
+// Add this function to get the current user's email
+function getCurrentUserEmail() {
+  try {
+    return Session.getActiveUser().getEmail();
+  } catch (e) {
+    Logger.log('Could not get user email: ' + e.toString());
+    return '';
+  }
+}
+
 // Test function to verify the web app is working
 function testWebApp() {
   const testData = {
