@@ -57,9 +57,18 @@
         .main-container {
             min-height: 100vh;
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             justify-content: center;
-            padding: 100px 20px 20px; /* Extra top padding for fixed header */
+            padding: 100px 20px 20px;
+            gap: 20px;
+        }
+
+        .content-wrapper {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            max-width: 1200px;
+            align-items: flex-start;
         }
 
         .form-container {
@@ -70,8 +79,76 @@
             padding: 40px;
             width: 100%;
             max-width: 600px;
-            transform: translateY(0);
-            transition: transform 0.3s ease;
+            flex: 1;
+        }
+
+        .sidebar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            width: 350px;
+            position: sticky;
+            top: 100px;
+        }
+
+        .sidebar h2 {
+            color: #2d3748;
+            font-size: 24px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .sidebar h3 {
+            color: #4a5568;
+            font-size: 18px;
+            margin-top: 20px;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .sidebar p, .sidebar li {
+            color: #718096;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .sidebar li {
+            position: relative;
+            padding-left: 20px;
+            margin-bottom: 8px;
+        }
+
+        .sidebar li:before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .doc-types-section {
+            margin-top: 25px;
+            padding-top: 25px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .doc-type-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin: 4px 4px 4px 0;
+            font-weight: 500;
         }
 
         h1 {
@@ -271,6 +348,18 @@
                 opacity: 0;
             }
         }
+
+        /* Responsive design */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                position: static;
+                margin-top: 20px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -284,86 +373,111 @@
     </header>
     
     <div class="main-container">
-        <div class="form-container">
-            <h1>Sample Document Assistant</h1>
-            <p class="subtitle">Fill out the form below to generate your custom legal documents</p>
-        
-        <form id="documentForm">
-            <div class="form-group">
-                <label for="email">
-                    Email Address
-                    <span class="helper-text">We'll notify you when your documents are ready</span>
-                </label>
-                <input type="email" id="email" name="email" required placeholder="your@email.com">
-            </div>
-
-            <div class="form-group">
-                <label for="firstParty">
-                    First Party Name
-                    <span class="helper-text">The primary party in all agreements (defaults to Fontara)</span>
-                </label>
-                <input type="text" id="firstParty" name="firstParty" placeholder="Fontara">
-            </div>
-
-            <div class="form-group">
-                <label for="geography">
-                    Geography
-                    <span class="helper-text">Determines the business center locations in agreements</span>
-                </label>
-                <select id="geography" name="geography" required>
-                    <option value="">Select a region</option>
-                    <option value="NAMER">NAMER (North America)</option>
-                    <option value="EMEA">EMEA (Europe, Middle East, Africa)</option>
-                    <option value="LATAM">LATAM (Latin America)</option>
-                    <option value="APAC">APAC (Asia-Pacific)</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="industry">
-                    Industry
-                    <span class="helper-text">Select your primary industry sector</span>
-                </label>
-                <select id="industry" name="industry" required>
-                    <option value="">Select an industry</option>
-                    <option value="Technology">Technology</option>
-                    <option value="Healthcare">Healthcare</option>
-                    <option value="Financial Services">Financial Services</option>
-                    <option value="Manufacturing">Manufacturing</option>
-                    <option value="Energy">Energy</option>
-                    <option value="HR">Human Resources</option>
-                    <option value="Real Estate">Real Estate</option>
-                </select>
-            </div>
-
-            <div class="form-group hidden" id="subindustryGroup">
-                <label for="subindustry">
-                    Subindustry
-                    <span class="helper-text">Choose a specific sector within your industry</span>
-                </label>
-                <select id="subindustry" name="subindustry" required>
-                    <option value="">Select a subindustry</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="quantity">
-                    Quantity
-                    <span class="helper-text">Number of documents to generate (1-50)</span>
-                </label>
-                <input type="number" id="quantity" name="quantity" min="1" max="50" required placeholder="5">
-            </div>
-
-            <button type="submit" class="submit-btn">Generate Documents</button>
+        <div class="content-wrapper">
+            <div class="form-container">
+                <h1>Sample Document Assistant</h1>
+                <p class="subtitle">Fill out the form below to generate your custom legal documents</p>
             
-            <div class="progress-container" id="progressContainer">
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progressFill"></div>
-                </div>
-                <div class="progress-message" id="progressMessage">Submitting your request...</div>
-                <div class="progress-details" id="progressDetails"></div>
+                <form id="documentForm">
+                    <div class="form-group">
+                        <label for="email">
+                            Email Address
+                            <span class="helper-text">We'll notify you when your documents are ready</span>
+                        </label>
+                        <input type="email" id="email" name="email" required placeholder="your@email.com">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="firstParty">
+                            First Party Name
+                            <span class="helper-text">The primary party in all agreements (defaults to Fontara)</span>
+                        </label>
+                        <input type="text" id="firstParty" name="firstParty" placeholder="Fontara">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="geography">
+                            Geography
+                            <span class="helper-text">Determines the business center locations in agreements</span>
+                        </label>
+                        <select id="geography" name="geography" required>
+                            <option value="">Select a region</option>
+                            <option value="NAMER">NAMER (North America)</option>
+                            <option value="EMEA">EMEA (Europe, Middle East, Africa)</option>
+                            <option value="LATAM">LATAM (Latin America)</option>
+                            <option value="APAC">APAC (Asia-Pacific)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="industry">
+                            Industry
+                            <span class="helper-text">Select your primary industry sector</span>
+                        </label>
+                        <select id="industry" name="industry" required>
+                            <option value="">Select an industry</option>
+                            <option value="Technology">Technology</option>
+                            <option value="Healthcare">Healthcare</option>
+                            <option value="Financial Services">Financial Services</option>
+                            <option value="Manufacturing">Manufacturing</option>
+                            <option value="Energy">Energy</option>
+                            <option value="HR">Human Resources</option>
+                            <option value="Real Estate">Real Estate</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group hidden" id="subindustryGroup">
+                        <label for="subindustry">
+                            Subindustry
+                            <span class="helper-text">Choose a specific sector within your industry</span>
+                        </label>
+                        <select id="subindustry" name="subindustry" required>
+                            <option value="">Select a subindustry</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="quantity">
+                            Quantity
+                            <span class="helper-text">Number of documents to generate (1-50)</span>
+                        </label>
+                        <input type="number" id="quantity" name="quantity" min="1" max="50" required placeholder="5">
+                    </div>
+
+                    <button type="submit" class="submit-btn">Generate Documents</button>
+                    
+                    <div class="progress-container" id="progressContainer">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <div class="progress-message" id="progressMessage">Submitting your request...</div>
+                        <div class="progress-details" id="progressDetails"></div>
+                    </div>
+                </form>
             </div>
-        </form>
+
+            <div class="sidebar">
+                <h2>What To Expect</h2>
+                
+                <h3>Document Randomization</h3>
+                <p>Your generated documents will include realistic variations to demonstrate AI capabilities:</p>
+                <ul>
+                    <li>Key dates within the next 180 days</li>
+                    <li>Random counterparty companies</li>
+                    <li>Initial terms of 1-3 years</li>
+                    <li>Notice periods of 30, 60, or 90 days</li>
+                    <li>Variable assignment and renewal terms</li>
+                    <li>Payment terms ranging from 30-60 days</li>
+                    <li>Industry-specific obligations and clauses</li>
+                </ul>
+
+                <div id="docTypesSection" class="doc-types-section hidden">
+                    <h3>Expected Document Types</h3>
+                    <p id="docTypesDescription">Based on your selected subindustry, you'll receive:</p>
+                    <div id="docTypesList"></div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -378,11 +492,95 @@
             "Real Estate": ["Office", "Retail", "Industrial", "Warehouse", "Commercial", "Residential", "Investment", "Development", "Mixed-Use", "REITs", "Construction", "Infrastructure"]
         };
 
+        // Document types mapping (extracted from your DOC_TYPE_LIBRARY)
+        const docTypesByIndustry = {
+            "Technology": {
+                "SaaS": ["Software License Agreement", "Cloud Services Agreement", "Data Processing Agreement (DPA)", "Enterprise License Agreement", "Support & Maintenance Agreement", "API Terms of Service"],
+                "Enterprise Software": ["Software License Agreement", "Enterprise License Agreement", "Support & Maintenance Agreement"],
+                "Mobile Apps": ["Software License Agreement", "Support & Maintenance Agreement", "Game Publishing Agreement", "In-App Purchase Terms"],
+                "Gaming": ["Software License Agreement", "Game Publishing Agreement", "In-App Purchase Terms"],
+                "Cloud Infrastructure": ["Cloud Services Agreement", "API Terms of Service", "Data Warehouse Agreement"],
+                "Fintech": ["API Terms of Service", "Data Processing Agreement (DPA)", "Payment Processing Agreement", "Digital Wallet Agreement"],
+                "E-commerce": ["API Terms of Service", "Marketplace Agreement", "Drop-Ship Agreement", "Payment Processing Agreement"],
+                "Marketing Tech": ["Data Processing Agreement (DPA)", "Marketing Automation Agreement", "Lead Generation Agreement"],
+                "HR Tech": ["Data Processing Agreement (DPA)", "HRIS Integration Agreement", "Payroll Processing Agreement"],
+                "Data Analytics": ["Cloud Services Agreement", "Data Analytics Platform Agreement", "Data Warehouse Agreement"]
+            },
+            "Healthcare": {
+                "Digital Health": ["Business Associate Agreement (BAA)", "Telehealth Service Agreement", "Patient Portal Agreement", "Health Data Agreement", "EMR Integration Agreement"],
+                "Medical Devices": ["Business Associate Agreement (BAA)", "Clinical Trial Agreement", "Medical Device Supply Agreement", "Health Data Agreement", "Diagnostic Services Agreement", "Medical Equipment Lease"],
+                "Telehealth": ["Business Associate Agreement (BAA)", "Telehealth Service Agreement"],
+                "Healthcare IT": ["Business Associate Agreement (BAA)", "Telehealth Service Agreement", "Patient Portal Agreement", "EMR Integration Agreement"],
+                "Pharmaceuticals": ["Clinical Trial Agreement", "Drug Supply Agreement", "Research Collaboration Agreement"],
+                "Biotechnology": ["Clinical Trial Agreement", "Drug Supply Agreement", "Research Collaboration Agreement"],
+                "Diagnostics": ["Medical Device Supply Agreement", "Diagnostic Services Agreement"],
+                "Surgical Equipment": ["Medical Device Supply Agreement", "Medical Equipment Lease"]
+            },
+            "Financial Services": {
+                "Banking": ["Loan Agreement", "Credit Facility Agreement", "Deposit Account Agreement"],
+                "Credit Unions": ["Loan Agreement", "Credit Facility Agreement", "Deposit Account Agreement"],
+                "Alternative Lending": ["Loan Agreement", "Alternative Lending Agreement"],
+                "Wealth Management": ["Investment Advisory Agreement", "Portfolio Management Agreement", "Fee-Based Advisory Agreement", "ERISA Fiduciary Agreement"],
+                "Investment Banking": ["Investment Advisory Agreement", "Underwriting Agreement", "M&A Advisory Agreement"],
+                "Asset Management": ["Investment Advisory Agreement", "Portfolio Management Agreement", "ERISA Fiduciary Agreement"],
+                "Fintech": ["Payment Processing Agreement", "Alternative Lending Agreement", "Merchant Agreement", "Digital Wallet Agreement"],
+                "Payment Processors": ["Payment Processing Agreement", "Merchant Agreement", "Digital Wallet Agreement"],
+                "Insurance": ["Insurance Policy Contract", "Reinsurance Agreement", "Agent/Broker Agreement"],
+                "Insurtech": ["Insurance Policy Contract", "Agent/Broker Agreement", "Insurtech Platform Agreement"],
+                "Risk Management": ["Insurance Policy Contract", "Risk Assessment Agreement"]
+            },
+            "Manufacturing": {
+                "Automotive": ["Supply Agreement", "Distribution Agreement", "Quality Assurance Agreement", "Automotive Supplier Agreement", "Tier 1 Supplier Agreement"],
+                "Aerospace": ["Supply Agreement", "Quality Assurance Agreement", "Aerospace Certification Agreement", "Defense Contractor Agreement"],
+                "Consumer Goods": ["Supply Agreement", "Distribution Agreement", "Retail Supplier Agreement", "Private Label Manufacturing"],
+                "Industrial Equipment": ["Supply Agreement", "Distribution Agreement", "OEM Agreement"],
+                "Contract Manufacturing": ["Manufacturing Services Agreement", "Tolling Agreement"],
+                "Private Label": ["Manufacturing Services Agreement", "Private Label Manufacturing"],
+                "Electronics": ["Manufacturing Services Agreement", "Tolling Agreement", "Electronics Assembly Agreement"],
+                "Industrial Products": ["Distribution Agreement", "Industrial Distribution Agreement"],
+                "Food & Beverage": ["Quality Assurance Agreement", "Food Safety Agreement", "Co-Packing Agreement"]
+            },
+            "Energy": {
+                "Renewable Energy": ["Power Purchase Agreement (PPA)", "Energy Services Agreement", "Solar Installation Agreement", "Battery Storage Agreement"],
+                "Solar": ["Power Purchase Agreement (PPA)", "Solar Installation Agreement", "Solar Lease Agreement"],
+                "Wind": ["Power Purchase Agreement (PPA)", "Wind Farm Development Agreement", "Wind Turbine Supply Agreement"],
+                "Utilities": ["Power Purchase Agreement (PPA)", "Utility Interconnection Agreement", "Wholesale Power Agreement", "Grid-Scale Storage Agreement"],
+                "Oil & Gas": ["Joint Operating Agreement (JOA)", "Drilling Services Agreement", "Production Sharing Agreement"],
+                "Exploration": ["Joint Operating Agreement (JOA)", "Drilling Services Agreement", "Seismic Survey Agreement"],
+                "Production": ["Joint Operating Agreement (JOA)", "Production Sharing Agreement", "Refining Services Agreement"],
+                "Energy Management": ["Energy Services Agreement", "Smart Grid Integration Agreement", "Demand Response Agreement"],
+                "Smart Grid": ["Energy Services Agreement", "Smart Grid Integration Agreement", "Demand Response Agreement"],
+                "Energy Storage": ["Energy Services Agreement", "Battery Storage Agreement", "Grid-Scale Storage Agreement"]
+            },
+            "HR": {
+                "All": ["Offer Letter", "Employee Separation Agreement", "Stock Option Agreement", "Non-Compete Agreement"]
+            },
+            "Real Estate": {
+                "Office": ["Commercial Lease Agreement", "Office Space License Agreement", "Tenant Improvement Agreement"],
+                "Retail": ["Commercial Lease Agreement", "Retail Lease Agreement", "Shopping Center Management"],
+                "Industrial": ["Commercial Lease Agreement", "Industrial Lease Agreement", "Cold Storage Agreement"],
+                "Warehouse": ["Commercial Lease Agreement", "Cold Storage Agreement", "Warehouse Distribution Agreement", "Logistics Center Agreement"],
+                "Commercial": ["Purchase and Sale Agreement", "Property Management Agreement"],
+                "Residential": ["Purchase and Sale Agreement", "Property Management Agreement", "Residential Property Management", "Apartment Management Agreement"],
+                "Investment": ["Purchase and Sale Agreement", "Investment Property Agreement", "Real Estate Syndication Agreement"],
+                "Development": ["Purchase and Sale Agreement", "Construction Agreement", "Land Development Agreement", "Design-Build Agreement"],
+                "Mixed-Use": ["Property Management Agreement", "Mixed-Use Development Agreement"],
+                "REITs": ["Property Management Agreement", "REIT Management Agreement"],
+                "Construction": ["Construction Agreement", "Design-Build Agreement", "General Contractor Agreement"],
+                "Infrastructure": ["Construction Agreement", "General Contractor Agreement", "Infrastructure Development Agreement"]
+            }
+        };
+
+        // General documents available to all
+        const generalDocuments = ["Non-Disclosure Agreement (NDA)", "Master Service Agreement (MSA)", "Consulting Agreement"];
+
         // Get DOM elements
         const industrySelect = document.getElementById('industry');
         const subindustrySelect = document.getElementById('subindustry');
         const subindustryGroup = document.getElementById('subindustryGroup');
         const firstPartyInput = document.getElementById('firstParty');
+        const docTypesSection = document.getElementById('docTypesSection');
+        const docTypesList = document.getElementById('docTypesList');
 
         // Handle industry change
         industrySelect.addEventListener('change', function() {
@@ -390,6 +588,9 @@
             
             // Clear subindustry options
             subindustrySelect.innerHTML = '<option value="">Select a subindustry</option>';
+            
+            // Hide doc types section when industry changes
+            docTypesSection.classList.add('hidden');
             
             if (selectedIndustry && subindustries[selectedIndustry]) {
                 // Show subindustry dropdown
@@ -406,12 +607,48 @@
                 // If there's only one option (like HR -> All), select it automatically
                 if (subindustries[selectedIndustry].length === 1) {
                     subindustrySelect.value = subindustries[selectedIndustry][0];
+                    updateDocTypes(selectedIndustry, subindustries[selectedIndustry][0]);
                 }
             } else {
                 // Hide subindustry dropdown
                 subindustryGroup.classList.add('hidden');
             }
         });
+
+        // Handle subindustry change
+        subindustrySelect.addEventListener('change', function() {
+            const selectedIndustry = industrySelect.value;
+            const selectedSubindustry = this.value;
+            
+            if (selectedIndustry && selectedSubindustry) {
+                updateDocTypes(selectedIndustry, selectedSubindustry);
+            } else {
+                docTypesSection.classList.add('hidden');
+            }
+        });
+
+        // Update document types display
+        function updateDocTypes(industry, subindustry) {
+            // Clear existing content
+            docTypesList.innerHTML = '';
+            
+            // Get specific document types for the subindustry
+            const specificDocs = docTypesByIndustry[industry]?.[subindustry] || [];
+            
+            // Combine with general documents
+            const allDocs = [...generalDocuments, ...specificDocs];
+            
+            // Create badges for each document type
+            allDocs.forEach(doc => {
+                const badge = document.createElement('span');
+                badge.className = 'doc-type-badge';
+                badge.textContent = doc;
+                docTypesList.appendChild(badge);
+            });
+            
+            // Show the section
+            docTypesSection.classList.remove('hidden');
+        }
 
         // Handle form submission
         document.getElementById('documentForm').addEventListener('submit', function(e) {
@@ -486,6 +723,7 @@
                         // Reset form
                         document.getElementById('documentForm').reset();
                         subindustryGroup.classList.add('hidden');
+                        docTypesSection.classList.add('hidden');
                         submitBtn.disabled = false;
                         submitBtn.textContent = originalText;
                         
