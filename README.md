@@ -13,6 +13,7 @@ The Sample Document Assistant is designed to help sales teams generate realistic
 - **Multi-Language Support**: Create documents in English, Spanish, French, German, Portuguese, and Japanese
 - **Document Sets**: Generate related document sets (NDA → MSA → SOW → Change Order) with proper parent-child relationships
 - **AI-Powered Generation**: Uses OpenAI GPT-4 to create realistic, comprehensive legal agreements
+- **Google Drive Integration**: Creates Google Doc files from OpenAI HTML outputs and stores content in request-specific folders in Google Drive
 - **Web Interface**: User-friendly form for document requests
 - **Automated Notifications**: Slack integration for completion notifications
 
@@ -37,18 +38,6 @@ The system supports 100+ document types across industries including:
 - **HR**: Offer Letter, Employee Separation, Stock Option Agreement
 
 ## Architecture
-
-### File Structure
-├── 01_constants.js          # Document types, industries, counterparties
-├── 02_utils.js              # Utility functions and helpers
-├── 03_promptBuilder.js      # AI prompt generation logic
-├── 04_documentBuilder.js    # Document data assembly
-├── 05_fileHandler.js        # Google Drive file operations
-├── 06_slackNotifier.js      # Slack webhook integration
-├── 07_main.js               # Main request processing
-├── WebApp.js                # Web app endpoints
-├── index.html               # Web form interface
-└── appsscript.json          # Project configuration
 
 ### Key Components
 
