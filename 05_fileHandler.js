@@ -147,7 +147,7 @@ function sanitizeHtml(html) {
     return html;
 }
 
-// Create reference cover doc
+// Create reference cover doc with refined formatting
 function createSubindustryReferenceDoc(requestData, subfolder) {
   try {
     const { industry, subindustry, firstParty } = requestData;
@@ -173,92 +173,365 @@ function createSubindustryReferenceDoc(requestData, subfolder) {
       return a.name.localeCompare(b.name);
     });
     
+    // Separate general and specific document types
+    const generalDocs = docTypes.filter(d => 
+      d.meta.category === 'General' || d.meta.category === 'HR-Cross-Industry' || d.meta.category === 'Real Estate-Specific'
+    );
+    const specificDocs = docTypes.filter(d => 
+      d.meta.category === `${industry}-Specific`
+    );
+    
     // Build the HTML content
     let html = `
 <!DOCTYPE html>
 <html>
 <head>
   <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 20px; }
-    h1 { font-size: 2.5rem; }   /* 40px */
-    h2 { font-size: 2rem; }     /* 32px */
-    h3 { font-size: 1.5rem; }   /* 24px */
-    h4 { font-size: 1.25rem; }  /* 20px */
-    h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 10px; }
-    h2 { color: #34495e; }
-    h3 { color: #7f8c8d; }
-    .doc-type { background: #f8f9fa; padding: 20px 0px; margin: 20px 0; border-left: 4px solid #3498db; border-radius: 5px; }
-    .obligation { background: #fff; padding: 15px 0px; margin: 10px 0; border: 1px solid #e0e0e0; border-radius: 3px; }
-    .examples { margin-top: 10px; padding-left: 20px; }
-    .example { color: #555; font-style: italic; }
-    .category { font-weight: bold; color: #2980b9; margin-bottom: 5px; }
-    .meta-info { font-size: 0.9em; color: #666; margin: 5px 0; }
+    body { 
+      font-family: Arial, sans-serif; 
+      line-height: 1.6; 
+      color: #333; 
+      max-width: 1000px; 
+      margin: 0 auto; 
+      padding: 20px;
+      background-color: #f9f9f9;
+    }
+    
+    /* Typography */
+    h1 { 
+      font-size: 2.5rem; 
+      color: #1a1a1a; 
+      margin: 0 0 10px 0;
+      border-bottom: 4px solid #ffc820;
+      padding-bottom: 15px;
+    }
+    h2 { 
+      font-size: 2rem; 
+      color: #2c3e50; 
+      margin: 40px 0 20px 0;
+      border-bottom: 2px solid #e0e0e0;
+      padding-bottom: 10px;
+    }
+    h3 { 
+      font-size: 1.5rem; 
+      color: #34495e; 
+      margin: 30px 0 15px 0;
+      background-color: #f0f0f0;
+      padding: 10px 15px;
+      border-left: 4px solid #3498db;
+    }
+    h4 { 
+      font-size: 1.25rem; 
+      color: #555;
+      margin: 20px 0 10px 0;
+    }
+    
+    /* Header section */
+    .header-section {
+      background-color: #fff;
+      padding: 0px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
+    }
+    
+    .header-section p {
+      font-size: 1.1rem;
+      line-height: 1.8;
+      color: #555;
+    }
+    
+    .metadata {
+      background-color: #f8f9fa;
+      padding: 20px;
+      border-radius: 5px;
+      margin: 20px 0;
+    }
+    
+    .metadata p {
+      margin: 5px 0;
+      font-size: 0.95rem;
+    }
+    
+    /* Document lists */
+    .doc-list-section {
+      background-color: #fff;
+      padding: 25px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
+    }
+    
+    .doc-list {
+      list-style: none;
+      padding: 0;
+      margin: 15px 0;
+    }
+    
+    .doc-list li {
+      padding: 8px 15px;
+      margin: 5px 0;
+      background-color: #f8f9fa;
+      border-left: 3px solid #3498db;
+      border-radius: 3px;
+      font-size: 0.95rem;
+    }
+    
+    .doc-count {
+      color: #666;
+      font-style: italic;
+      margin-left: 10px;
+    }
+    
+    /* Tables */
+    table {
+      width: 950px;
+      border-collapse: collapse;
+      margin: 20px auto;
+      background-color: #fff;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      table-layout: fixed;
+    }
+    
+    th {
+      background-color: #34495e;
+      color: white;
+      padding: 12px 15px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+    
+    th:first-child {
+      width: 200px;
+    }
+    
+    th:last-child {
+      width: 750px;
+    }
+    
+    td {
+      padding: 12px 15px;
+      border-bottom: 1px solid #e0e0e0;
+      vertical-align: top;
+    }
+    
+    td:first-child {
+      width: 200px;
+    }
+    
+    td:last-child {
+      width: 750px;
+    }
+    
+    tr:nth-child(even) {
+      background-color: #f8f9fa;
+    }
+    
+    tr:hover {
+      background-color: #f0f0f0;
+    }
+    
+    .obligation-name {
+      font-weight: 600;
+      color: #2c3e50;
+      white-space: nowrap;
+    }
+    
+    .examples-cell {
+      padding-left: 20px;
+    }
+    
+    .example {
+      margin: 8px 0;
+      padding: 8px 12px;
+      background-color: #f9f9f9;
+      border-left: 2px solid #ddd;
+      font-size: 0.9rem;
+      line-height: 1.5;
+      color: #555;
+      font-style: italic;
+    }
+    
+    .example-number {
+      font-weight: bold;
+      color: #3498db;
+      margin-right: 5px;
+    }
+    
+    /* Document type section */
+    .doc-type-section {
+      background-color: #fff;
+      padding: 25px;
+      margin: 30px 0;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .doc-meta {
+      background-color: #f8f9fa;
+      padding: 15px;
+      border-radius: 5px;
+      margin: 15px 0;
+      font-size: 0.9rem;
+      color: #666;
+    }
+    
+    .no-obligations {
+      padding: 20px;
+      text-align: center;
+      color: #999;
+      font-style: italic;
+      background-color: #f8f9fa;
+      border-radius: 5px;
+    }
+    
+    /* Footer */
+    .footer {
+      margin-top: 60px;
+      padding: 30px;
+      background-color: #2c3e50;
+      color: #ecf0f1;
+      text-align: center;
+      border-radius: 8px;
+      font-size: 0.9rem;
+    }
+    
+    .footer p {
+      margin: 5px 0;
+    }
+    
+    /* Docusign branding */
+    .docusign-yellow {
+      color: #ffc820;
+    }
+    
+    @media print {
+      body {
+        background-color: white;
+      }
+      .header-section, .doc-list-section, .doc-type-section {
+        box-shadow: none;
+        border: 1px solid #ddd;
+      }
+    }
   </style>
 </head>
 <body>
   <h1>Document Type Reference Guide</h1>
-  <p><strong>Industry:</strong> ${industry}</p>
-  <p><strong>Subindustry:</strong> ${subindustry || 'All'}</p>
-  <p><strong>Company:</strong> ${firstParty}</p>
-  <p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>
   
-  <h2>Available Document Types (${docTypes.length} total)</h2>
+  <div class="header-section">
+    <h2>About This Reference Guide</h2>
+    <p>The documents created for <strong>${firstParty}</strong> are specifically designed to include language and structured data that can be extracted using <strong class="docusign-yellow">Docusign Iris</strong>, our advanced AI-powered agreement analysis platform.</p>
+    <p>Each document type contains industry-specific terms, obligations, and clauses that demonstrate how Docusign Iris can identify, extract, and analyze key contract data points, helping you manage agreements more efficiently and reduce risk.</p>
+    
+    <div class="metadata">
+      <p><strong>Generated for:</strong> ${firstParty}</p>
+      <p><strong>Industry:</strong> ${industry}</p>
+      <p><strong>Subindustry:</strong> ${subindustry || 'All Subindustries'}</p>
+      <p><strong>Generated on:</strong> ${new Date().toLocaleString()}</p>
+      <p><strong>Total Document Types Available:</strong> ${docTypes.length}</p>
+    </div>
+  </div>
+  
+  <div class="doc-list-section">
+    <h2>Document Types</h2>
+    <p><em>Note: Document generation is randomized. The more documents you request, the greater variety you'll see in your generated set.</em></p>
+    
+    <h3>General Document Types <span class="doc-count">(${generalDocs.length} available)</span></h3>
+    <ul class="doc-list">
 `;
 
+    // Add general documents
+    generalDocs.forEach(doc => {
+      html += `      <li>${doc.name}</li>\n`;
+    });
+
+    html += `    </ul>
+    
+    <h3>${industry}-Specific Document Types <span class="doc-count">(${specificDocs.length} available)</span></h3>
+    <ul class="doc-list">
+`;
+
+    // Add specific documents
+    specificDocs.forEach(doc => {
+      html += `      <li>${doc.name}</li>\n`;
+    });
+
+    html += `    </ul>
+  </div>
+  
+  <h2>Document Obligation Types</h2>
+`;
+
+    // Process industry-specific documents first
     let currentCategory = '';
     
-    docTypes.forEach(({ name, meta }) => {
+    // Start with industry-specific docs
+    const orderedDocs = [...specificDocs, ...generalDocs];
+    
+    orderedDocs.forEach(({ name, meta }) => {
       // Add category header if it changed
       if (meta.category !== currentCategory) {
         currentCategory = meta.category;
-        html += `<h2 style="color: #2980b9;">${currentCategory}</h2>`;
+        html += `  <h3 style="margin-top: 50px;">${currentCategory} Documents</h3>\n`;
       }
       
-      html += `<div class="doc-type">`;
-      html += `<h3>${name}</h3>`;
-      html += `<div class="meta-info">`;
-      html += `<p><strong>Contract Prefix:</strong> ${meta.key}</p>`;
-      html += `<p><strong>Description:</strong> ${meta.description}</p>`;
+      html += `  <div class="doc-type-section">`;
+      html += `    <h3>${name}</h3>`;
       
+      html += `    <div class="doc-meta">`;
+      html += `      <strong>Contract Prefix:</strong> ${meta.key} | `;
+      html += `      <strong>Description:</strong> ${meta.description}`;
       if (meta.noTerm) {
-        html += `<p><strong>Term Type:</strong> No fixed term (one-time document)</p>`;
+        html += ` | <strong>Type:</strong> One-time document (no term)`;
       }
+      html += `    </div>`;
       
-      html += `</div>`;
-      
-      // Add obligations section
+      // Add obligations table
       if (meta.obligations && meta.obligations.length > 0) {
-        html += `<h4>Custom Terms & Obligations (${meta.obligations.length})</h4>`;
+        html += `    <h4>Obligations & Terms (${meta.obligations.length} defined)</h4>`;
+        html += `    <table>`;
+        html += `      <thead>`;
+        html += `        <tr>`;
+        html += `          <th>Obligation Type</th>`;
+        html += `          <th>Example Language</th>`;
+        html += `        </tr>`;
+        html += `      </thead>`;
+        html += `      <tbody>`;
         
         meta.obligations.forEach(oblKey => {
           const oblText = OBL_TEXT[oblKey];
           if (oblText) {
-            html += `<div class="obligation">`;
-            html += `<strong>${oblKey}:</strong> ${oblText}`;
-            html += `<div class="examples">`;
-            html += `<p><em>Examples of how this might appear in the agreement:</em></p>`;
+            html += `        <tr>`;
+            html += `          <td class="obligation-name">${oblKey}</td>`;
+            html += `          <td class="examples-cell">`;
             
-            // Generate examples based on the obligation type
+            // Generate examples
             const examples = generateObligationExamples(oblKey, firstParty);
             examples.forEach((example, idx) => {
-              html += `<div class="example">${idx + 1}. "${example}"</div>`;
+              html += `            <div class="example"><span class="example-number">${idx + 1}.</span> ${example}</div>`;
             });
             
-            html += `</div>`;
-            html += `</div>`;
+            html += `          </td>`;
+            html += `        </tr>`;
           }
         });
+        
+        html += `      </tbody>`;
+        html += `    </table>`;
       } else {
-        html += `<p><em>No specific obligations defined for this document type.</em></p>`;
+        html += `    <div class="no-obligations">No specific obligations defined for this document type</div>`;
       }
       
-      html += `</div>`;
+      html += `  </div>`;
     });
     
     html += `
-  <div style="margin-top: 50px; padding-top: 20px; border-top: 1px solid #ccc; font-size: 0.9em; color: #666;">
-    <p>This reference document was automatically generated to accompany the document generation request.</p>
-    <p>It provides a comprehensive overview of all document types available for the ${industry} - ${subindustry || 'All'} combination.</p>
+  <div class="footer">
+    <p><strong>Docusign Iris Reference Guide</strong></p>
+    <p>This document demonstrates the types of agreements and contract language that can be analyzed by Docusign Iris.</p>
+    <p>© ${new Date().getFullYear()} Docusign, Inc. All rights reserved.</p>
   </div>
 </body>
 </html>`;
