@@ -347,21 +347,35 @@ This document should follow standard legal formatting with appropriate sections 
 
 function getPromptOutputFormat(firstParty, counterparty, subindustry, geography) {
     const currencyFormat = getCurrencyAndDateFormat(geography);
+    
+    // Randomize font settings
+    const fontSizes = [10, 11, 12];
+    const fontFamilies = ['Arial', 'Times New Roman', 'serif', 'sans-serif'];
+    
+    const selectedFontSize = fontSizes[Math.floor(Math.random() * fontSizes.length)];
+    const selectedFontFamily = fontFamilies[Math.floor(Math.random() * fontFamilies.length)];
+    
+    // Adjust header sizes based on body font size
+    const headerFontSize = selectedFontSize + 2;
+    const titleFontSize = selectedFontSize + 3;
+    
+    // Calculate line height (typically 1.15-1.2x font size)
+    const lineHeight = Math.round(selectedFontSize * 1.15);
 
     return `Output Format & Professional Standards
 
-The output must be formatted as valid, professional-grade HTML that mirrors the quality of documents produced by top-tier law firms specializing in ${subindustry} transactions. Use semantic markup with Arial font, size 11, and sophisticated document structure.
+The output must be formatted as valid, professional-grade HTML that mirrors the quality of documents produced by top-tier law firms specializing in ${subindustry} transactions. Use semantic markup with ${selectedFontFamily} font, size ${selectedFontSize}, and sophisticated document structure.
 
 ### Document Header (Critical)
 <div style="text-align: center; margin-bottom: 30pt; page-break-inside: avoid;">
-<h1 style="font-family: Arial; font-size: 14pt; font-weight: bold; margin-bottom: 8pt; text-transform: uppercase; letter-spacing: 1pt;">[DOCUMENT TYPE]</h1>
-<h2 style="font-family: Arial; font-size: 11pt; font-weight: normal; margin-bottom: 16pt; color: #666;">[CONTRACT NUMBER]</h2>
+<h1 style="font-family: ${selectedFontFamily}; font-size: ${titleFontSize}pt; font-weight: bold; margin-bottom: 8pt; text-transform: uppercase; letter-spacing: 1pt;">[DOCUMENT TYPE]</h1>
+<h2 style="font-family: ${selectedFontFamily}; font-size: ${selectedFontSize}pt; font-weight: normal; margin-bottom: 16pt; color: #666;">[CONTRACT NUMBER]</h2>
 </div>
 
 Example:
 <div style="text-align: center; margin-bottom: 30pt; page-break-inside: avoid;">
-<h1 style="font-family: Arial; font-size: 14pt; font-weight: bold; margin-bottom: 8pt; text-transform: uppercase; letter-spacing: 1pt;">INVESTMENT ADVISORY AGREEMENT</h1>
-<h2 style="font-family: Arial; font-size: 11pt; font-weight: normal; margin-bottom: 16pt; color: #666;">IAA-49213</h2>
+<h1 style="font-family: ${selectedFontFamily}; font-size: ${titleFontSize}pt; font-weight: bold; margin-bottom: 8pt; text-transform: uppercase; letter-spacing: 1pt;">INVESTMENT ADVISORY AGREEMENT</h1>
+<h2 style="font-family: ${selectedFontFamily}; font-size: ${selectedFontSize}pt; font-weight: normal; margin-bottom: 16pt; color: #666;">IAA-49213</h2>
 </div>
 
 ### Professional Document Architecture
@@ -392,10 +406,10 @@ Structure the agreement using sophisticated legal document conventions:
 ### Advanced Formatting Standards
 
 ### Typography & Spacing:
-- Body text: 11pt Arial
-- Section headers: 12pt Arial, bold
-- Document title: 14pt Arial, bold, uppercase
-- Line spacing: 1.15 (or 14pt line-height for 11pt text)
+- Body text: ${selectedFontSize}pt ${selectedFontFamily}
+- Section headers: ${headerFontSize}pt ${selectedFontFamily}, bold
+- Document title: ${titleFontSize}pt ${selectedFontFamily}, bold, uppercase
+- Line spacing: 1.15 (or ${lineHeight}pt line-height for ${selectedFontSize}pt text)
 - Paragraph spacing: 12pt between paragraphs
 - Section spacing: 18pt between major sections
 
@@ -453,31 +467,6 @@ function getObligationsText(agreementType) {
         }
     });
     return obligationsText;
-}
-
-function getSubindustrySpecificGuidance(subindustry) {
-    const guidanceMap = {
-        "Wealth Management": "Focus on fiduciary responsibilities, fee transparency, and regulatory compliance with SEC and state investment advisor requirements. Include provisions for investment policy statements and performance reporting.",
-        "SaaS": "Emphasize data security, service level agreements, API governance, and GDPR compliance. Include provisions for data processing, user access controls, and system availability guarantees.",
-        "Healthcare IT": "Prioritize HIPAA compliance, patient data protection, and interoperability standards. Include provisions for electronic health records, audit trails, and emergency access procedures.",
-        "Automotive": "Focus on quality standards (IATF 16949), supply chain security, and automotive safety regulations. Include provisions for just-in-time delivery, tooling requirements, and recall procedures.",
-        "Solar": "Emphasize system performance guarantees, utility interconnection standards, and renewable energy compliance. Include provisions for net metering, permitting, and environmental impact.",
-        "Banking": "Focus on federal banking regulations, FDIC compliance, and anti-money laundering requirements. Include provisions for deposit insurance, regulatory reporting, and customer due diligence.",
-        "Insurance": "Emphasize state insurance regulations, solvency requirements, and claims handling standards. Include provisions for policy administration, actuarial compliance, and regulatory filing.",
-        "Digital Health": "Focus on FDA software as medical device regulations, clinical validation, and patient safety. Include provisions for data integrity, clinical workflows, and regulatory submissions.",
-        "Telehealth": "Emphasize state licensing requirements, patient consent, and emergency protocols. Include provisions for cross-state practice, technology standards, and clinical documentation.",
-        "Pharmaceuticals": "Focus on FDA Good Manufacturing Practices, clinical trial regulations, and drug safety reporting. Include provisions for batch documentation, pharmacovigilance, and regulatory compliance.",
-        "Gaming": "Emphasize age verification, content ratings, and platform compliance. Include provisions for virtual goods, payment processing, and user-generated content moderation.",
-        "E-commerce": "Focus on consumer protection, payment security, and marketplace regulations. Include provisions for product liability, shipping terms, and customer data protection.",
-        "Fintech": "Emphasize financial services regulations, payment processing compliance, and consumer protection. Include provisions for KYC requirements, fraud prevention, and regulatory reporting.",
-        "Aerospace": "Focus on AS9100 quality standards, NADCAP certification, and export control regulations. Include provisions for configuration management, material traceability, and safety compliance.",
-        "Oil & Gas": "Emphasize environmental regulations, safety standards, and joint operating procedures. Include provisions for cost sharing, operational control, and environmental compliance.",
-        "Wind": "Focus on environmental impact assessments, grid interconnection, and turbine certification. Include provisions for wind resource assessments, power purchase agreements, and decommissioning.",
-        "Real Estate - Office": "Emphasize lease administration, tenant improvements, and building management. Include provisions for common area maintenance, parking allocation, and sustainability requirements.",
-        "Real Estate - Construction": "Focus on building codes, safety regulations, and contractor licensing. Include provisions for performance bonds, lien waivers, and change order procedures."
-    };
-
-    return guidanceMap[subindustry] || `Ensure compliance with industry-standard practices and regulations specific to ${subindustry} operations.`;
 }
 
 function getRegulatoryContext(subindustry, geography) {
