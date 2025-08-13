@@ -60,6 +60,33 @@ function submitSampleRequest(e) {
         const rootFolder = DriveApp.getFolderById(rootFolderId);
         const subfolder = rootFolder.createFolder(folderName);
 
+        // ===== ADD FOLDER PERMISSIONS HERE =====
+        // Grant the submitter access to the folder they requested
+        try {
+            // Add the submitter as an editor of the folder
+            subfolder.addEditor(requestData.email);
+            Logger.log(`Granted editor access to ${requestData.email} for folder: ${folderName}`);
+
+            // Optional: Also share the root folder as viewer if they don't have access
+            // This ensures they can navigate to their subfolder
+            try {
+                const rootFolderAccess = rootFolder.getAccess(requestData.email);
+                if (rootFolderAccess === DriveApp.Permission.NONE) {
+                    rootFolder.addViewer(requestData.email);
+                    Logger.log(`Granted viewer access to ${requestData.email} for root folder`);
+                }
+            } catch (accessError) {
+                // User doesn't have access to root folder, grant viewer access
+                rootFolder.addViewer(requestData.email);
+                Logger.log(`Granted viewer access to ${requestData.email} for root folder`);
+            }
+
+        } catch (permissionError) {
+            Logger.log(`Warning: Could not set permissions for ${requestData.email}: ${permissionError.message}`);
+            // Continue processing even if permissions fail
+        }
+        // ===== END OF PERMISSION CHANGES =====
+
         let successMessage = "";
 
         if (requestData.createSets === true) {

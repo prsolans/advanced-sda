@@ -436,6 +436,21 @@
                         </select>
                     </div>
 
+                                        <div class="form-group">
+                        <label for="language">
+                            Document Language
+                            <span class="helper-text">Select the language for your documents</span>
+                        </label>
+                        <select id="language" name="language" required>
+                            <option value="English">English</option>
+                            <option value="Spanish">Spanish (ES)</option>
+                            <option value="French">French (FR)</option>
+                            <option value="German">German (DE)</option>
+                            <option value="Portuguese (BR)">Portuguese (BR)</option>
+                            <option value="Japanese">Japanese (JA)</option>
+                        </select>
+                    </div>
+
                     <div class="form-group">
                         <label for="quantity">
                             Quantity
@@ -674,6 +689,7 @@
                 geography: document.getElementById('geography').value,
                 industry: document.getElementById('industry').value,
                 subindustry: document.getElementById('subindustry').value,
+                language: document.getElementById('language').value,
                 quantity: parseInt(document.getElementById('quantity').value)
             };
             
@@ -686,7 +702,7 @@
                 { at: 40, text: "Generating documents...", detail: "Creating customized legal agreements" },
                 { at: 60, text: "Applying industry standards...", detail: `Tailoring for ${formData.subindustry || formData.industry}` },
                 { at: 80, text: "Finalizing documents...", detail: "Almost complete" },
-                { at: 95, text: "Saving to Google Drive...", detail: "You will get a Slack message when docs are complete" }
+                { at: 100, text: "Saving to Google Drive...", detail: "You can close this window at your convenience. You will get a Slack message when docs are complete." }
             ];
             
             let currentMessageIndex = 0;

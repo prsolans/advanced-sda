@@ -1,13 +1,4 @@
-// 01_constants.js (Refactored + Expanded)
-
-// const COUNTERPARTIES = [
-//   "Keystone Dynamics", "Weekend Ventures", "Iver & Co.", "Dancefloor Data",
-//   "Torches & Co.", "Arcade Corp.", "Modern Age Ventures", "Everlong Enterprises",
-//   "High Violet Group", "Little Lion Holdings", "Xyloto Corp.", "Dog Days Capital",
-//   "Electric Feel Energy", "Oracular Inc.", "Impala Logistics", "Coexist Innovations",
-//   "Innerspeaker Inc.", "After Hours Capital", "Crystal Castle Holdings",
-//   "El Camino Group", "Wolf Gang Ventures", "All Friends Co."
-// ];
+// 01_constants.js
 
 const COUNTERPARTIES = [
   "Discrete Quantum Mechanics", "Keranos Digital Media", "Stellar Logical", "DataVault Dynamics", "Vitality Horizons Medical", "Pine Care", "Nesis Biotech", "Precisys Health Analytics", "Pathway Placers", "ScoutVision Recruiting", "Marc Kline Ultra Learning", "Insight Baybridge", "EduTech Solutions", "LearnSphere Global", "MarketPulse Dynamics", "Momentum Driver", "Dynamics Talent Strategies", "FutureSkills Solutions", "ClimbTech Financial", "Virtual Asset Collective", "SmartFactory Systems", "Innovate Global Manufacturing", "Hidden Continent Environmental", "Helix Learning"
