@@ -1,5 +1,8 @@
-// 07_main.js (Refactored)
+// 07_main.js (Updated to handle subindustry reference document)
 function submitSampleRequest(e) {
+    Logger.log("=== submitSampleRequest STARTED ===");
+    Logger.log("Script Version: 1.0"); // Add a version number to confirm deployment
+
     if (!e || !e.source) {
         Logger.log("Function called without a valid event trigger.");
         return;
@@ -33,9 +36,6 @@ function submitSampleRequest(e) {
 
         const properties = PropertiesService.getScriptProperties();
         const rootFolderId = properties.getProperty("ROOT_FOLDER_ID");
-        const subindustry = sheet.getRange(firstRow, COLUMN_MAP.SUBINDUSTRY).getValue() || "SaaS";
-        const parsed = parseSubindustrySelection(subindustry);
-
         if (!rootFolderId) throw new Error("ROOT_FOLDER_ID is not set in Script Properties.");
 
         const requestData = {
@@ -46,8 +46,9 @@ function submitSampleRequest(e) {
             language: sheet.getRange(firstRow, COLUMN_MAP.LANGUAGE).getValue(),
             geography: sheet.getRange(firstRow, COLUMN_MAP.GEOGRAPHY).getValue() || "NAMER",
             firstParty: (sheet.getRange(firstRow, COLUMN_MAP.FIRST_PARTY).getValue() || "").toString().trim() || "Fontara",
-            industry: parsed.industry,
-            subindustry: parsed.subindustry,
+            industry: sheet.getRange(firstRow, COLUMN_MAP.INDUSTRY).getValue() || pick(INDUSTRIES),
+            subindustry: sheet.getRange(firstRow, COLUMN_MAP.SUBINDUSTRY) ?
+                sheet.getRange(firstRow, COLUMN_MAP.SUBINDUSTRY).getValue() : null,
             createSets: sheet.getRange(firstRow, COLUMN_MAP.CREATE_SETS).getValue() === true,
         };
 
@@ -56,69 +57,101 @@ function submitSampleRequest(e) {
         }
 
         const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-        const folderName = `${requestData.email}_${subindustry}(${requestData.quantity})_${timestamp}`;
+        const folderName = `${requestData.email}_${timestamp}`;
         const rootFolder = DriveApp.getFolderById(rootFolderId);
         const subfolder = rootFolder.createFolder(folderName);
 
-        // ===== ADD FOLDER PERMISSIONS HERE =====
-        // Grant the submitter access to the folder they requested
-        try {
-            // Add the submitter as an editor of the folder
-            subfolder.addEditor(requestData.email);
-            Logger.log(`Granted editor access to ${requestData.email} for folder: ${folderName}`);
-
-            // Optional: Also share the root folder as viewer if they don't have access
-            // This ensures they can navigate to their subfolder
-            try {
-                const rootFolderAccess = rootFolder.getAccess(requestData.email);
-                if (rootFolderAccess === DriveApp.Permission.NONE) {
-                    rootFolder.addViewer(requestData.email);
-                    Logger.log(`Granted viewer access to ${requestData.email} for root folder`);
-                }
-            } catch (accessError) {
-                // User doesn't have access to root folder, grant viewer access
-                rootFolder.addViewer(requestData.email);
-                Logger.log(`Granted viewer access to ${requestData.email} for root folder`);
-            }
-
-        } catch (permissionError) {
-            Logger.log(`Warning: Could not set permissions for ${requestData.email}: ${permissionError.message}`);
-            // Continue processing even if permissions fail
-        }
-        // ===== END OF PERMISSION CHANGES =====
-
         let successMessage = "";
+        let referenceDocUrl = null;
+        let subindustryReferenceUrl = null;
+
+        // // REPLACE the existing block with this debug version:
+        // // Create subindustry reference document (stored in REFERENCE_DOC_FOLDER_ID)
+        // Logger.log("=== Checking industry for reference doc ===");
+        // Logger.log("requestData.industry value: '" + requestData.industry + "'");
+        // Logger.log("requestData.industry type: " + typeof requestData.industry);
+        // Logger.log("requestData.industry truthy check: " + (requestData.industry ? "true" : "false"));
+
+        // if (requestData.industry) {
+        //     Logger.log("Industry exists, calling createSubindustryReferenceDoc...");
+        //     try {
+        //         subindustryReferenceUrl = createSubindustryReferenceDoc(requestData);
+
+        //         Logger.log("Function returned: '" + subindustryReferenceUrl + "'");
+        //         Logger.log("Return type: " + typeof subindustryReferenceUrl);
+
+        //         if (subindustryReferenceUrl) {
+        //             Logger.log("✓ Subindustry reference document created: " + subindustryReferenceUrl);
+        //         } else {
+        //             Logger.log("✗ Function returned null/undefined/empty");
+        //         }
+        //     } catch (error) {
+        //         Logger.log("ERROR calling createSubindustryReferenceDoc: " + error.message);
+        //         Logger.log("Stack: " + error.stack);
+        //     }
+        // } else {
+        //     Logger.log("No industry specified, skipping reference doc");
+        // }
+
+        Logger.log("Final subindustryReferenceUrl value: " + subindustryReferenceUrl);
 
         if (requestData.createSets === true) {
             const numSets = Math.floor(requestData.quantity / 5);
             const docCount = numSets * 5;
             if (numSets < 1) throw new Error("Quantity must be 5 or more to create sets.");
 
-            const allSetTypes = getDocTypesForIndustry(requestData.industry);
-            const DOCUMENT_SET_TYPES = [
-                allSetTypes.find(t => t.includes("NDA")) || "Non-Disclosure Agreement (NDA)",
-                allSetTypes.find(t => t.includes("MSA")) || "Master Service Agreement (MSA)",
-                allSetTypes.find(t => t.includes("SOW")) || "Statement Of Work (SOW)",
-                allSetTypes.find(t => t.includes("SOW")) || "Statement Of Work (SOW)",
-                allSetTypes.find(t => t.includes("Change Order")) || "Change Order"
-            ];
+            // Process each set separately to create reference documents for each
+            for (let setIndex = 0; setIndex < numSets; setIndex++) {
+                const allSetTypes = getDocTypesForIndustry(requestData.industry);
+                const DOCUMENT_SET_TYPES = [
+                    allSetTypes.find(t => t.includes("NDA")) || "Non-Disclosure Agreement (NDA)",
+                    allSetTypes.find(t => t.includes("MSA")) || "Master Service Agreement (MSA)",
+                    allSetTypes.find(t => t.includes("SOW")) || "Statement Of Work (SOW)",
+                    allSetTypes.find(t => t.includes("SOW")) || "Statement Of Work (SOW)",
+                    allSetTypes.find(t => t.includes("Change Order")) || "Change Order"
+                ];
 
-            let parents = {};
-            const setCounterparty = pick(COUNTERPARTIES);
+                let parents = {};
+                const setCounterparty = pick(COUNTERPARTIES);
+                const setDocuments = []; // Store all documents in this set for reference doc
 
-            for (const docType of DOCUMENT_SET_TYPES) {
-                const docData = generateSetDocumentRow(requestData, docType, setCounterparty);
-                if (docType.includes("MSA")) parents.MSA = docData;
-                if (docType.includes("SOW")) parents.SOW = docData;
-                linkParentContracts(docData, parents);
-                Logger.log("Doc Data: " + JSON.stringify(docData, null, 2));
-                processAndCreateFile(docData, subfolder);
+                for (const docType of DOCUMENT_SET_TYPES) {
+                    const docData = generateSetDocumentRow(requestData, docType, setCounterparty);
+
+                    if (docType.includes("MSA")) parents.MSA = docData;
+                    if (docType.includes("SOW")) parents.SOW = docData;
+
+                    linkParentContracts(docData, parents);
+                    setDocuments.push(docData); // Add to set documents array
+
+                    Logger.log("Doc Data: " + JSON.stringify(docData, null, 2));
+                    processAndCreateFile(docData, subfolder);
+                }
+
+                // Create contract set reference document for first set only (stored in REFERENCE_DOC_FOLDER_ID)
+                if (setIndex === 0) {
+                    referenceDocUrl = createReferenceDocument(setDocuments, setCounterparty, requestData);
+                    if (referenceDocUrl) {
+                        Logger.log("Contract set reference document created: " + referenceDocUrl);
+                    }
+                }
             }
 
             successMessage = `Success! ${docCount} documents (${numSets} sets) created.`;
 
         } else {
+            // For individual documents, no contract set reference document is created
             const docCount = requestData.quantity;
+
+            // ADD THE REFERENCE DOC CREATION HERE:
+            Logger.log("=== CREATING REFERENCE DOC ===");
+            let subindustryReferenceUrl = null;
+            if (requestData.industry) {
+                Logger.log("Industry found: " + requestData.industry);
+                subindustryReferenceUrl = createSubindustryReferenceDoc(requestData);
+                Logger.log("Reference URL: " + subindustryReferenceUrl);
+            }
+
             for (let i = 0; i < docCount; i++) {
                 const docData = generateRandomDocumentRow(requestData);
                 processAndCreateFile(docData, subfolder);
@@ -127,8 +160,23 @@ function submitSampleRequest(e) {
         }
 
         statusRange.setValue(successMessage);
-        sendSlackNotification(requestData.email, successMessage, requestData.language, subfolder.getUrl());
-        Logger.log("Slack notification sent with folder link.");
+
+        Logger.log("=== About to send Slack notification ===");
+        Logger.log("Folder URL: " + subfolder.getUrl());
+        Logger.log("Subindustry Reference URL: " + subindustryReferenceUrl);
+        Logger.log("Contract Set Reference URL: " + referenceDocUrl);
+
+        // Send Slack notification with both reference document URLs if available
+        sendSlackNotificationWithReferences(
+            requestData.email,
+            successMessage,
+            requestData.language,
+            subfolder.getUrl(),
+            referenceDocUrl,
+            subindustryReferenceUrl
+        );
+
+        Logger.log("Slack notification sent with folder link and reference documents.");
 
     } catch (error) {
         Logger.log(`Error processing request in row ${firstRow}: ${error.message}`);

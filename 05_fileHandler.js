@@ -147,11 +147,21 @@ function sanitizeHtml(html) {
   return html;
 }
 
-// Refactored createSubindustryReferenceDoc - Minimal, focused on subindustry-specific content only
-// Refactored createSubindustryReferenceDoc - Minimal, focused on subindustry-specific content only
-function createSubindustryReferenceDoc(requestData, subfolder) {
+// Updated createSubindustryReferenceDoc - Stores in designated folder and returns URL
+function createSubindustryReferenceDoc(requestData) {
   try {
     const { industry, subindustry, firstParty } = requestData;
+    
+    // Get the reference folder ID from Script Properties
+    const properties = PropertiesService.getScriptProperties();
+    const refFolderId = properties.getProperty("REFERENCE_DOC_FOLDER_ID");
+    
+    if (!refFolderId) {
+      Logger.log("REFERENCE_DOC_FOLDER_ID not set in Script Properties. Skipping reference doc creation.");
+      return null;
+    }
+    
+    const refFolder = DriveApp.getFolderById(refFolderId);
 
     // Get ONLY industry-specific document types (no general docs)
     const specificDocs = [];
@@ -324,8 +334,9 @@ function createSubindustryReferenceDoc(requestData, subfolder) {
 </body>
 </html>`;
 
-    // Create the file
-    const fileName = `${industry}_${subindustry || 'All'}_Reference`;
+    // Create the file with timestamp for uniqueness
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+    const fileName = `${industry}_${subindustry || 'All'}_Reference_${timestamp}`;
     const blob = Utilities.newBlob(html, MimeType.HTML, `${fileName}.html`);
     const file = DriveApp.createFile(blob);
 
@@ -340,26 +351,19 @@ function createSubindustryReferenceDoc(requestData, subfolder) {
 
     file.setTrashed(true);
 
-    // Move to folder
+    // Move to reference folder instead of user folder
     const newFile = DriveApp.getFileById(docFile.id);
-    newFile.moveTo(subfolder);
-
-    Logger.log(`Created reference document: ${fileName}`);
-    return docFile.id;
+    newFile.moveTo(refFolder);
+    
+    // Return the file URL for Slack notification
+    const fileUrl = newFile.getUrl();
+    Logger.log(`Created subindustry reference document: ${fileName} at ${fileUrl}`);
+    return fileUrl;
 
   } catch (error) {
-    Logger.log(`Error creating reference document: ${error.message}`);
+    Logger.log(`Error creating subindustry reference document: ${error.message}`);
+    return null;
   }
-}
-
-// Systematic approach to generate examples for ALL obligations
-function generateObligationExamples(obligationType, companyName) {
-  // First, check if we have specific examples
-  const specificExamples = getSpecificExamples(obligationType, companyName);
-  if (specificExamples) return specificExamples;
-
-  // Otherwise, generate based on patterns and keywords
-  return generatePatternBasedExamples(obligationType, companyName);
 }
 
 // Specific examples for high-priority obligations
