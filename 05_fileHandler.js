@@ -3,185 +3,173 @@
 
 // Fixed version of createFileInDriveV3 that ensures proper naming
 function createFileInDriveV3(html, agreementType, language, contractNumber) {
-    // Debug logging
-    Logger.log(`createFileInDriveV3 called with:`);
-    Logger.log(`  agreementType: "${agreementType}"`);
-    Logger.log(`  language: "${language}"`);
-    Logger.log(`  contractNumber: "${contractNumber}"`);
-    
-    const languageAbbreviations = {
-        Spanish: "[ES]",
-        French: "[FR]",
-        German: "[DE]",
-        "Portuguese (PT)": "[PT]",
-        "Portuguese (BR)": "[BR]",
-        Japanese: "[JA]",
-        English: "", // No prefix for English
-    };
+  // Debug logging
+  Logger.log(`createFileInDriveV3 called with:`);
+  Logger.log(`  agreementType: "${agreementType}"`);
+  Logger.log(`  language: "${language}"`);
+  Logger.log(`  contractNumber: "${contractNumber}"`);
 
-    // Get language prefix - default to empty string if not found or if English
-    const langPrefix = (language && language !== 'English') ? (languageAbbreviations[language] || "") : "";
+  const languageAbbreviations = {
+    Spanish: "[ES]",
+    French: "[FR]",
+    German: "[DE]",
+    "Portuguese (PT)": "[PT]",
+    "Portuguese (BR)": "[BR]",
+    Japanese: "[JA]",
+    English: "", // No prefix for English
+  };
 
-    // Use the provided contract number, or generate a new one if it doesn't exist
-    const finalContractNumber = contractNumber || generateContractNumber(agreementType);
+  // Get language prefix - default to empty string if not found or if English
+  const langPrefix = (language && language !== 'English') ? (languageAbbreviations[language] || "") : "";
 
-    // Build filename components - ENSURE agreementType is included
-    const fileNameParts = [];
-    
-    // Only add language prefix if it exists
-    if (langPrefix && langPrefix.length > 0) {
-        fileNameParts.push(langPrefix);
-    }
-    
-    // Add the agreement type - this is critical!
-    if (agreementType && agreementType.length > 0) {
-        fileNameParts.push(agreementType);
-    } else {
-        Logger.log("WARNING: No agreement type provided for file naming!");
-        fileNameParts.push("Document"); // Fallback if no type
-    }
-    
-    // Add the contract number
-    if (finalContractNumber) {
-        fileNameParts.push(finalContractNumber);
-    }
-    
-    // Join with " - " separator
-    const fileName = fileNameParts.filter(part => part && part.length > 0).join(" - ");
-    
-    Logger.log(`Final filename will be: "${fileName}"`);
+  // Use the provided contract number, or generate a new one if it doesn't exist
+  const finalContractNumber = contractNumber || generateContractNumber(agreementType);
 
-    // Sanitize HTML content
-    html = sanitizeHtml(html);
+  // Build filename components - ENSURE agreementType is included
+  const fileNameParts = [];
 
-    // Create blob and file
-    const blob = Utilities.newBlob(html, MimeType.HTML, `${fileName}.html`);
-    const file = DriveApp.createFile(blob);
+  // Only add language prefix if it exists
+  if (langPrefix && langPrefix.length > 0) {
+    fileNameParts.push(langPrefix);
+  }
 
-    // Convert to Google Doc
-    const docFile = Drive.Files.copy(
-        {
-            title: fileName,
-            mimeType: MimeType.GOOGLE_DOCS,
-        },
-        file.getId()
-    );
+  // Add the agreement type - this is critical!
+  if (agreementType && agreementType.length > 0) {
+    fileNameParts.push(agreementType);
+  } else {
+    Logger.log("WARNING: No agreement type provided for file naming!");
+    fileNameParts.push("Document"); // Fallback if no type
+  }
 
-    file.setTrashed(true);
+  // Add the contract number
+  if (finalContractNumber) {
+    fileNameParts.push(finalContractNumber);
+  }
 
-    Logger.log("Google Docs File ID: " + docFile.id);
-    return docFile.id;
+  // Join with " - " separator
+  const fileName = fileNameParts.filter(part => part && part.length > 0).join(" - ");
+
+  Logger.log(`Final filename will be: "${fileName}"`);
+
+  // Sanitize HTML content
+  html = sanitizeHtml(html);
+
+  // Create blob and file
+  const blob = Utilities.newBlob(html, MimeType.HTML, `${fileName}.html`);
+  const file = DriveApp.createFile(blob);
+
+  // Convert to Google Doc
+  const docFile = Drive.Files.copy(
+    {
+      title: fileName,
+      mimeType: MimeType.GOOGLE_DOCS,
+    },
+    file.getId()
+  );
+
+  file.setTrashed(true);
+
+  Logger.log("Google Docs File ID: " + docFile.id);
+  return docFile.id;
 }
 
 // Also ensure processAndCreateFile is passing the data correctly
 function processAndCreateFile(docData, subfolder) {
-    if (!docData) {
-        Logger.log("processAndCreateFile skipped because docData was null.");
-        return;
-    }
+  if (!docData) {
+    Logger.log("processAndCreateFile skipped because docData was null.");
+    return;
+  }
 
-    // Destructure all needed properties from the data object
-    const {
-        agreementType, 
-        language, 
-        firstParty, 
-        counterparty,
-        contractNumber
-    } = docData;
-    
-    // Log what we're working with
-    Logger.log(`processAndCreateFile - Processing document:`);
+  // Destructure all needed properties from the data object
+  const {
+    agreementType,
+    language,
+    firstParty,
+    counterparty,
+    contractNumber
+  } = docData;
+
+  // Log what we're working with
+  Logger.log(`processAndCreateFile - Processing document:`);
+  Logger.log(`  agreementType: "${agreementType}"`);
+  Logger.log(`  language: "${language}"`);
+  Logger.log(`  contractNumber: "${contractNumber}"`);
+
+  // Ensure we have an agreement type
+  if (!agreementType) {
+    Logger.log("ERROR: No agreementType in docData!");
+    throw new Error("Missing agreementType in document data");
+  }
+
+  // Generate a number if one isn't already set
+  const finalContractNumber = contractNumber || generateContractNumber(agreementType);
+  docData.contractNumber = finalContractNumber;
+
+  Logger.log("docData going into prompt:\n" + JSON.stringify(docData, null, 2));
+
+  const role = 'This GPT is designated to generate realistic sample agreements for use during AI demonstrations. It is tailored to create agreements with specific legal language and conditions that can be analyzed to return structured information.';
+  const prompt = createPrompt(docData);
+
+  try {
+    const responseFromOpenAI = PreSalesOpenAI.executePrompt4o(role, prompt);
+
+    // Pass all parameters explicitly and verify they exist
+    Logger.log(`Calling createFileInDriveV3 with:`);
     Logger.log(`  agreementType: "${agreementType}"`);
-    Logger.log(`  language: "${language}"`);
-    Logger.log(`  contractNumber: "${contractNumber}"`);
-    
-    // Ensure we have an agreement type
-    if (!agreementType) {
-        Logger.log("ERROR: No agreementType in docData!");
-        throw new Error("Missing agreementType in document data");
-    }
+    Logger.log(`  language: "${language || 'English'}"`);
+    Logger.log(`  contractNumber: "${finalContractNumber}"`);
 
-    // Generate a number if one isn't already set
-    const finalContractNumber = contractNumber || generateContractNumber(agreementType);
-    docData.contractNumber = finalContractNumber; 
+    const newFileId = createFileInDriveV3(
+      responseFromOpenAI,
+      agreementType,
+      language || 'English',
+      finalContractNumber
+    );
 
-    Logger.log("docData going into prompt:\n" + JSON.stringify(docData, null, 2));
+    const newFile = DriveApp.getFileById(newFileId);
+    newFile.moveTo(subfolder);
+    newFile.setDescription(`Template for ${firstParty} and ${counterparty}`);
 
-    const role = 'This GPT is designated to generate realistic sample agreements for use during AI demonstrations. It is tailored to create agreements with specific legal language and conditions that can be analyzed to return structured information.';
-    const prompt = createPrompt(docData);
-
-    try {
-        const responseFromOpenAI = PreSalesOpenAI.executePrompt4o(role, prompt);
-
-        // Pass all parameters explicitly and verify they exist
-        Logger.log(`Calling createFileInDriveV3 with:`);
-        Logger.log(`  agreementType: "${agreementType}"`);
-        Logger.log(`  language: "${language || 'English'}"`);
-        Logger.log(`  contractNumber: "${finalContractNumber}"`);
-        
-        const newFileId = createFileInDriveV3(
-            responseFromOpenAI, 
-            agreementType, 
-            language || 'English', 
-            finalContractNumber
-        );
-
-        const newFile = DriveApp.getFileById(newFileId);
-        newFile.moveTo(subfolder);
-        newFile.setDescription(`Template for ${firstParty} and ${counterparty}`);
-
-    } catch (error) {
-        Logger.log(`Failed to create document for ${agreementType} with ${counterparty}. Original Error: ${error.message}`);
-        throw new Error(`Failed for ${agreementType}. Details: ${error.message}`);
-    }
+  } catch (error) {
+    Logger.log(`Failed to create document for ${agreementType} with ${counterparty}. Original Error: ${error.message}`);
+    throw new Error(`Failed for ${agreementType}. Details: ${error.message}`);
+  }
 }
 
 // Proper sanitization function
 function sanitizeHtml(html) {
-    // Strip out any leftover code block tags
-    html = html.replace(/```html|```/g, "").trim();
+  // Strip out any leftover code block tags
+  html = html.replace(/```html|```/g, "").trim();
 
-    // Escape your special markers once, globally, instead of brute-forcing 100 loops
-    html = html.replace(/<# </g, "&lt;# &lt;").replace(/> #>/g, "&gt; #&gt;");
+  // Escape your special markers once, globally, instead of brute-forcing 100 loops
+  html = html.replace(/<# </g, "&lt;# &lt;").replace(/> #>/g, "&gt; #&gt;");
 
-    return html;
+  return html;
 }
 
-// Create reference cover doc with refined formatting
+// Refactored createSubindustryReferenceDoc - Minimal, focused on subindustry-specific content only
+// Refactored createSubindustryReferenceDoc - Minimal, focused on subindustry-specific content only
 function createSubindustryReferenceDoc(requestData, subfolder) {
   try {
     const { industry, subindustry, firstParty } = requestData;
-    
-    // Get all document types for this industry/subindustry
-    const docTypes = [];
+
+    // Get ONLY industry-specific document types (no general docs)
+    const specificDocs = [];
     for (const [docType, meta] of Object.entries(DOC_TYPE_LIBRARY)) {
-      const industryMatch = meta.industries.includes(industry) || meta.industries.includes('All');
-      const subindustryMatch = !subindustry || 
-                              meta.subindustries.includes(subindustry) || 
-                              meta.subindustries.includes('All');
-      
-      if (industryMatch && subindustryMatch) {
-        docTypes.push({ name: docType, meta: meta });
+      const isSpecific = meta.category === `${industry}-Specific`;
+      const subindustryMatch = !subindustry ||
+        meta.subindustries.includes(subindustry) ||
+        meta.subindustries.includes('All');
+
+      if (isSpecific && subindustryMatch) {
+        specificDocs.push({ name: docType, meta: meta });
       }
     }
-    
-    // Sort by category for better organization
-    docTypes.sort((a, b) => {
-      if (a.meta.category !== b.meta.category) {
-        return a.meta.category.localeCompare(b.meta.category);
-      }
-      return a.name.localeCompare(b.name);
-    });
-    
-    // Separate general and specific document types
-    const generalDocs = docTypes.filter(d => 
-      d.meta.category === 'General' || d.meta.category === 'HR-Cross-Industry' || d.meta.category === 'Real Estate-Specific'
-    );
-    const specificDocs = docTypes.filter(d => 
-      d.meta.category === `${industry}-Specific`
-    );
-    
-    // Build the HTML content
+
+    // Sort alphabetically
+    specificDocs.sort((a, b) => a.name.localeCompare(b.name));
+
+    // Build minimal HTML content
     let html = `
 <!DOCTYPE html>
 <html>
@@ -189,358 +177,158 @@ function createSubindustryReferenceDoc(requestData, subfolder) {
   <style>
     body { 
       font-family: Arial, sans-serif; 
-      line-height: 1.6; 
+      line-height: 1.5; 
       color: #333; 
-      max-width: 1000px; 
-      margin: 0 auto; 
       padding: 20px;
-      background-color: #f9f9f9;
+      margin: 0;
     }
-    
-    /* Typography */
     h1 { 
-      font-size: 2.5rem; 
+      font-size: 24px; 
       color: #1a1a1a; 
-      margin: 0 0 10px 0;
-      border-bottom: 4px solid #ffc820;
-      padding-bottom: 15px;
+      margin: 0 0 20px 0;
+      border-bottom: 2px solid #ffc820;
+      padding-bottom: 10px;
+      text-align: center;
     }
     h2 { 
-      font-size: 2rem; 
+      font-size: 18px; 
       color: #2c3e50; 
-      margin: 40px 0 20px 0;
-      border-bottom: 2px solid #e0e0e0;
-      padding-bottom: 10px;
-    }
-    h3 { 
-      font-size: 1.5rem; 
-      color: #34495e; 
       margin: 30px 0 15px 0;
-      background-color: #f0f0f0;
-      padding: 10px 15px;
-      border-left: 4px solid #3498db;
+      background: #f0f0f0;
+      padding: 8px;
     }
-    h4 { 
-      font-size: 1.25rem; 
-      color: #555;
-      margin: 20px 0 10px 0;
-    }
-    
-    /* Header section */
-    .header-section {
-      background-color: #fff;
-      padding: 0px;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      margin-bottom: 30px;
-    }
-    
-    .header-section p {
-      font-size: 1.1rem;
-      line-height: 1.8;
-      color: #555;
-    }
-    
-    .metadata {
-      background-color: #f8f9fa;
-      padding: 20px;
-      border-radius: 5px;
-      margin: 20px 0;
-    }
-    
-    .metadata p {
-      margin: 5px 0;
-      font-size: 0.95rem;
-    }
-    
-    /* Document lists */
-    .doc-list-section {
-      background-color: #fff;
-      padding: 25px;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      margin-bottom: 30px;
-    }
-    
     .doc-list {
+      margin: 20px 0 40px 0;
+      padding: 15px;
+      background: #f8f9fa;
+      border-radius: 5px;
+    }
+    .doc-list ul {
+      margin: 10px 0;
+      padding-left: 20px;
       list-style: none;
-      padding: 0;
-      margin: 15px 0;
     }
-    
     .doc-list li {
-      padding: 8px 15px;
       margin: 5px 0;
-      background-color: #f8f9fa;
-      border-left: 3px solid #3498db;
-      border-radius: 3px;
-      font-size: 0.95rem;
     }
-    
-    .doc-count {
-      color: #666;
-      font-style: italic;
-      margin-left: 10px;
+    .doc-list a {
+      color: #2c3e50;
+      text-decoration: none;
+      font-weight: 500;
     }
-    
-    /* Tables */
+    .doc-list a:hover {
+      color: #3498db;
+      text-decoration: underline;
+    }
     table {
-      width: 950px;
+      width: 1000px;
       border-collapse: collapse;
-      margin: 20px auto;
-      background-color: #fff;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-      table-layout: fixed;
+      margin: 15px auto 30px auto;
     }
-    
     th {
-      background-color: #34495e;
+      background: #34495e;
       color: white;
-      padding: 12px 15px;
+      padding: 10px;
       text-align: left;
-      font-weight: 600;
-      font-size: 0.95rem;
+      font-size: 14px;
     }
-    
     th:first-child {
       width: 200px;
     }
-    
     th:last-child {
-      width: 750px;
+      width: 800px;
     }
-    
     td {
-      padding: 12px 15px;
-      border-bottom: 1px solid #e0e0e0;
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+      font-size: 13px;
       vertical-align: top;
     }
-    
-    td:first-child {
-      width: 200px;
-    }
-    
-    td:last-child {
-      width: 750px;
-    }
-    
     tr:nth-child(even) {
-      background-color: #f8f9fa;
+      background: #f8f9fa;
     }
-    
-    tr:hover {
-      background-color: #f0f0f0;
-    }
-    
     .obligation-name {
-      font-weight: 600;
-      color: #2c3e50;
-      white-space: nowrap;
+      font-weight: bold;
     }
-    
-    .examples-cell {
-      padding-left: 20px;
-    }
-    
     .example {
-      margin: 8px 0;
-      padding: 8px 12px;
-      background-color: #f9f9f9;
-      border-left: 2px solid #ddd;
-      font-size: 0.9rem;
-      line-height: 1.5;
-      color: #555;
+      margin: 6px 0;
       font-style: italic;
+      color: #555;
+      line-height: 1.4;
     }
-    
     .example-number {
       font-weight: bold;
       color: #3498db;
       margin-right: 5px;
     }
-    
-    /* Document type section */
-    .doc-type-section {
-      background-color: #fff;
-      padding: 25px;
-      margin: 30px 0;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    
-    .doc-meta {
-      background-color: #f8f9fa;
-      padding: 15px;
-      border-radius: 5px;
-      margin: 15px 0;
-      font-size: 0.9rem;
-      color: #666;
-    }
-    
-    .no-obligations {
-      padding: 20px;
-      text-align: center;
-      color: #999;
-      font-style: italic;
-      background-color: #f8f9fa;
-      border-radius: 5px;
-    }
-    
-    /* Footer */
-    .footer {
-      margin-top: 60px;
-      padding: 30px;
-      background-color: #2c3e50;
-      color: #ecf0f1;
-      text-align: center;
-      border-radius: 8px;
-      font-size: 0.9rem;
-    }
-    
-    .footer p {
-      margin: 5px 0;
-    }
-    
-    /* Docusign branding */
-    .docusign-yellow {
-      color: #ffc820;
-    }
-    
-    @media print {
-      body {
-        background-color: white;
-      }
-      .header-section, .doc-list-section, .doc-type-section {
-        box-shadow: none;
-        border: 1px solid #ddd;
-      }
-    }
   </style>
 </head>
 <body>
-  <h1>Document Type Reference Guide</h1>
-  
-  <div class="header-section">
-    <h2>About This Reference Guide</h2>
-    <p>The documents created for <strong>${firstParty}</strong> are specifically designed to include language and structured data that can be extracted using <strong class="docusign-yellow">Docusign Iris</strong>, our advanced AI-powered agreement analysis platform.</p>
-    <p>Each document type contains industry-specific terms, obligations, and clauses that demonstrate how Docusign Iris can identify, extract, and analyze key contract data points, helping you manage agreements more efficiently and reduce risk.</p>
-    
-    <div class="metadata">
-      <p><strong>Generated for:</strong> ${firstParty}</p>
-      <p><strong>Industry:</strong> ${industry}</p>
-      <p><strong>Subindustry:</strong> ${subindustry || 'All Subindustries'}</p>
-      <p><strong>Generated on:</strong> ${new Date().toLocaleString()}</p>
-      <p><strong>Total Document Types Available:</strong> ${docTypes.length}</p>
-    </div>
-  </div>
-  
-  <div class="doc-list-section">
-    <h2>Document Types</h2>
-    <p><em>Note: Document generation is randomized. The more documents you request, the greater variety you'll see in your generated set.</em></p>
-    
-    <h3>General Document Types <span class="doc-count">(${generalDocs.length} available)</span></h3>
-    <ul class="doc-list">
-`;
+  <h1>${industry} - ${subindustry || 'All Subindustries'} Document Reference</h1>
+  <p style="text-align: center; color: #666; margin: 20px 0; font-size: 14px;">
+  This reference guide displays the industry-specific document types and their associated obligations that will be included in your generated documents.
+</p>
+  <div class="doc-list">
+    <strong>Custom Document Types (${specificDocs.length}):</strong>
+    <ul>`;
 
-    // Add general documents
-    generalDocs.forEach(doc => {
-      html += `      <li>${doc.name}</li>\n`;
+    // Add document type list with links
+    specificDocs.forEach(({ name, meta }) => {
+      const anchorId = name.replace(/[^a-zA-Z0-9]/g, '_');
+      html += `\n      <li><a href="#${anchorId}">${name} (${meta.key})</a></li>`;
     });
 
-    html += `    </ul>
-    
-    <h3>${industry}-Specific Document Types <span class="doc-count">(${specificDocs.length} available)</span></h3>
-    <ul class="doc-list">
-`;
-
-    // Add specific documents
-    specificDocs.forEach(doc => {
-      html += `      <li>${doc.name}</li>\n`;
-    });
-
-    html += `    </ul>
+    html += `
+    </ul>
   </div>
-  
-  <h2>Document Obligation Types</h2>
 `;
 
-    // Process industry-specific documents first
-    let currentCategory = '';
-    
-    // Start with industry-specific docs
-    const orderedDocs = [...specificDocs, ...generalDocs];
-    
-    orderedDocs.forEach(({ name, meta }) => {
-      // Add category header if it changed
-      if (meta.category !== currentCategory) {
-        currentCategory = meta.category;
-        html += `  <h3 style="margin-top: 50px;">${currentCategory} Documents</h3>\n`;
-      }
-      
-      html += `  <div class="doc-type-section">`;
-      html += `    <h3>${name}</h3>`;
-      
-      html += `    <div class="doc-meta">`;
-      html += `      <strong>Contract Prefix:</strong> ${meta.key} | `;
-      html += `      <strong>Description:</strong> ${meta.description}`;
-      if (meta.noTerm) {
-        html += ` | <strong>Type:</strong> One-time document (no term)`;
-      }
-      html += `    </div>`;
-      
-      // Add obligations table
+    // Process each document type
+    specificDocs.forEach(({ name, meta }) => {
+      const anchorId = name.replace(/[^a-zA-Z0-9]/g, '_');
+      html += `  <h2 id="${anchorId}">${name} (${meta.key})</h2>\n`;
+
+      // Only show obligations table if there are obligations
       if (meta.obligations && meta.obligations.length > 0) {
-        html += `    <h4>Obligations & Terms (${meta.obligations.length} defined)</h4>`;
-        html += `    <table>`;
-        html += `      <thead>`;
-        html += `        <tr>`;
-        html += `          <th>Obligation Type</th>`;
-        html += `          <th>Example Language</th>`;
-        html += `        </tr>`;
-        html += `      </thead>`;
-        html += `      <tbody>`;
-        
+        html += `  <table>\n`;
+        html += `    <thead>\n`;
+        html += `      <tr>\n`;
+        html += `        <th>Obligation Type</th>\n`;
+        html += `        <th>Example Language</th>\n`;
+        html += `      </tr>\n`;
+        html += `    </thead>\n`;
+        html += `    <tbody>\n`;
+
+        // Show all obligations
         meta.obligations.forEach(oblKey => {
-          const oblText = OBL_TEXT[oblKey];
-          if (oblText) {
-            html += `        <tr>`;
-            html += `          <td class="obligation-name">${oblKey}</td>`;
-            html += `          <td class="examples-cell">`;
-            
-            // Generate examples
-            const examples = generateObligationExamples(oblKey, firstParty);
+          const examples = generateObligationExamples(oblKey, firstParty);
+          if (examples && examples.length > 0) {
+            html += `      <tr>\n`;
+            html += `        <td class="obligation-name">${oblKey}</td>\n`;
+            html += `        <td>\n`;
+            // Show all three examples
             examples.forEach((example, idx) => {
-              html += `            <div class="example"><span class="example-number">${idx + 1}.</span> ${example}</div>`;
+              html += `          <div class="example"><span class="example-number">${idx + 1}.</span> ${example}</div>\n`;
             });
-            
-            html += `          </td>`;
-            html += `        </tr>`;
+            html += `        </td>\n`;
+            html += `      </tr>\n`;
           }
         });
-        
-        html += `      </tbody>`;
-        html += `    </table>`;
-      } else {
-        html += `    <div class="no-obligations">No specific obligations defined for this document type</div>`;
+
+        html += `    </tbody>\n`;
+        html += `  </table>\n`;
       }
-      
-      html += `  </div>`;
     });
-    
+
     html += `
-  <div class="footer">
-    <p><strong>Docusign Iris Reference Guide</strong></p>
-    <p>This document demonstrates the types of agreements and contract language that can be analyzed by Docusign Iris.</p>
-    <p>© ${new Date().getFullYear()} Docusign, Inc. All rights reserved.</p>
-  </div>
 </body>
 </html>`;
 
     // Create the file
-    const fileName = `Reference Guide - ${industry} - ${subindustry || 'All'}`;
+    const fileName = `${industry}_${subindustry || 'All'}_Reference`;
     const blob = Utilities.newBlob(html, MimeType.HTML, `${fileName}.html`);
     const file = DriveApp.createFile(blob);
-    
+
     // Convert to Google Doc
     const docFile = Drive.Files.copy(
       {
@@ -549,20 +337,18 @@ function createSubindustryReferenceDoc(requestData, subfolder) {
       },
       file.getId()
     );
-    
+
     file.setTrashed(true);
-    
-    // Move to the same folder as the generated documents
+
+    // Move to folder
     const newFile = DriveApp.getFileById(docFile.id);
     newFile.moveTo(subfolder);
-    newFile.setDescription(`Reference guide for ${industry} - ${subindustry || 'All'} document types`);
-    
+
     Logger.log(`Created reference document: ${fileName}`);
     return docFile.id;
-    
+
   } catch (error) {
     Logger.log(`Error creating reference document: ${error.message}`);
-    // Don't throw - this is supplementary, shouldn't stop main process
   }
 }
 
@@ -571,7 +357,7 @@ function generateObligationExamples(obligationType, companyName) {
   // First, check if we have specific examples
   const specificExamples = getSpecificExamples(obligationType, companyName);
   if (specificExamples) return specificExamples;
-  
+
   // Otherwise, generate based on patterns and keywords
   return generatePatternBasedExamples(obligationType, companyName);
 }
@@ -611,14 +397,14 @@ function getSpecificExamples(obligationType, companyName) {
       `Any changes to PCI compliance status shall be reported to ${companyName} within 5 business days.`
     ]
   };
-  
+
   return examples[obligationType] || null;
 }
 
 // Pattern-based example generator for complete coverage
 function generatePatternBasedExamples(obligationType, companyName) {
   const obligation = obligationType.toLowerCase();
-  
+
   // Categorize by keywords and patterns
   if (obligation.includes('compliance') || obligation.includes('regulatory')) {
     return generateComplianceExamples(obligationType, companyName);
@@ -760,7 +546,7 @@ function generateDefaultExamples(obligationType, companyName) {
 // Helper function to extract action words from obligation types
 function extractActionWord(obligationType) {
   const obligation = obligationType.toLowerCase();
-  
+
   if (obligation.includes('deliver')) return 'fulfill';
   if (obligation.includes('payment')) return 'process';
   if (obligation.includes('report')) return 'provide';
@@ -770,7 +556,7 @@ function extractActionWord(obligationType) {
   if (obligation.includes('monitor')) return 'track';
   if (obligation.includes('verify')) return 'validate';
   if (obligation.includes('manage')) return 'oversee';
-  
+
   return 'implement'; // default action
 }
 
@@ -803,7 +589,7 @@ function generateSpecializedExamples(obligationType, companyName) {
       `${companyName} shall approve all Breach Notification communications to affected individuals or regulatory authorities.`
     ]
   };
-  
+
   return specializedExamples[obligationType] || null;
 }
 
@@ -812,11 +598,11 @@ function generateObligationExamples(obligationType, companyName) {
   // Try specialized examples first
   const specialized = generateSpecializedExamples(obligationType, companyName);
   if (specialized) return specialized;
-  
+
   // Then try specific examples
   const specific = getSpecificExamples(obligationType, companyName);
   if (specific) return specific;
-  
+
   // Finally use pattern-based generation
   return generatePatternBasedExamples(obligationType, companyName);
 }

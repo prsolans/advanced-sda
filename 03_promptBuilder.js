@@ -112,11 +112,24 @@ United States: Washington, D.C.
 }
 
 function getPromptObjective(industry, firstParty, language) {
+    // Add language-specific instructions
+    let languageInstructions = "";
+    
+    if (language && language !== "English") {
+        languageInstructions = `
+
+Language-Specific Requirements for ${language}:
+- Generate ALL content in ${language}, including headers, legal terms, and body text
+- Use appropriate legal terminology and phrasing standard in ${language} legal documents
+- Apply ${language}-specific formatting conventions for dates, numbers, and currency
+- Ensure proper grammar, punctuation, and capitalization rules for ${language}
+- Translate all legal concepts accurately while maintaining their legal validity in ${language}
+`;
+    }
 
     const objective = `Objective:
-To generate Word documents with contractual information in ${language}. These documents should reflect the specific context of ${firstParty}, a company based in [Country], operating in the ${industry} sector. Each document must be comprehensive, realistic, compliant with professional legal practices, and adapted to the company’s activities in ${industry}. Where applicable, the documents must include relevant local regulations specific to the ${industry} and [country], such as BaFin in Germany or GDPR in the EU. Additionally, all monetary values in the documents must use the currency consistent with the country where the agreement applies (e.g., euros for France, pounds for the UK, etc.). Any numbers should be written out in words, followed by the numerical form in parentheses, wherever possible (e.g., "thirty (30) days").Dates should be formatted according to the [country]’s standard date format (e.g., dd/mm/yyyy for France, mm/dd/yyyy for the United States, etc.).
-
-  `;
+To generate Word documents with contractual information in ${language}. These documents should reflect the specific context of ${firstParty}, a company based in [Country], operating in the ${industry} sector. ${languageInstructions} Each document must be comprehensive, realistic, compliant with professional legal practices...`;
+    
     return objective;
 }
 
