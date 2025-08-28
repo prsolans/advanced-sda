@@ -1,10 +1,7 @@
 // 07_main.js (Updated to handle subindustry reference document)
 function submitSampleRequest(e) {
-    Logger.log("=== submitSampleRequest STARTED ===");
-    Logger.log("Script Version: 1.0"); // Add a version number to confirm deployment
-
     if (!e || !e.source) {
-        Logger.log("Function called without a valid event trigger.");
+        Logger.log("ERROR: Function called without a valid event trigger.");
         return;
     }
     const pick = arr => arr[Math.floor(Math.random() * arr.length)];
@@ -66,29 +63,11 @@ function submitSampleRequest(e) {
         let subindustryReferenceUrl = null;
 
         // Create subindustry reference document (stored in REFERENCE_DOC_FOLDER_ID)
-        Logger.log("=== BEFORE REFERENCE DOC CHECK ===");
-        Logger.log("Line reached: 60");
-        Logger.log("requestData exists: " + (requestData ? "YES" : "NO"));
-        Logger.log("requestData.industry raw value: [" + requestData.industry + "]");
-        Logger.log("requestData.industry type: " + typeof requestData.industry);
-
-        // Try without the if condition first
-        Logger.log("Attempting to call createSubindustryReferenceDoc directly...");
         try {
-            const testResult = createSubindustryReferenceDoc(requestData);
-            Logger.log("Direct call returned: " + testResult);
+            subindustryReferenceUrl = createSubindustryReferenceDoc(requestData);
         } catch (e) {
-            Logger.log("Direct call failed: " + e.message);
+            Logger.log("Could not create subindustry reference document: " + e.message);
         }
-
-        // Now try with the condition
-        if (requestData.industry) {
-            Logger.log("INSIDE IF BLOCK - This should appear if industry exists");
-        } else {
-            Logger.log("INDUSTRY IS FALSY: [" + requestData.industry + "]");
-        }
-
-        Logger.log("=== AFTER REFERENCE DOC CHECK ===");
 
         if (requestData.createSets === true) {
             const numSets = Math.floor(requestData.quantity / 5);
@@ -119,16 +98,12 @@ function submitSampleRequest(e) {
                     linkParentContracts(docData, parents);
                     setDocuments.push(docData); // Add to set documents array
 
-                    Logger.log("Doc Data: " + JSON.stringify(docData, null, 2));
                     processAndCreateFile(docData, subfolder);
                 }
 
                 // Create contract set reference document for first set only (stored in REFERENCE_DOC_FOLDER_ID)
                 if (setIndex === 0) {
                     referenceDocUrl = createReferenceDocument(setDocuments, setCounterparty, requestData);
-                    if (referenceDocUrl) {
-                        Logger.log("Contract set reference document created: " + referenceDocUrl);
-                    }
                 }
             }
 
@@ -147,11 +122,6 @@ function submitSampleRequest(e) {
 
         statusRange.setValue(successMessage);
 
-        Logger.log("=== About to send Slack notification ===");
-        Logger.log("Folder URL: " + subfolder.getUrl());
-        Logger.log("Subindustry Reference URL: " + subindustryReferenceUrl);
-        Logger.log("Contract Set Reference URL: " + referenceDocUrl);
-
         // Send Slack notification with both reference document URLs if available
         sendSlackNotificationWithReferences(
             requestData.email,
@@ -162,10 +132,8 @@ function submitSampleRequest(e) {
             subindustryReferenceUrl
         );
 
-        Logger.log("Slack notification sent with folder link and reference documents.");
-
     } catch (error) {
-        Logger.log(`Error processing request in row ${firstRow}: ${error.message}`);
+        Logger.log(`ERROR: Processing request in row ${firstRow}: ${error.message}`);
         statusRange.setValue(`Error: ${error.message}`);
     }
 }

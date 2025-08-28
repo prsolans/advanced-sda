@@ -11,6 +11,15 @@ class PromptEngineV2 {
     this.cache = new Map();
     this.initialized = false;
     this.init();
+    
+    // Initialize enhanced cache manager for performance (if available)
+    try {
+      if (typeof DocumentCache !== 'undefined') {
+        DocumentCache.init();
+      }
+    } catch (error) {
+      Logger.log('Cache manager not available, continuing with basic caching');
+    }
   }
 
   init() {
@@ -52,20 +61,14 @@ class PromptEngineV2 {
       }
     };
 
-    // Cache standard formatting rules to eliminate redundancy
+    // Cache essential content rules only (formatting handled in post-processing)
     this.cachedRules = {
-      htmlFormatting: `<style>p{margin:0;line-height:1.15;space-after:24pt}strong{font-weight:bold}</style>`,
-      
-      structureTemplate: `<p><strong>1. CONFIDENTIALITY</strong></p><p>Company A agrees to maintain the confidentiality of all proprietary information disclosed by Company B during the term of this agreement.</p><p>Such confidential information shall not be disclosed to any third party without prior written consent of the disclosing party.</p>`,
-
-      coreRules: 'Use real addresses/dates/amounts | 3-4 <p> tags per section | Bold headers: <p><strong>N. TITLE</strong></p> | 24pt spaceAfter',
+      contentRules: 'Use real addresses/dates/amounts | Professional legal language | Complete paragraphs only | Start with agreement content directly | Follow specified language requirements strictly',
 
       placeholderReplacements: {
         '[Effective Date]': 'ACTUAL_DATE',
         '[Address]': 'FULL_REALISTIC_ADDRESS', 
-        '[Amount]': 'SPECIFIC_CURRENCY_AMOUNT',
-        '[State]': 'APPROPRIATE_STATE_PROVINCE',
-        '[Country]': 'GEOGRAPHY_COUNTRY'
+        '[Amount]': 'SPECIFIC_CURRENCY_AMOUNT'
       }
     };
 
@@ -220,9 +223,6 @@ class PromptEngineV2 {
     const startTime = Date.now();
     
     try {
-      Logger.log(`=== PromptEngineV2 Processing ===`);
-      Logger.log(`Input docData: ${JSON.stringify(docData, null, 2)}`);
-      
       // Build the core specification
       const spec = {
         meta: {
@@ -237,18 +237,11 @@ class PromptEngineV2 {
         output: this.buildOutputSection(docData)
       };
 
-      Logger.log(`Built specification sections successfully`);
-      Logger.log(`Document section: ${JSON.stringify(spec.document, null, 2)}`);
-      Logger.log(`Context section: ${JSON.stringify(spec.context, null, 2)}`);
-
       // Format as optimized prompt
       const prompt = this.formatAsPrompt(spec, docData);
       
       const elapsed = Date.now() - startTime;
-      Logger.log(`PromptEngineV2 generated prompt in ${elapsed}ms`);
-      Logger.log(`=== COMPLETE PROMPT (${prompt.length} chars) ===`);
-      Logger.log(prompt);
-      Logger.log(`=== END PROMPT ===`);
+      Logger.log(`PromptEngineV2: Generated ${docData.agreementType} prompt in ${elapsed}ms (${prompt.length} chars)`);
       
       return prompt;
       
@@ -397,101 +390,19 @@ class PromptEngineV2 {
   }
 
   buildOutputSection(docData) {
-    // Get randomized styling elements
-    const fontSizes = [10, 11, 12];
-    const fontFamilies = ['Arial', 'Times New Roman', 'Calibri'];
-    const selectedFontSize = fontSizes[Math.floor(Math.random() * fontSizes.length)];
-    const selectedFontFamily = fontFamilies[Math.floor(Math.random() * fontFamilies.length)];
-    
+    const language = docData.language || 'English';
     return {
-      format: "HTML",
-      compatibility: "Google Docs",
-      styling: {
-        body: {
-          fontFamily: selectedFontFamily,
-          fontSize: `${selectedFontSize}pt`,
-          lineHeight: Math.round(selectedFontSize * 1.15),
-          marginBottom: "12pt"
-        },
-        header: {
-          titleSize: `${selectedFontSize + 3}pt`,
-          contractSize: `${selectedFontSize}pt`,
-          alignment: "center",
-          titleWeight: "bold",
-          titleTransform: "uppercase",
-          letterSpacing: "1pt",
-          color: "#666"
-        }
-      },
-      structure: {
-        mandatoryHeader: {
-          format: `<div style="text-align: center; margin-bottom: 30pt; page-break-inside: avoid;">
-<h1 style="font-family: ${selectedFontFamily}; font-size: ${selectedFontSize + 3}pt; font-weight: bold; margin-bottom: 9pt; text-transform: uppercase; letter-spacing: 1pt;">${docData.agreementType.toUpperCase()}</h1>
-<h2 style="font-family: ${selectedFontFamily}; font-size: ${selectedFontSize}pt; font-weight: normal; margin-bottom: 15pt; color: #666;">${docData.contractNumber || 'CONTRACT-NUMBER'}</h2>
-</div>`,
-          description: "CRITICAL: Every document MUST begin with this exact header structure before any body text"
-        },
-        sections: [
-          {
-            name: "Preamble and Recitals",
-            requirement: "Begin with preamble identifying parties and Effective Date. Follow with 'Whereas' clauses explaining business context",
-            format: "Complete paragraphs only, no bullet points"
-          },
-          {
-            name: "Definitions",
-            requirement: "Numbered definitions section immediately after recitals. Define all key terms used throughout agreement",
-            format: "Each definition as separate numbered paragraph"
-          },
-          {
-            name: "Core Business Terms",
-            requirement: "Scope of services, payment terms, deliverables specific to industry",
-            format: "Detailed paragraphs with extensive legal language"
-          },
-          {
-            name: "Term and Termination",
-            requirement: "Industry-appropriate notice periods and termination conditions",
-            format: "Multiple paragraphs covering all termination scenarios"
-          },
-          {
-            name: "Representations and Warranties",
-            requirement: "Industry-specific representations and warranties",
-            format: "Comprehensive paragraphs with detailed representations"
-          },
-          {
-            name: "Risk Allocation",
-            requirement: "Indemnification and limitation of liability appropriate for industry",
-            format: "Detailed legal paragraphs explaining risk allocation"
-          },
-          {
-            name: "Miscellaneous/Boilerplate",
-            requirement: "Standard legal clauses: Governing Law, Notices, Assignment, Force Majeure, Entire Agreement, Severability",
-            format: "Group all standard clauses in final section"
-          },
-          {
-            name: "Signatures",
-            requirement: "Proper signature blocks for authorized representatives",
-            format: "Formatted signature lines with name, title, date fields"
-          }
-        ]
-      },
-      contentRequirements: [
-        "EXTENSIVE DETAIL: Each section must include 3-4 well-structured paragraphs of formal legal language",
-        "NO BULLET POINTS: All content in complete paragraphs only - Never use bullet points or numbered lists in content",
-        "NO PLACEHOLDERS: All terms finalized with realistic data - No [brackets] or placeholder text",
-        "PARAGRAPH STRUCTURE: Use HTML <p> tags to create distinct paragraphs - Each paragraph 3-5 sentences",
-        "SECTION HEADERS: Use bold text in <strong> tags at same font size as body text for section titles", 
-        "INDUSTRY-SPECIFIC: Include industry terminology and business practices throughout",
-        "COMPREHENSIVE: 8-12 pages of substantive legal content with detailed explanations",
-        "PROFESSIONAL: Mirror quality of top-tier law firm documents with sophisticated legal language",
-        "REALISTIC SAMPLE DATA: Include specific dollar amounts, dates, addresses, and business terms"
+      format: "JSON",
+      requirements: [
+        "Valid JSON structure only",
+        `ALL content must be in ${language} - section titles, legal terms, and body text`,
+        `Use proper ${language} legal terminology and formatting conventions`,
+        language !== 'English' ? `NEVER mix English with ${language} - translate ALL terms including "Agreement", "Company", "Corporation", "Effective Date"` : 'Use professional English legal terminology',
+        "Complete business terms in sections", 
+        "Industry-appropriate terminology",
+        "No placeholder text - use realistic data"
       ],
-      htmlRequirements: [
-        "Use semantic markup with proper font styling",
-        "Include margin and spacing specifications",
-        "Ensure Google Docs conversion compatibility",
-        "Apply consistent formatting throughout document",
-        "Use h1 for document title only, bold <strong> tags for section headers at body text size"
-      ]
+      sections: "Standard legal document structure with comprehensive coverage of all business terms"
     };
   }
 
@@ -537,9 +448,6 @@ class PromptEngineV2 {
       this.sectionCache.addressExamples[keyData.geography] : 
       ['123 Main St, Anytown, USA', '456 Business Ave, Commerce City, USA'];
     
-    // Debug signature cache access
-    Logger.log(`DEBUG: Geography=${keyData.geography}, sectionCache exists=${!!this.sectionCache}, signatureBlocks exists=${!!this.sectionCache?.signatureBlocks}, geography key exists=${!!this.sectionCache?.signatureBlocks?.[keyData.geography]}`);
-    
     const signatureOptions = this.sectionCache?.signatureBlocks?.[keyData.geography] || 
       this.sectionCache?.signatureBlocks?.['NAMER'] || 
       [{ name: 'John Smith', title: 'Chief Executive Officer' }, { name: 'Jane Doe', title: 'President' }];
@@ -554,43 +462,72 @@ class PromptEngineV2 {
     const companyBSigOptions = signatureOptions && signatureOptions.length > 1 ? signatureOptions.slice(1) : [{ name: 'Jane Doe', title: 'President' }];
     const companyBSignature = companyBSigOptions.length > 0 ? companyBSigOptions[Math.floor(Math.random() * companyBSigOptions.length)] : { name: 'Jane Doe', title: 'President' };
     
-    // Debug selected signatures
-    Logger.log(`DEBUG: Selected signatures - Company A: ${companyASignature.name}, ${companyASignature.title} | Company B: ${companyBSignature.name}, ${companyBSignature.title}`);
-    
     // Get agreement-specific section template with fallback
     const sectionTemplate = this.getSectionTemplate ? this.getSectionTemplate(keyData.type) : 'Preamble|Recitals|Definitions|Core Terms|Obligations|Term|Miscellaneous|Signatures';
     
-    // Ultra-compressed prompt using all cached elements
-    const prompt = `Generate: ${keyData.type}
+    // Generate financial values if appropriate for this document type
+    let financialSection = '';
+    if (this.shouldIncludeFinancialValues(keyData.type)) {
+      const financialValues = this.generateFinancialValues(keyData.type, keyData.industry, keyData.geography);
+      financialSection = `
+FINANCIAL TERMS:
+Contract Value: ${financialValues.contractValue}
+Deposit: ${financialValues.depositAmount}, Due: ${financialValues.depositDue}
+Payment: ${financialValues.oneTimeAmount}, Due: ${financialValues.firstPaymentDue}
+Monthly: ${financialValues.monthlyAmount}`;
+    }
+
+    // Context-rich prompt using all built data - REQUEST JSON STRUCTURE
+    const prompt = `Generate JSON document structure for: ${keyData.type}
 ${keyData.industry}/${keyData.subindustry}|${keyData.geography}|${keyData.language}
 ${keyData.parties.first.name}↔${keyData.parties.counter.name}
 ${keyData.parent ? `Parent:${keyData.parent.type}#${keyData.parent.number}\n` : ''}
 
-${spec.output.structure.mandatoryHeader.format}${this.cachedRules.htmlFormatting}
+OUTPUT: Valid JSON with this structure:
+{
+  "documentType": "${keyData.type}",
+  "preamble": {
+    "content": "complete preamble HTML in ${keyData.language} with proper party identification and effective date",
+    "parties": [{"name": "string", "type": "Corporation|LLC|etc", "jurisdiction": "string"}],
+    "effectiveDate": "readable date"
+  },
+  "recitals": ["array of whereas statements in ${keyData.language}"],
+  "sections": [
+    {
+      "number": "1", 
+      "title": "SECTION NAME in ${keyData.language}",
+      "paragraphs": ["array of paragraph text in ${keyData.language}"]
+    }
+  ]
+}
 
-RULES: ${this.cachedRules.coreRules}
+LANGUAGE REQUIREMENT: ${keyData.language !== 'English' ? `
+CRITICAL: Generate 100% of content in ${keyData.language} only. This includes:
+- Document preamble: "ESTE ACUERDO" not "THIS ACUERDO" 
+- Legal terms: "Acuerdo" not "Agreement", "Fecha de Entrada en Vigor" not "Effective Date"
+- Entity types: "Corporación" not "Corporation", "Sociedad" not "LLC"  
+- Jurisdictions: Translate country names to ${keyData.language}
+- All parenthetical terms must be in ${keyData.language}
+- NO English words mixed with ${keyData.language} content
+Use proper ${keyData.language} legal terminology throughout.` : 'Generate content in English with professional legal terminology.'}
 
-ADDRESSES (NO PLACEHOLDERS):
+CONTENT: Professional legal language | Real data only | Complete business terms${keyData.language !== 'English' ? ` | Example preamble format for ${keyData.language}: "ESTE ACUERDO DE [TIPO] (el "Acuerdo") se celebra a partir del [FECHA] (la "Fecha de Entrada en Vigor") entre: [EMPRESA], una Corporación organizada bajo las leyes de [PAÍS] (la "Compañía"); y [CONTRAPARTE], una Corporación organizada bajo las leyes de [PAÍS] (la "Contraparte");"` : ''}
+
+CONTEXT:
+Industry: ${subindustryGuidance}
+Business: ${spec.context.industry.businessExamples || 'standard business operations'}
+Regulations: ${spec.context.industry.regulations.join(', ')}
+Legal System: ${spec.context.geography.legalSystem}
+Currency: ${spec.context.geography.currencySymbol} (${spec.context.geography.exampleAmount})
+Date Format: ${spec.context.geography.dateFormat}
+
+ADDRESSES:
 ${keyData.parties.first.name}: ${companyAAddress}
-${keyData.parties.counter.name}: ${companyBAddress}
+${keyData.parties.counter.name}: ${companyBAddress}${financialSection}
 
-SIGNATURE BLOCKS:
-${keyData.parties.first.name}: ${companyASignature.name}, ${companyASignature.title}
-${keyData.parties.counter.name}: ${companyBSignature.name}, ${companyBSignature.title}
-
-REPLACE: [Effective Date]→${dynamicData.effectiveDate} | [Amount]→${keyData.currency} amounts | [State]→${geoData.country} regions
-
-TEMPLATE: ${this.cachedRules.structureTemplate}
-
-SECTIONS: ${sectionTemplate}
-
-OBLIGATIONS: ${keyData.obligations.slice(0,2).join(',')}
-
-INDUSTRY: ${subindustryGuidance.substring(0, 120)}...
-
-TERMS: ${dynamicData.instructions}
-
-Font: ${spec.output.styling.body.fontFamily} ${spec.output.styling.body.fontSize}
+EFFECTIVE: ${dynamicData.effectiveDate}
+SECTIONS: ${sectionTemplate.replace('|Signatures', '')}
+OBLIGATIONS: ${keyData.obligations.join(', ')}
 
 BEGIN:`;
 
@@ -640,6 +577,105 @@ BEGIN:`;
     const pattern = new RegExp(`${fieldName}:\\s*\\$([\\d,]+)`);
     const match = instructionStr.match(pattern);
     return match ? match[1] : null;
+  }
+
+  // Generate geography and industry appropriate financial values
+  generateFinancialValues(agreementType, industry, geography) {
+    const geo = this.geographyMap[geography] || this.geographyMap['NAMER'];
+    
+    // Industry-based value ranges
+    const industryRanges = {
+      'Healthcare': { min: 100000, max: 2000000, depositRate: 0.15 },
+      'Financial Services': { min: 250000, max: 5000000, depositRate: 0.20 },
+      'Technology': { min: 75000, max: 1500000, depositRate: 0.10 },
+      'Energy': { min: 500000, max: 10000000, depositRate: 0.25 },
+      'Manufacturing': { min: 200000, max: 3000000, depositRate: 0.20 },
+      'Real Estate': { min: 1000000, max: 50000000, depositRate: 0.10 },
+      'default': { min: 50000, max: 500000, depositRate: 0.15 }
+    };
+
+    // Document type multipliers
+    const docTypeMultipliers = {
+      'MSA': 1.5,
+      'Investment Advisory': 3.0,
+      'Supply Agreement': 2.0,
+      'Cloud Services': 1.2,
+      'Consulting': 0.8,
+      'License': 0.7,
+      'SOW': 1.0
+    };
+
+    // Get base ranges
+    const range = industryRanges[industry] || industryRanges['default'];
+    
+    // Find document type multiplier
+    let multiplier = 1.0;
+    for (const [docKey, mult] of Object.entries(docTypeMultipliers)) {
+      if (agreementType.includes(docKey)) {
+        multiplier = mult;
+        break;
+      }
+    }
+
+    // Calculate adjusted ranges
+    const adjustedMin = Math.floor(range.min * multiplier);
+    const adjustedMax = Math.floor(range.max * multiplier);
+    
+    // Generate main contract value
+    const contractValue = Math.floor(Math.random() * (adjustedMax - adjustedMin)) + adjustedMin;
+    
+    // Generate related amounts
+    const depositAmount = Math.floor(contractValue * range.depositRate);
+    const oneTimeAmount = Math.floor(contractValue * (0.05 + Math.random() * 0.15)); // 5-20% of contract
+    const monthlyAmount = Math.floor(contractValue * (0.02 + Math.random() * 0.08)); // 2-10% monthly
+    
+    // Generate dates in geography-appropriate format
+    const today = new Date();
+    const depositDue = new Date(today.getTime() + Math.floor(Math.random() * 90) * 24 * 60 * 60 * 1000); // 0-90 days
+    const firstPaymentDue = new Date(today.getTime() + Math.floor(Math.random() * 180) * 24 * 60 * 60 * 1000); // 0-180 days
+
+    // Format amounts with proper currency
+    const formatAmount = (amount) => {
+      const formatted = amount.toLocaleString();
+      if (geo.currency === 'EUR') {
+        return `€${formatted} EUR`;
+      } else if (geo.currency === 'USD') {
+        return `$${formatted} USD`;
+      } else {
+        return `${geo.currencySymbol}${formatted}`;
+      }
+    };
+
+    return {
+      contractValue: formatAmount(contractValue),
+      depositAmount: formatAmount(depositAmount), 
+      oneTimeAmount: formatAmount(oneTimeAmount),
+      monthlyAmount: formatAmount(monthlyAmount),
+      depositDue: this.formatDateForGeography(depositDue, geography),
+      firstPaymentDue: this.formatDateForGeography(firstPaymentDue, geography),
+      rawContractValue: contractValue
+    };
+  }
+
+  // Determine which document types should include financial values
+  shouldIncludeFinancialValues(agreementType) {
+    const financialDocTypes = [
+      'SOW', 'Statement of Work',
+      // MSA removed - payment terms only, no specific values
+      'Consulting Agreement',
+      'Service Agreement', 
+      'Supply Agreement',
+      'Investment Advisory',
+      'Cloud Services',
+      'Software License',
+      'API Terms',
+      'SaaS Agreement',
+      'Clinical Trial'
+    ];
+
+    return financialDocTypes.some(docType => 
+      agreementType.toLowerCase().includes(docType.toLowerCase())
+    );
   }
 
   determinePartyRole(agreementType, party) {
@@ -756,25 +792,20 @@ BEGIN:`;
   }
 
   getSubindustryGuidance(subindustry) {
-    const guidanceMap = {
-      "Wealth Management": "Focus on fiduciary responsibilities, fee transparency, and regulatory compliance with SEC and state investment advisor requirements. Include provisions for investment policy statements and performance reporting.",
-      "SaaS": "Emphasize data security, service level agreements, API governance, and GDPR compliance. Include provisions for data processing, user access controls, and system availability guarantees.",
-      "Healthcare IT": "Prioritize HIPAA compliance, patient data protection, and interoperability standards. Include provisions for electronic health records, audit trails, and emergency access procedures.",
-      "Digital Health": "Focus on FDA software as medical device regulations, clinical validation, and patient safety. Include provisions for data integrity, clinical workflows, and regulatory submissions.",
-      "Telehealth": "Emphasize state licensing requirements, patient consent, and emergency protocols. Include provisions for cross-state practice, technology standards, and clinical documentation.",
-      "Automotive": "Focus on quality standards (IATF 16949), supply chain security, and automotive safety regulations. Include provisions for just-in-time delivery, tooling requirements, and recall procedures.",
-      "Solar": "Emphasize system performance guarantees, utility interconnection standards, and renewable energy compliance. Include provisions for net metering, permitting, and environmental impact.",
-      "Wind": "Focus on environmental impact assessments, grid interconnection, and turbine certification. Include provisions for wind resource assessments, power purchase agreements, and decommissioning.",
-      "Banking": "Focus on federal banking regulations, FDIC compliance, and anti-money laundering requirements. Include provisions for deposit insurance, regulatory reporting, and customer due diligence.",
-      "Insurance": "Emphasize state insurance regulations, solvency requirements, and claims handling standards. Include provisions for policy administration, actuarial compliance, and regulatory filing.",
-      "Gaming": "Emphasize age verification, content ratings, and platform compliance. Include provisions for virtual goods, payment processing, and user-generated content moderation.",
-      "E-commerce": "Focus on consumer protection, payment security, and marketplace regulations. Include provisions for product liability, shipping terms, and customer data protection.",
-      "Fintech": "Emphasize financial services regulations, payment processing compliance, and consumer protection. Include provisions for KYC requirements, fraud prevention, and regulatory reporting.",
-      "Aerospace": "Focus on AS9100 quality standards, NADCAP certification, and export control regulations. Include provisions for configuration management, material traceability, and safety compliance.",
-      "Oil & Gas": "Emphasize environmental regulations, safety standards, and joint operating procedures. Include provisions for cost sharing, operational control, and environmental compliance."
+    // Use enhanced cache manager for O(1) lookup instead of O(n) object creation
+    if (typeof DocumentCache !== 'undefined' && DocumentCache.initialized) {
+      return DocumentCache.getSubindustryGuidance(subindustry);
+    }
+    
+    // Fallback to basic guidance if cache not available
+    const basicGuidance = {
+      "Wealth Management": "Focus on fiduciary responsibilities, fee transparency, and regulatory compliance with SEC and state investment advisor requirements.",
+      "SaaS": "Emphasize data security, service level agreements, API governance, and GDPR compliance.",
+      "Healthcare IT": "Prioritize HIPAA compliance, patient data protection, and interoperability standards.",
+      "Fintech": "Emphasize financial services regulations, payment processing compliance, and consumer protection."
     };
-
-    return guidanceMap[subindustry] || `Ensure compliance with industry-standard practices and regulations specific to ${subindustry} operations. Include appropriate risk management, operational procedures, and regulatory compliance provisions.`;
+    
+    return basicGuidance[subindustry] || `Standard professional practices for ${subindustry} with industry-appropriate terminology and regulatory compliance.`;
   }
 
   getBusinessExamples(subindustry) {
@@ -937,533 +968,3 @@ BEGIN:`;
 
 // Create global instance
 const promptEngineV2 = new PromptEngineV2();
-
-// Export for testing
-function testPromptEngineV2() {
-  const testData = {
-    agreementType: "Master Service Agreement (MSA)",
-    industry: "Healthcare",
-    subindustry: "Digital Health",
-    geography: "NAMER",
-    language: "English",
-    firstParty: "TestHealth Inc.",
-    counterparty: "ClientCare Corp",
-    contractNumber: "MSA-12345",
-    specialInstructions: "Effective Date: 01/15/2024, Initial Term: 3 year(s), Payment Terms: 30 days, Compliance, HIPAA Compliance, Data Security",
-    effectiveDate: new Date()
-  };
-  
-  // Test new engine
-  const jsonPrompt = promptEngineV2.createPromptJSON(testData);
-  
-  // Test if legacy function exists before comparing
-  let comparison = { legacy: "N/A", json: jsonPrompt.substring(0, 500) };
-  
-  if (typeof createPrompt !== 'undefined') {
-    try {
-      const legacyPrompt = createPrompt(testData);
-      Logger.log(`Legacy size: ${legacyPrompt.length} chars`);
-      Logger.log(`JSON size: ${jsonPrompt.length} chars`);
-      Logger.log(`Size change: ${Math.round((jsonPrompt.length/legacyPrompt.length) * 100)}% of original`);
-      
-      comparison = {
-        legacy: legacyPrompt.substring(0, 500),
-        json: jsonPrompt.substring(0, 500),
-        legacySize: legacyPrompt.length,
-        jsonSize: jsonPrompt.length
-      };
-    } catch (error) {
-      Logger.log(`Legacy prompt test failed: ${error.message}`);
-    }
-  }
-  
-  // Test formatting elements are present
-  const hasHeader = jsonPrompt.includes('<h1 style=');
-  const hasStructure = jsonPrompt.includes('DOCUMENT STRUCTURE:');
-  const hasFormatting = jsonPrompt.includes('CRITICAL FORMATTING:');
-  const hasIndustryGuidance = jsonPrompt.includes('INDUSTRY GUIDANCE:');
-  
-  Logger.log(`✓ Formatting Check - Header: ${hasHeader}, Structure: ${hasStructure}, Formatting: ${hasFormatting}, Industry: ${hasIndustryGuidance}`);
-  
-  return comparison;
-}
-
-// Test specific formatting components and placeholder fixes
-function testFormattingComponents() {
-  const testData = {
-    agreementType: "Software License Agreement",
-    industry: "Technology",
-    subindustry: "SaaS",
-    geography: "EMEA",
-    language: "English",
-    firstParty: "TechCorp Inc.",
-    counterparty: "Enterprise Solutions Ltd",
-    contractNumber: "SLA-67890",
-    specialInstructions: "Effective Date: 12/15/2024, Initial Term: 2 year(s), Payment Terms: 30 days, Data Privacy, Service Levels"
-  };
-  
-  const prompt = promptEngineV2.createPromptJSON(testData);
-  
-  Logger.log("=== COMPREHENSIVE FORMATTING TEST ===");
-  Logger.log(`Prompt length: ${prompt.length} characters`);
-  
-  // Test anti-placeholder rules
-  Logger.log(`✓ Contains specific effective date: ${prompt.includes('12/15/2024')}`);
-  Logger.log(`✓ Contains anti-placeholder rules: ${prompt.includes('NO [Effective Date]')}`);
-  Logger.log(`✓ Contains paragraph structure rules: ${prompt.includes('PARAGRAPH BREAKS')}`);
-  Logger.log(`✓ Contains HTML formatting: ${prompt.includes('<h1 style=')}`);
-  Logger.log(`✓ Contains industry guidance: ${prompt.includes('data security')}`);
-  Logger.log(`✓ Contains EMEA currency: ${prompt.includes('EUR')}`);
-  Logger.log(`✓ Contains company names: ${prompt.includes('TechCorp Inc.')}`);
-  Logger.log(`✓ Contains structure example: ${prompt.includes('EXAMPLE STRUCTURE')}`);
-  Logger.log(`✓ Contains multiple paragraph requirement: ${prompt.includes('3-4 well-structured paragraphs')}`);
-  
-  return {
-    promptLength: prompt.length,
-    hasPlaceholderProtection: prompt.includes('NO [Effective Date]'),
-    hasStructureExample: prompt.includes('EXAMPLE STRUCTURE'),
-    hasParagraphRules: prompt.includes('PARAGRAPH BREAKS'),
-    preview: prompt.substring(0, 1000)
-  };
-}
-
-// Test real document generation scenario
-function testRealisticScenario() {
-  const testData = {
-    agreementType: "Master Service Agreement (MSA)",
-    industry: "Healthcare",
-    subindustry: "Digital Health",
-    geography: "NAMER",
-    language: "English",
-    firstParty: "HealthTech Solutions Inc.",
-    counterparty: "MedCare Systems LLC", 
-    contractNumber: "MSA-2024-8901",
-    specialInstructions: "Contract Number: MSA-2024-8901, Effective Date: 01/15/2024, Initial Term: 3 year(s), Expiration Date: 01/15/2027, Payment Terms: 30 days, HIPAA Compliance, Data Security, Service Levels"
-  };
-  
-  const prompt = promptEngineV2.createPromptJSON(testData);
-  
-  Logger.log("=== REALISTIC SCENARIO TEST ===");
-  Logger.log(`Healthcare-specific regulations: ${prompt.includes('HIPAA')}`);
-  Logger.log(`Specific contract terms: ${prompt.includes('01/15/2024')}`);
-  Logger.log(`Anti-placeholder protection: ${prompt.includes('NO [Effective Date] - Use: 01/15/2024')}`);
-  Logger.log(`Digital Health guidance: ${prompt.includes('FDA software')}`);
-  Logger.log(`Proper structure: ${prompt.includes('<p><strong>1. PREAMBLE</strong></p>')}`);
-  
-  return prompt.length;
-}
-
-// Test prompt optimization improvements
-function testPromptOptimization() {
-  const testData = {
-    agreementType: "Master Service Agreement (MSA)",
-    industry: "Technology", 
-    subindustry: "SaaS",
-    geography: "NAMER",
-    language: "English",
-    firstParty: "TechCorp Inc.",
-    counterparty: "ClientSoft LLC",
-    contractNumber: "MSA-2024-001",
-    specialInstructions: "Effective Date: 03/15/2024, Initial Term: 2 year(s), Payment Terms: 30 days, Data Privacy, Service Levels"
-  };
-
-  const prompt = promptEngineV2.createPromptJSON(testData);
-
-  Logger.log("=== PROMPT OPTIMIZATION ANALYSIS ===");
-  Logger.log(`Optimized prompt length: ${prompt.length} characters`);
-  Logger.log(`Structure clarity: ${prompt.includes('Structure each section as:')}`);
-  Logger.log(`Critical rules section: ${prompt.includes('CRITICAL RULES:')}`);
-  Logger.log(`Concise format: ${prompt.includes('Generate:')}`);
-  Logger.log(`Industry guidance truncated: ${prompt.includes('...')}`);
-  
-  // Count sections to show reduction
-  const sections = (prompt.match(/[A-Z ]+:/g) || []).length;
-  Logger.log(`Number of sections: ${sections}`);
-  
-  return {
-    length: prompt.length,
-    sections: sections,
-    isOptimized: prompt.length < 2000, // Target under 2k chars
-    preview: prompt
-  };
-}
-
-// Test all improvements: placeholders, spacing, caching
-function testAllImprovements() {
-  const testData = {
-    agreementType: "Master Service Agreement (MSA)",
-    industry: "Technology", 
-    subindustry: "SaaS",
-    geography: "EMEA",
-    language: "English", 
-    firstParty: "CloudTech Solutions Ltd",
-    counterparty: "DataCorp Industries",
-    contractNumber: "MSA-EU-2024-555",
-    specialInstructions: "Effective Date: 05/20/2024, Initial Term: 3 year(s), Payment Terms: 45 days, Data Privacy, Service Levels, GDPR Compliance"
-  };
-
-  const prompt = promptEngineV2.createPromptJSON(testData);
-
-  Logger.log("=== COMPREHENSIVE IMPROVEMENT TEST ===");
-  
-  // Test address placeholder fixes
-  Logger.log(`✓ No [Address] placeholders: ${!prompt.includes('[Address]')}`);
-  Logger.log(`✓ Has specific addresses: ${prompt.includes('Finsbury Square')}`);
-  Logger.log(`✓ Has realistic address format: ${prompt.includes('London EC2A')}`);
-  
-  // Test spacing improvements
-  Logger.log(`✓ Has CSS spacing rules: ${prompt.includes('space-after:24pt')}`);
-  Logger.log(`✓ Has paragraph spacing: ${prompt.includes('space-after:24pt')}`);
-  
-  // Test caching efficiency
-  Logger.log(`✓ Uses cached rules: ${prompt.includes('|')}`); // Pipe-separated cached rules
-  Logger.log(`✓ Uses cached sections: ${prompt.includes('Preamble|Recitals')}`);
-  Logger.log(`✓ Uses cached addresses: ${prompt.includes('ADDRESSES (NO PLACEHOLDERS)')}`);
-  
-  // Test redundancy elimination
-  const redundantWords = ['must', 'should', 'ensure', 'include', 'contain'];
-  const redundancyCount = redundantWords.reduce((count, word) => {
-    return count + (prompt.toLowerCase().split(word).length - 1);
-  }, 0);
-  Logger.log(`✓ Reduced redundant language: ${redundancyCount} instances (target <10)`);
-  
-  // Test overall optimization
-  Logger.log(`✓ Prompt length: ${prompt.length} chars (target <1200)`);
-  Logger.log(`✓ EMEA currency: ${prompt.includes('EUR')}`);
-  Logger.log(`✓ Effective date: ${prompt.includes('05/20/2024')}`);
-  
-  return {
-    length: prompt.length,
-    hasAddressExamples: prompt.includes('Finsbury Square'),
-    hasSpacingRules: prompt.includes('space-after:24pt'),
-    usesCachedRules: prompt.includes('|'),
-    redundancyScore: redundancyCount,
-    isFullyOptimized: prompt.length < 1200 && redundancyCount < 10,
-    preview: prompt.substring(0, 800)
-  };
-}
-
-// Test address variety system
-function testAddressVariety() {
-  Logger.log("=== ADDRESS VARIETY TEST ===");
-  
-  // Test multiple generations to see Company B variety
-  const testData = {
-    agreementType: "Software License Agreement",
-    industry: "Technology",
-    subindustry: "SaaS", 
-    geography: "EMEA",
-    language: "English",
-    firstParty: "TechCorp Ltd",
-    counterparty: "ClientSoft GmbH",
-    contractNumber: "SLA-EU-001",
-    specialInstructions: "Effective Date: 06/01/2024, Payment Terms: 30 days"
-  };
-
-  // Generate multiple prompts to test Company B variety
-  const companyBAddresses = new Set();
-  const companyAAddresses = new Set();
-  
-  for (let i = 0; i < 10; i++) {
-    const prompt = promptEngineV2.createPromptJSON(testData);
-    
-    // Extract addresses from prompt
-    const addressSection = prompt.match(/ADDRESSES \(NO PLACEHOLDERS\):([\s\S]*?)REPLACE:/);
-    if (addressSection) {
-      const addresses = addressSection[1].trim().split('\n');
-      if (addresses.length >= 2) {
-        const companyA = addresses[0].split(': ')[1];
-        const companyB = addresses[1].split(': ')[1];
-        
-        companyAAddresses.add(companyA);
-        companyBAddresses.add(companyB);
-      }
-    }
-  }
-
-  Logger.log(`Company A consistency: ${companyAAddresses.size === 1 ? 'PASS' : 'FAIL'} (${companyAAddresses.size} unique)`);
-  Logger.log(`Company B variety: ${companyBAddresses.size >= 3 ? 'PASS' : 'FAIL'} (${companyBAddresses.size} unique)`);
-  Logger.log(`Company A address: ${Array.from(companyAAddresses)[0]}`);
-  Logger.log(`Company B addresses: ${Array.from(companyBAddresses).join(' | ')}`);
-  
-  // Test cache stats
-  const stats = promptEngineV2.getCacheStats();
-  Logger.log(`Cache stats: ${stats.totalAddresses} total addresses, ${stats.addressVariety}`);
-  
-  return {
-    companyAConsistent: companyAAddresses.size === 1,
-    companyBVariety: companyBAddresses.size,
-    companyBAddresses: Array.from(companyBAddresses),
-    cacheStats: stats
-  };
-}
-
-// Test geography-specific regulations
-function testGeographySpecificRegulations() {
-  Logger.log("=== GEOGRAPHY-SPECIFIC REGULATIONS TEST ===");
-  
-  const testCases = [
-    { geography: 'NAMER', industry: 'Technology', expected: 'CCPA' },
-    { geography: 'EMEA', industry: 'Technology', expected: 'DMA' },
-    { geography: 'APAC', industry: 'Technology', expected: 'PDPA' },
-    { geography: 'LATAM', industry: 'Technology', expected: 'LGPD' },
-    { geography: 'NAMER', industry: 'Financial Services', expected: 'CFPB' },
-    { geography: 'EMEA', industry: 'Financial Services', expected: 'MiFID II' }
-  ];
-
-  const results = {};
-  
-  testCases.forEach(testCase => {
-    const testData = {
-      agreementType: "Master Service Agreement (MSA)",
-      industry: testCase.industry,
-      subindustry: "General",
-      geography: testCase.geography,
-      language: "English",
-      firstParty: "TestCorp",
-      counterparty: "ClientCorp",
-      contractNumber: "TEST-001"
-    };
-
-    const prompt = promptEngineV2.createPromptJSON(testData);
-    const hasExpected = prompt.includes(testCase.expected);
-    const key = `${testCase.geography}-${testCase.industry}`;
-    
-    results[key] = {
-      expected: testCase.expected,
-      found: hasExpected,
-      status: hasExpected ? 'PASS' : 'FAIL'
-    };
-    
-    Logger.log(`${key}: Expected ${testCase.expected} - ${hasExpected ? 'FOUND' : 'NOT FOUND'}`);
-  });
-
-  // Test that CCPA does NOT appear in non-NAMER geographies
-  const nonNamerTest = {
-    agreementType: "Software License Agreement",
-    industry: "Technology",
-    geography: "EMEA",
-    language: "English",
-    firstParty: "EuroTech",
-    counterparty: "ClientEU"
-  };
-  
-  const emeaPrompt = promptEngineV2.createPromptJSON(nonNamerTest);
-  const ccpaInEmea = emeaPrompt.includes('CCPA');
-  results['EMEA-No-CCPA'] = {
-    expected: 'No CCPA',
-    found: !ccpaInEmea,
-    status: !ccpaInEmea ? 'PASS' : 'FAIL'
-  };
-  
-  Logger.log(`EMEA should NOT have CCPA: ${!ccpaInEmea ? 'PASS' : 'FAIL'}`);
-  
-  return results;
-}
-
-// Test agreement-specific section ordering
-function testAgreementSpecificSections() {
-  Logger.log("=== AGREEMENT-SPECIFIC SECTIONS TEST ===");
-  
-  const testCases = [
-    {
-      type: "Non-Disclosure Agreement (NDA)",
-      expectedSections: ["Confidential Information", "Use Restrictions", "Return of Information", "Exceptions"],
-      shouldNotHave: ["Payment Terms", "Deliverables"]
-    },
-    {
-      type: "Master Service Agreement (MSA)",
-      expectedSections: ["Services", "Statement of Work Process", "Indemnification", "Limitation of Liability"],
-      shouldNotHave: ["Grant of License", "API Access"]
-    },
-    {
-      type: "Software License Agreement",
-      expectedSections: ["Grant of License", "Use Restrictions", "Support and Maintenance"],
-      shouldNotHave: ["Confidential Information", "Clinical Trial"]
-    },
-    {
-      type: "Data Processing Agreement (DPA)",
-      expectedSections: ["Processing Instructions", "Data Subject Rights", "Security Measures", "International Transfers"],
-      shouldNotHave: ["Grant of License", "Investment Authority"]
-    },
-    {
-      type: "Investment Advisory Agreement",
-      expectedSections: ["Advisory Services", "Investment Authority", "Fiduciary Duties", "Fees"],
-      shouldNotHave: ["API Access", "Clinical Trial"]
-    }
-  ];
-
-  const results = {};
-  
-  testCases.forEach(testCase => {
-    const testData = {
-      agreementType: testCase.type,
-      industry: "Technology",
-      subindustry: "SaaS",
-      geography: "NAMER",
-      language: "English",
-      firstParty: "TestCorp Inc.",
-      counterparty: "ClientCorp LLC",
-      contractNumber: "TEST-001"
-    };
-
-    const prompt = promptEngineV2.createPromptJSON(testData);
-    
-    // Check for expected sections
-    const hasExpected = testCase.expectedSections.every(section => prompt.includes(section));
-    const missingExpected = testCase.expectedSections.filter(section => !prompt.includes(section));
-    
-    // Check that inappropriate sections are NOT included
-    const hasUnwanted = testCase.shouldNotHave.some(section => prompt.includes(section));
-    const foundUnwanted = testCase.shouldNotHave.filter(section => prompt.includes(section));
-    
-    const key = testCase.type.replace(/[^a-zA-Z]/g, '');
-    results[key] = {
-      agreementType: testCase.type,
-      hasAllExpected: hasExpected,
-      missingExpected: missingExpected,
-      hasUnwantedSections: hasUnwanted,
-      foundUnwanted: foundUnwanted,
-      status: hasExpected && !hasUnwanted ? 'PASS' : 'FAIL'
-    };
-    
-    Logger.log(`${testCase.type}:`);
-    Logger.log(`  Expected sections: ${hasExpected ? 'ALL FOUND' : 'MISSING: ' + missingExpected.join(', ')}`);
-    Logger.log(`  Unwanted sections: ${hasUnwanted ? 'FOUND: ' + foundUnwanted.join(', ') : 'NONE FOUND'}`);
-    Logger.log(`  Status: ${results[key].status}`);
-  });
-
-  // Test section template selection logic
-  const templateTests = [
-    { input: "Non-Disclosure Agreement (NDA)", expected: "NDA" },
-    { input: "confidentiality agreement", expected: "NDA" },
-    { input: "SaaS Agreement", expected: "SaaS" },
-    { input: "API Terms of Service", expected: "API Terms" },
-    { input: "Unknown Agreement Type", expected: "default" }
-  ];
-
-  Logger.log("\n=== TEMPLATE SELECTION TEST ===");
-  templateTests.forEach(test => {
-    const template = promptEngineV2.getSectionTemplate(test.input);
-    const isCorrect = test.expected === "default" ? 
-      template === promptEngineV2.sectionCache.default : 
-      template === promptEngineV2.sectionCache.sectionTemplates[test.expected];
-    
-    Logger.log(`${test.input} → ${isCorrect ? 'CORRECT' : 'INCORRECT'} template`);
-  });
-
-  return results;
-}
-
-// Test signature block variety system
-function testSignatureBlocks() {
-  Logger.log("=== SIGNATURE BLOCKS TEST ===");
-  
-  // Test multiple generations to see signature variety
-  const testData = {
-    agreementType: "Master Service Agreement (MSA)",
-    industry: "Technology",
-    subindustry: "SaaS",
-    geography: "EMEA", 
-    language: "English",
-    firstParty: "TechCorp Ltd",
-    counterparty: "ClientSoft GmbH",
-    contractNumber: "MSA-EU-002"
-  };
-
-  // Generate multiple prompts to test signature variety
-  const companyASignatures = new Set();
-  const companyBSignatures = new Set();
-  
-  for (let i = 0; i < 8; i++) {
-    const prompt = promptEngineV2.createPromptJSON(testData);
-    
-    // Extract signatures from prompt
-    const signatureSection = prompt.match(/SIGNATURE BLOCKS:([\s\S]*?)REPLACE:/);
-    if (signatureSection) {
-      const signatures = signatureSection[1].trim().split('\n');
-      if (signatures.length >= 2) {
-        const companyASig = signatures[0].split(': ')[1];
-        const companyBSig = signatures[1].split(': ')[1];
-        
-        companyASignatures.add(companyASig);
-        companyBSignatures.add(companyBSig);
-      }
-    }
-  }
-
-  Logger.log(`Company A signature consistency: ${companyASignatures.size === 1 ? 'PASS' : 'FAIL'} (${companyASignatures.size} unique)`);
-  Logger.log(`Company B signature variety: ${companyBSignatures.size >= 3 ? 'PASS' : 'FAIL'} (${companyBSignatures.size} unique)`);
-  Logger.log(`Company A signature: ${Array.from(companyASignatures)[0]}`);
-  Logger.log(`Company B signatures: ${Array.from(companyBSignatures).join(' | ')}`);
-  
-  // Test geography-specific titles
-  const regionTests = ['NAMER', 'EMEA', 'APAC', 'LATAM'];
-  regionTests.forEach(geography => {
-    const regionalTest = { ...testData, geography };
-    const prompt = promptEngineV2.createPromptJSON(regionalTest);
-    
-    const hasSignatureSection = prompt.includes('SIGNATURE BLOCKS:');
-    const hasRegionalNames = geography === 'LATAM' ? 
-      prompt.includes('Director Ejecutivo') || prompt.includes('Gerente General') :
-      prompt.includes('CEO') || prompt.includes('Director') || prompt.includes('President');
-    
-    Logger.log(`${geography}: Signature section ${hasSignatureSection ? 'FOUND' : 'MISSING'}, Regional titles ${hasRegionalNames ? 'FOUND' : 'MISSING'}`);
-  });
-
-  return {
-    companyAConsistent: companyASignatures.size === 1,
-    companyBVariety: companyBSignatures.size,
-    companyBSignatures: Array.from(companyBSignatures),
-    geographyTests: regionTests.map(geo => ({
-      geography: geo,
-      hasSignatures: true // Will be tested in actual run
-    }))
-  };
-}
-
-// Test EMEA signature selection specifically
-function testEMEASignatures() {
-  Logger.log("=== EMEA SIGNATURE TEST ===");
-  
-  const testData = {
-    agreementType: "Clinical Trial Agreement",
-    industry: "Healthcare",
-    subindustry: "Digital Health",
-    geography: "EMEA",
-    language: "English",
-    firstParty: "HealthTech Europe Ltd",
-    counterparty: "Research Institute GmbH",
-    contractNumber: "CTA-EU-003"
-  };
-
-  const prompt = promptEngineV2.createPromptJSON(testData);
-  
-  // Check for expected EMEA signatures
-  const hasJamesClarke = prompt.includes('James R. Clarke');
-  const hasManagingDirector = prompt.includes('Managing Director');
-  const hasEMEANames = prompt.includes('Sophie M. Laurent') || prompt.includes('Oliver J. Schmidt') || prompt.includes('Isabella C. Rossi');
-  const hasEMEATitles = prompt.includes('Chief Executive Officer') || prompt.includes('General Manager') || prompt.includes('Director of Operations');
-  
-  // Check that fallback signatures are NOT used
-  const hasJohnSmith = prompt.includes('John Smith');
-  const hasJaneDoe = prompt.includes('Jane Doe');
-  
-  Logger.log(`✓ Company A (James R. Clarke): ${hasJamesClarke ? 'FOUND' : 'MISSING'}`);
-  Logger.log(`✓ Managing Director title: ${hasManagingDirector ? 'FOUND' : 'MISSING'}`);
-  Logger.log(`✓ EMEA Company B names: ${hasEMEANames ? 'FOUND' : 'MISSING'}`);
-  Logger.log(`✓ EMEA Company B titles: ${hasEMEATitles ? 'FOUND' : 'MISSING'}`);
-  Logger.log(`✗ Fallback John Smith: ${hasJohnSmith ? 'FOUND (BAD)' : 'NOT FOUND (GOOD)'}`);
-  Logger.log(`✗ Fallback Jane Doe: ${hasJaneDoe ? 'FOUND (BAD)' : 'NOT FOUND (GOOD)'}`);
-  
-  const status = hasJamesClarke && hasManagingDirector && hasEMEANames && !hasJohnSmith && !hasJaneDoe ? 'PASS' : 'FAIL';
-  Logger.log(`EMEA Signature Test: ${status}`);
-  
-  return {
-    hasCorrectCompanyA: hasJamesClarke,
-    hasCorrectTitle: hasManagingDirector,
-    hasEMEAVariety: hasEMEANames,
-    noFallbacks: !hasJohnSmith && !hasJaneDoe,
-    status: status
-  };
-}

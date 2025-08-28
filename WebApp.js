@@ -204,18 +204,14 @@ function processRowDirectly(sheet, rowNumber, formData) {
           contractNumber: contractNumber
         };
 
-        // Add any special fields for SOWs
-        if (agreementType.includes("SOW")) {
-          const today = new Date();
-          const totalValue = Math.floor(Math.random() * 450000) + 50000;
-          const depositAmount = Math.floor(Math.random() * 20000) + 5000;
-          const oneTimeAmount = Math.floor(Math.random() * 40000) + 10000;
-          const depositDue = new Date(today.getTime() + Math.floor(Math.random() * 180) * 24 * 60 * 60 * 1000);
-          const oneTimeDue = new Date(today.getTime() + Math.floor(Math.random() * 180) * 24 * 60 * 60 * 1000);
-
-          docData.specialInstructions += `, Total Contract Value: $${totalValue.toLocaleString()} USD`;
-          docData.specialInstructions += `, Deposit Amount: $${depositAmount.toLocaleString()} USD, Deposit Due: ${Utilities.formatDate(depositDue, Session.getScriptTimeZone(), "MM/dd/yyyy")}`;
-          docData.specialInstructions += `, One-Time Payment: $${oneTimeAmount.toLocaleString()} USD, Due: ${Utilities.formatDate(oneTimeDue, Session.getScriptTimeZone(), "MM/dd/yyyy")}`;
+        // Add financial terms for applicable document types
+        if (shouldIncludeFinancialValuesWebApp(agreementType)) {
+          const financialValues = generateFinancialValuesWebApp(agreementType, formData.industry, formData.geography);
+          
+          docData.specialInstructions += `, Total Contract Value: ${financialValues.contractValue}`;
+          docData.specialInstructions += `, Deposit Amount: ${financialValues.depositAmount}, Deposit Due: ${financialValues.depositDue}`;
+          docData.specialInstructions += `, Payment Amount: ${financialValues.oneTimeAmount}, Due: ${financialValues.firstPaymentDue}`;
+          docData.specialInstructions += `, Monthly Amount: ${financialValues.monthlyAmount}`;
         }
 
         // Add obligations
@@ -306,6 +302,120 @@ function getCurrentUserEmail() {
     Logger.log('Could not get user email: ' + e.toString());
     return '';
   }
+}
+
+// Helper functions for financial value generation in WebApp
+function shouldIncludeFinancialValuesWebApp(agreementType) {
+  const financialDocTypes = [
+    'SOW', 'Statement of Work',
+    // MSA removed - payment terms only, no specific values
+    'Consulting Agreement',
+    'Service Agreement', 
+    'Supply Agreement',
+    'Investment Advisory',
+    'Cloud Services',
+    'Software License',
+    'API Terms',
+    'SaaS Agreement',
+    'Clinical Trial'
+  ];
+
+  return financialDocTypes.some(docType => 
+    agreementType.toLowerCase().includes(docType.toLowerCase())
+  );
+}
+
+function generateFinancialValuesWebApp(agreementType, industry, geography) {
+  // Geography map for WebApp
+  const geographyMap = {
+    'NAMER': { currency: 'USD', currencySymbol: '$', dateFormat: 'MM/DD/YYYY' },
+    'EMEA': { currency: 'EUR', currencySymbol: '€', dateFormat: 'DD/MM/YYYY' },
+    'APAC': { currency: 'varies', currencySymbol: '¥/$', dateFormat: 'DD/MM/YYYY' },
+    'LATAM': { currency: 'USD', currencySymbol: '$', dateFormat: 'DD/MM/YYYY' }
+  };
+  
+  const geo = geographyMap[geography] || geographyMap['NAMER'];
+  
+  // Industry-based value ranges
+  const industryRanges = {
+    'Healthcare': { min: 100000, max: 2000000, depositRate: 0.15 },
+    'Financial Services': { min: 250000, max: 5000000, depositRate: 0.20 },
+    'Technology': { min: 75000, max: 1500000, depositRate: 0.10 },
+    'Energy': { min: 500000, max: 10000000, depositRate: 0.25 },
+    'Manufacturing': { min: 200000, max: 3000000, depositRate: 0.20 },
+    'Real Estate': { min: 1000000, max: 50000000, depositRate: 0.10 },
+    'default': { min: 50000, max: 500000, depositRate: 0.15 }
+  };
+
+  // Document type multipliers
+  const docTypeMultipliers = {
+    'MSA': 1.5,
+    'Investment Advisory': 3.0,
+    'Supply Agreement': 2.0,
+    'Cloud Services': 1.2,
+    'Consulting': 0.8,
+    'License': 0.7,
+    'SOW': 1.0
+  };
+
+  // Get base ranges
+  const range = industryRanges[industry] || industryRanges['default'];
+  
+  // Find document type multiplier
+  let multiplier = 1.0;
+  for (const [docKey, mult] of Object.entries(docTypeMultipliers)) {
+    if (agreementType.includes(docKey)) {
+      multiplier = mult;
+      break;
+    }
+  }
+
+  // Calculate adjusted ranges
+  const adjustedMin = Math.floor(range.min * multiplier);
+  const adjustedMax = Math.floor(range.max * multiplier);
+  
+  // Generate main contract value
+  const contractValue = Math.floor(Math.random() * (adjustedMax - adjustedMin)) + adjustedMin;
+  
+  // Generate related amounts
+  const depositAmount = Math.floor(contractValue * range.depositRate);
+  const oneTimeAmount = Math.floor(contractValue * (0.05 + Math.random() * 0.15));
+  const monthlyAmount = Math.floor(contractValue * (0.02 + Math.random() * 0.08));
+  
+  // Generate dates
+  const today = new Date();
+  const depositDue = new Date(today.getTime() + Math.floor(Math.random() * 90) * 24 * 60 * 60 * 1000);
+  const firstPaymentDue = new Date(today.getTime() + Math.floor(Math.random() * 180) * 24 * 60 * 60 * 1000);
+
+  // Format amounts with proper currency
+  const formatAmount = (amount) => {
+    const formatted = amount.toLocaleString();
+    if (geo.currency === 'EUR') {
+      return `€${formatted} EUR`;
+    } else if (geo.currency === 'USD') {
+      return `$${formatted} USD`;
+    } else {
+      return `${geo.currencySymbol}${formatted}`;
+    }
+  };
+
+  // Format dates for geography
+  const formatDate = (date) => {
+    if (geo.dateFormat === 'DD/MM/YYYY') {
+      return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
+    } else {
+      return `${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}/${date.getFullYear()}`;
+    }
+  };
+
+  return {
+    contractValue: formatAmount(contractValue),
+    depositAmount: formatAmount(depositAmount), 
+    oneTimeAmount: formatAmount(oneTimeAmount),
+    monthlyAmount: formatAmount(monthlyAmount),
+    depositDue: formatDate(depositDue),
+    firstPaymentDue: formatDate(firstPaymentDue)
+  };
 }
 
 // Test function to verify the web app is working

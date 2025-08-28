@@ -263,18 +263,8 @@ function getPromptGeneralRequirements(firstParty, industry, counterparty, subind
     const businessExamples = getSubindustryExamples(subindustry);
 
     return `General Requirements:
-### Document Header
-Every generated document must begin with a header containing two lines, before any body text:
-
-1. The full document type (e.g., "Investment Advisory Agreement").
-2. The contract number assigned to this document (e.g., "IAA-49213").
-
-Example:
-
-Investment Advisory Agreement  
-IAA-49213
-
-This header must be styled appropriately so that the document type is in bold and that both are centered (e.g., using <center> and <b> in HTML output) and appear at the very top of the document.
+### Document Content
+Generate the document body content without headers, title, or contract number - these will be added in post-processing.
 
 ### Agreement Structure for ${subindustry} Context
 The generated agreement must follow professional standards typical of ${subindustry} businesses and incorporate industry-specific practices. Adhere to the following architectural guidelines:
@@ -379,17 +369,8 @@ function getPromptOutputFormat(firstParty, counterparty, subindustry, geography)
 
 The output must be formatted as valid, professional-grade HTML that mirrors the quality of documents produced by top-tier law firms specializing in ${subindustry} transactions. Use semantic markup with ${selectedFontFamily} font, size ${selectedFontSize}, and sophisticated document structure.
 
-### Document Header (Critical)
-<div style="text-align: center; margin-bottom: 30pt; page-break-inside: avoid;">
-<h1 style="font-family: ${selectedFontFamily}; font-size: ${titleFontSize}pt; font-weight: bold; margin-bottom: 8pt; text-transform: uppercase; letter-spacing: 1pt;">[DOCUMENT TYPE]</h1>
-<h2 style="font-family: ${selectedFontFamily}; font-size: ${selectedFontSize}pt; font-weight: normal; margin-bottom: 16pt; color: #666;">[CONTRACT NUMBER]</h2>
-</div>
-
-Example:
-<div style="text-align: center; margin-bottom: 30pt; page-break-inside: avoid;">
-<h1 style="font-family: ${selectedFontFamily}; font-size: ${titleFontSize}pt; font-weight: bold; margin-bottom: 8pt; text-transform: uppercase; letter-spacing: 1pt;">INVESTMENT ADVISORY AGREEMENT</h1>
-<h2 style="font-family: ${selectedFontFamily}; font-size: ${selectedFontSize}pt; font-weight: normal; margin-bottom: 16pt; color: #666;">IAA-49213</h2>
-</div>
+### Document Body Content
+Begin with the agreement content directly (headers added in post-processing).
 
 ### Professional Document Architecture
 Structure the agreement using sophisticated legal document conventions:

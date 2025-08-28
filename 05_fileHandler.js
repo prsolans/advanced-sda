@@ -1,14 +1,8 @@
 // 05_fileHandler.js
 
 
-// Fixed version of createFileInDriveV3 that ensures proper naming
-function createFileInDriveV3(html, agreementType, language, contractNumber) {
-  // Debug logging
-  Logger.log(`createFileInDriveV3 called with:`);
-  Logger.log(`  agreementType: "${agreementType}"`);
-  Logger.log(`  language: "${language}"`);
-  Logger.log(`  contractNumber: "${contractNumber}"`);
-
+// Fixed version of createFileInDriveV3 that ensures proper naming including third party
+function createFileInDriveV3(html, agreementType, language, contractNumber, counterparty) {
   const languageAbbreviations = {
     Spanish: "[ES]",
     French: "[FR]",
@@ -46,10 +40,13 @@ function createFileInDriveV3(html, agreementType, language, contractNumber) {
     fileNameParts.push(finalContractNumber);
   }
 
+  // Add the counterparty (third party) name 
+  if (counterparty && counterparty.length > 0) {
+    fileNameParts.push(counterparty);
+  }
+
   // Join with " - " separator
   const fileName = fileNameParts.filter(part => part && part.length > 0).join(" - ");
-
-  Logger.log(`Final filename will be: "${fileName}"`);
 
   // Sanitize HTML content
   html = sanitizeHtml(html);
@@ -69,7 +66,6 @@ function createFileInDriveV3(html, agreementType, language, contractNumber) {
 
   file.setTrashed(true);
 
-  Logger.log("Google Docs File ID: " + docFile.id);
   return docFile.id;
 }
 
@@ -89,12 +85,6 @@ function processAndCreateFile(docData, subfolder) {
     contractNumber
   } = docData;
 
-  // Log what we're working with
-  Logger.log(`processAndCreateFile - Processing document:`);
-  Logger.log(`  agreementType: "${agreementType}"`);
-  Logger.log(`  language: "${language}"`);
-  Logger.log(`  contractNumber: "${contractNumber}"`);
-
   // Ensure we have an agreement type
   if (!agreementType) {
     Logger.log("ERROR: No agreementType in docData!");
@@ -105,11 +95,12 @@ function processAndCreateFile(docData, subfolder) {
   const finalContractNumber = contractNumber || generateContractNumber(agreementType);
   docData.contractNumber = finalContractNumber;
 
-  Logger.log("docData going into prompt:\n" + JSON.stringify(docData, null, 2));
-
   // ===== NEW PROMPT ENGINE SELECTION =====
+  // Re-enable JSON engine for all languages with enhanced language support
   const USE_JSON_ENGINE = PropertiesService.getScriptProperties()
     .getProperty('USE_JSON_ENGINE') === 'true';
+    
+  Logger.log(`Language: "${language}", USE_JSON_ENGINE: ${USE_JSON_ENGINE}`);
 
   let prompt;
   let role;
@@ -118,7 +109,6 @@ function processAndCreateFile(docData, subfolder) {
     try {
       prompt = promptEngineV2.createPromptJSON(docData);
       role = 'Generate legal documents from structured JSON specifications.';
-      Logger.log("✓ Using PromptEngineV2 (JSON-based)");
     } catch (error) {
       Logger.log(`PromptEngineV2 error, falling back to legacy: ${error.message}`);
       prompt = createPrompt(docData);
@@ -127,24 +117,23 @@ function processAndCreateFile(docData, subfolder) {
   } else {
     prompt = createPrompt(docData);
     role = 'This GPT is designated to generate realistic sample agreements for use during AI demonstrations. It is tailored to create agreements with specific legal language and conditions that can be analyzed to return structured information.';
-    Logger.log("Using legacy prompt engine");
   }
   // ===== END NEW SECTION =====
 
   try {
     const responseFromOpenAI = PreSalesOpenAI.executePrompt4o(role, prompt);
 
-    // Pass all parameters explicitly and verify they exist
-    Logger.log(`Calling createFileInDriveV3 with:`);
-    Logger.log(`  agreementType: "${agreementType}"`);
-    Logger.log(`  language: "${language || 'English'}"`);
-    Logger.log(`  contractNumber: "${finalContractNumber}"`);
+    // POST-PRODUCTION: Enhance paragraph spacing and formatting
+    const enhancedHTML = enhanceDocumentFormatting(responseFromOpenAI, docData);
+
+    // Create file with enhanced HTML formatting
 
     const newFileId = createFileInDriveV3(
-      responseFromOpenAI,
+      enhancedHTML,
       agreementType,
       language || 'English',
-      finalContractNumber
+      finalContractNumber,
+      counterparty
     );
 
     const newFile = DriveApp.getFileById(newFileId);
@@ -154,6 +143,342 @@ function processAndCreateFile(docData, subfolder) {
   } catch (error) {
     Logger.log(`Failed to create document for ${agreementType} with ${counterparty}. Original Error: ${error.message}`);
     throw new Error(`Failed for ${agreementType}. Details: ${error.message}`);
+  }
+}
+
+// POST-PRODUCTION: Convert JSON response to formatted HTML document
+function enhanceDocumentFormatting(responseContent, docData) {
+  // Try to parse as JSON first (works for all languages now)
+  try {
+    Logger.log(`Attempting JSON parsing of response (${responseContent.length} chars) for language: ${docData.language || 'English'}`);
+    
+    // Clean response - remove any markdown formatting if present
+    let cleanContent = responseContent.trim();
+    if (cleanContent.startsWith('```json')) {
+      cleanContent = cleanContent.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+    } else if (cleanContent.startsWith('```')) {
+      cleanContent = cleanContent.replace(/^```\s*/, '').replace(/\s*```$/, '');
+    }
+    
+    // Check if content looks like JSON before parsing
+    if (cleanContent.startsWith('{') && cleanContent.endsWith('}')) {
+      // Parse JSON and convert to HTML
+      const jsonData = JSON.parse(cleanContent);
+      Logger.log(`Successfully parsed JSON document structure for ${docData.language || 'English'}`);
+      return convertJsonToHtml(jsonData, docData);
+    } else {
+      Logger.log(`Response doesn't look like JSON structure, using HTML processing`);
+    }
+    
+  } catch (jsonError) {
+    Logger.log(`JSON parsing failed: ${jsonError.message}`);
+    Logger.log(`Falling back to HTML processing for response: ${responseContent.substring(0, 200)}...`);
+  }
+  
+  // Fallback to legacy HTML processing
+  return enhanceHtmlFormatting(responseContent, docData);
+}
+
+// Legacy HTML enhancement (fallback)
+function enhanceHtmlFormatting(html, docData) {
+  // Safety check - if HTML is too short, something went wrong
+  if (!html || html.trim().length < 100) {
+    Logger.log("ERROR: Input HTML too short - returning fallback document");
+    return `<!DOCTYPE html><html><head><title>Document Error</title></head><body><h1>Document Generation Error</h1><p>The document content was not generated properly. Please try again.</p></body></html>`;
+  }
+  
+  // Remove any existing style tags to avoid conflicts
+  html = html.replace(/<style[^>]*>.*?<\/style>/gis, '');
+  
+  // Add comprehensive paragraph spacing CSS that works with Google Docs
+  const enhancedCSS = `
+<style>
+@page {
+  margin: 1in;
+}
+body {
+  font-family: 'Times New Roman', serif;
+  font-size: 12pt;
+  line-height: 1.15;
+  margin: 1in;
+  padding: 0;
+}
+p {
+  margin: 0 0 12pt 0;
+  text-align: justify;
+  text-indent: 0;
+}
+strong {
+  font-weight: bold;
+}
+h1 {
+  font-size: 16pt;
+  font-weight: bold;
+  text-align: center;
+  margin: 0 0 8pt 0;
+  text-transform: uppercase;
+  letter-spacing: 1pt;
+}
+h2 {
+  font-size: 12pt;
+  font-weight: normal;
+  text-align: center;
+  margin: 0 0 16pt 0;
+  color: #666;
+}
+.section-header, .section-title {
+  font-weight: bold;
+  font-size: 12pt;
+  margin: 24pt 0 12pt 0;
+  text-transform: uppercase;
+}
+.signature-block {
+  margin-top: 36pt;
+  page-break-inside: avoid;
+}
+.signature-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 24pt;
+}
+.signature-table td {
+  width: 50%;
+  vertical-align: top;
+  padding: 12pt;
+  border: none;
+}
+.signer-name {
+  font-weight: bold;
+  margin-bottom: 6pt;
+}
+.signer-title {
+  margin-bottom: 24pt;
+  font-style: italic;
+}
+.signature-line {
+  border-bottom: 1pt solid black;
+  height: 24pt;
+  margin-bottom: 6pt;
+}
+.signature-date {
+  font-size: 11pt;
+}
+</style>`;
+
+  // Insert enhanced CSS at the beginning of the HTML
+  if (html.includes('<head>')) {
+    html = html.replace('<head>', '<head>' + enhancedCSS);
+  } else if (html.includes('<html>')) {
+    html = html.replace('<html>', '<html><head>' + enhancedCSS + '</head>');
+  } else {
+    // Add full HTML structure if missing
+    html = '<!DOCTYPE html><html><head>' + enhancedCSS + '</head><body>' + html + '</body></html>';
+  }
+  
+  // Standardize section headers - make them consistently bold and formatted
+  html = html.replace(/<p>\s*<strong>\s*([0-9]+\.?\s*[A-Z][^<]*?)\s*<\/strong>\s*<\/p>/gi, 
+    '<p class="section-header">$1</p>');
+  html = html.replace(/<strong>\s*([0-9]+\.?\s*[A-Z][^<]*?)\s*<\/strong>/gi, 
+    '<p class="section-header">$1</p>');
+  
+  // Also catch section headers without numbers
+  html = html.replace(/<p>\s*<strong>\s*([A-Z][A-Z\s]+)\s*<\/strong>\s*<\/p>/gi, 
+    '<p class="section-header">$1</p>');
+  
+  // Ensure proper paragraph structure - wrap loose text in <p> tags
+  html = html.replace(/(<\/p>|<\/h[1-6]>|<\/div>)\s*([^<\s][^<]*?)(?=<[ph])/g, '$1<p>$2</p>');
+  
+  // Fix any sections that might be missing proper paragraph wrapping
+  html = html.replace(/(<strong>[^<]*<\/strong>)([^<]+?)(?=<strong|$)/g, '<p>$1</p><p>$2</p>');
+  
+  // Log original content length for debugging
+  const originalLength = html.length;
+  Logger.log(`Processing document: original length ${originalLength} chars`);
+  Logger.log(`First 200 chars of content: ${html.substring(0, 200)}`);
+  
+  // TEMPORARILY DISABLE header removal to debug content generation
+  // html = html.replace(/^<h1[^>]*>[^<]*<\/h1>\s*/i, '');
+  // html = html.replace(/^<p[^>]*>\s*<strong>\s*contract\s*(number|no\.?)[^<]*<\/strong>\s*<\/p>\s*/i, '');
+  // html = html.replace(/^<p[^>]*>\s*contract\s*(number|no\.?)[^<]*<\/p>\s*/i, '');
+  
+  // Create and prepend standardized document header
+  const documentHeaderHTML = createDocumentHeader(docData);
+  html = documentHeaderHTML + html;
+  
+  // Remove any existing signature content that OpenAI may have generated (multi-language)
+  const signaturePatterns = [
+    /<p[^>]*>\s*<strong>\s*(SIGNATURES?|FIRMAS|ASSINATURAS|UNTERSCHRIFTEN|署名)\s*<\/strong>\s*<\/p>.*$/gis,
+    /(IN WITNESS WHEREOF|EN FE DE LO CUAL|EN FOI DE QUOI|ZUM ZEUGNIS DESSEN|これを証するため).*$/gis,
+    /signature.*$/gis
+  ];
+  
+  signaturePatterns.forEach(pattern => {
+    html = html.replace(pattern, '');
+  });
+  
+  // Create professional signature block with 2-column table
+  const effectiveDate = docData.effectiveDate || 
+    new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  
+  const signatureBlockHTML = createSignatureBlock(docData, effectiveDate);
+  
+  // Always append our signature block at the end
+  html += signatureBlockHTML;
+  
+  // Clean up any double paragraph tags
+  html = html.replace(/<p>\s*<p>/g, '<p>');
+  html = html.replace(/<\/p>\s*<\/p>/g, '</p>');
+  
+  // Log only if there's an issue
+  if (html.length < 500) {
+    Logger.log(`WARNING: Short document generated (${html.length} chars) - possible processing error`);
+  }
+  
+  return html;
+}
+
+// Create standardized document header with language support
+function createDocumentHeader(docData) {
+  const documentType = docData.agreementType || 'AGREEMENT';
+  const contractNumber = docData.contractNumber || 'DRAFT';
+  const language = normalizeLanguage(docData.language || 'English');
+  const translations = getLanguageTranslations(language);
+  
+  return `
+<h1>${documentType.toUpperCase()}</h1>
+<h2>${translations.contractNo}: ${contractNumber}</h2>
+`;
+}
+
+// Create professional 2-column signature block with language support
+function createSignatureBlock(docData, effectiveDate) {
+  const firstParty = docData.firstParty || 'Company A';
+  const counterparty = docData.counterparty || 'Company B';
+  const language = normalizeLanguage(docData.language || 'English');
+  const translations = getLanguageTranslations(language);
+  
+  // First try to extract from existing document content (best source)
+  let firstSignature = extractSignatureFromContent(docData, 'first');
+  let counterSignature = extractSignatureFromContent(docData, 'counter');
+  
+  // If not found, try specialInstructions
+  if (!firstSignature) {
+    firstSignature = extractSignatureInfo(docData, 'first');
+  }
+  if (!counterSignature) {
+    counterSignature = extractSignatureInfo(docData, 'counter');
+  }
+  
+  // Finally fall back to geography-appropriate defaults using the same system as the prompt engine
+  if (!firstSignature) {
+    firstSignature = getDefaultSignatureForGeography(docData.geography, 'first');
+  }
+  if (!counterSignature) {
+    counterSignature = getDefaultSignatureForGeography(docData.geography, 'counter');
+  }
+
+  return `
+<div class="signature-block">
+  <p class="section-header">${translations.signatures}</p>
+  <p>${translations.inWitnessWhereof}</p>
+  
+  <table class="signature-table">
+    <tr>
+      <td>
+        <div class="signer-name">${firstParty.toUpperCase()}</div>
+        <div class="signer-title">${translations.by}: ${firstSignature.name}</div>
+        <div class="signer-title">${translations.title}: ${firstSignature.title}</div>
+        <div class="signature-line"></div>
+        <div>${translations.signature}</div>
+        <div class="signature-date">${translations.date}: ${effectiveDate}</div>
+      </td>
+      <td>
+        <div class="signer-name">${counterparty.toUpperCase()}</div>
+        <div class="signer-title">${translations.by}: ${counterSignature.name}</div>
+        <div class="signer-title">${translations.title}: ${counterSignature.title}</div>
+        <div class="signature-line"></div>
+        <div>${translations.signature}</div>
+        <div class="signature-date">${translations.date}: ${effectiveDate}</div>
+      </td>
+    </tr>
+  </table>
+</div>`;
+}
+
+// Extract signature info from existing document content (if OpenAI generated names)
+function extractSignatureFromContent(docData, party) {
+  // This would need access to the generated content, but we're in post-processing
+  // For now, return null and rely on other methods
+  return null;
+}
+
+// Helper function to extract signature information from docData
+function extractSignatureInfo(docData, party) {
+  // Try to extract from specialInstructions or other fields
+  if (docData.specialInstructions) {
+    const instructions = docData.specialInstructions.toString();
+    
+    // Look for signature patterns in special instructions
+    const signatureMatch = instructions.match(new RegExp(`${party}.*?signature.*?name[:\\s]+(\\w+\\s+\\w+).*?title[:\\s]+(\\w+[^,\\n]*?)`, 'i'));
+    if (signatureMatch) {
+      return {
+        name: signatureMatch[1].trim(),
+        title: signatureMatch[2].trim()
+      };
+    }
+  }
+  
+  // If no specific signature info found, return null to use defaults
+  return null;
+}
+
+// Get geography-appropriate signature defaults (matching prompt engine system)
+function getDefaultSignatureForGeography(geography, party) {
+  // Mirror the signature system from 03a_promptEngineV2.js
+  const signatureBlocks = {
+    'NAMER': [
+      { name: 'Michael J. Thompson', title: 'Chief Executive Officer' }, // Company A (fixed)
+      { name: 'Sarah K. Martinez', title: 'President & COO' },           // Company B options
+      { name: 'David R. Johnson', title: 'Chief Technology Officer' },
+      { name: 'Jennifer L. Wilson', title: 'Chief Financial Officer' },
+      { name: 'Robert A. Davis', title: 'Senior Vice President' },
+      { name: 'Lisa M. Anderson', title: 'Executive Vice President' }
+    ],
+    'EMEA': [
+      { name: 'James R. Clarke', title: 'Managing Director' },           // Company A (fixed)
+      { name: 'Sophie M. Laurent', title: 'Chief Executive Officer' },   // Company B options  
+      { name: 'Oliver J. Schmidt', title: 'General Manager' },
+      { name: 'Isabella C. Rossi', title: 'Director of Operations' },
+      { name: 'Henrik P. Nielsen', title: 'Chief Technology Officer' },
+      { name: 'Emma K. Williams', title: 'Commercial Director' }
+    ],
+    'APAC': [
+      { name: 'Hiroshi Tanaka', title: 'President & CEO' },             // Company A (fixed)
+      { name: 'Wei Lin Chen', title: 'Managing Director' },             // Company B options
+      { name: 'Priya S. Sharma', title: 'Chief Operating Officer' },
+      { name: 'Kenji Nakamura', title: 'Executive Director' },
+      { name: 'Mei Ling Wong', title: 'General Manager' },
+      { name: 'Raj K. Patel', title: 'Chief Financial Officer' }
+    ],
+    'LATAM': [
+      { name: 'Carlos E. Rodriguez', title: 'Director Ejecutivo' },      // Company A (fixed)
+      { name: 'Maria F. Silva', title: 'Gerente General' },             // Company B options
+      { name: 'José L. Mendez', title: 'Director de Operaciones' },
+      { name: 'Ana C. Gutierrez', title: 'Directora Comercial' },
+      { name: 'Diego M. Vargas', title: 'Vicepresidente' },
+      { name: 'Lucia R. Torres', title: 'Directora Financiera' }
+    ]
+  };
+
+  const geoSignatures = signatureBlocks[geography] || signatureBlocks['NAMER'];
+  
+  if (party === 'first') {
+    // Company A gets fixed first signature
+    return geoSignatures[0];
+  } else {
+    // Company B gets random from remaining options
+    const companyBOptions = geoSignatures.slice(1);
+    return companyBOptions[Math.floor(Math.random() * companyBOptions.length)];
   }
 }
 

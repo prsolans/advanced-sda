@@ -51,6 +51,12 @@ function getDocTypesForIndustry(industry) {
 }
 
 function getDocTypesForSubindustry(subindustry) {
+  // Use enhanced cache manager for O(1) lookup instead of O(n) filtering
+  if (typeof DocumentCache !== 'undefined' && DocumentCache.initialized) {
+    return DocumentCache.getDocTypesForSubindustry(subindustry);
+  }
+  
+  // Fallback to original logic if cache not available
   return Object.keys(DOC_TYPE_LIBRARY).filter(key => {
     const doc = DOC_TYPE_LIBRARY[key];
     return (doc.subindustries.includes("All") || doc.subindustries.includes(subindustry)) &&
