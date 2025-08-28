@@ -107,8 +107,29 @@ function processAndCreateFile(docData, subfolder) {
 
   Logger.log("docData going into prompt:\n" + JSON.stringify(docData, null, 2));
 
-  const role = 'This GPT is designated to generate realistic sample agreements for use during AI demonstrations. It is tailored to create agreements with specific legal language and conditions that can be analyzed to return structured information.';
-  const prompt = createPrompt(docData);
+  // ===== NEW PROMPT ENGINE SELECTION =====
+  const USE_JSON_ENGINE = PropertiesService.getScriptProperties()
+    .getProperty('USE_JSON_ENGINE') === 'true';
+
+  let prompt;
+  let role;
+
+  if (USE_JSON_ENGINE) {
+    try {
+      prompt = promptEngineV2.createPromptJSON(docData);
+      role = 'Generate legal documents from structured JSON specifications.';
+      Logger.log("✓ Using PromptEngineV2 (JSON-based)");
+    } catch (error) {
+      Logger.log(`PromptEngineV2 error, falling back to legacy: ${error.message}`);
+      prompt = createPrompt(docData);
+      role = 'This GPT is designated to generate realistic sample agreements for use during AI demonstrations. It is tailored to create agreements with specific legal language and conditions that can be analyzed to return structured information.';
+    }
+  } else {
+    prompt = createPrompt(docData);
+    role = 'This GPT is designated to generate realistic sample agreements for use during AI demonstrations. It is tailored to create agreements with specific legal language and conditions that can be analyzed to return structured information.';
+    Logger.log("Using legacy prompt engine");
+  }
+  // ===== END NEW SECTION =====
 
   try {
     const responseFromOpenAI = PreSalesOpenAI.executePrompt4o(role, prompt);
@@ -151,16 +172,16 @@ function sanitizeHtml(html) {
 function createSubindustryReferenceDoc(requestData) {
   try {
     const { industry, subindustry, firstParty } = requestData;
-    
+
     // Get the reference folder ID from Script Properties
     const properties = PropertiesService.getScriptProperties();
     const refFolderId = properties.getProperty("REFERENCE_DOC_FOLDER_ID");
-    
+
     if (!refFolderId) {
       Logger.log("REFERENCE_DOC_FOLDER_ID not set in Script Properties. Skipping reference doc creation.");
       return null;
     }
-    
+
     const refFolder = DriveApp.getFolderById(refFolderId);
 
     // Get ONLY industry-specific document types (no general docs)
@@ -354,7 +375,7 @@ function createSubindustryReferenceDoc(requestData) {
     // Move to reference folder instead of user folder
     const newFile = DriveApp.getFileById(docFile.id);
     newFile.moveTo(refFolder);
-    
+
     // Return the file URL for Slack notification
     const fileUrl = newFile.getUrl();
     Logger.log(`Created subindustry reference document: ${fileName} at ${fileUrl}`);

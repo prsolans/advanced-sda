@@ -65,35 +65,30 @@ function submitSampleRequest(e) {
         let referenceDocUrl = null;
         let subindustryReferenceUrl = null;
 
-        // // REPLACE the existing block with this debug version:
-        // // Create subindustry reference document (stored in REFERENCE_DOC_FOLDER_ID)
-        // Logger.log("=== Checking industry for reference doc ===");
-        // Logger.log("requestData.industry value: '" + requestData.industry + "'");
-        // Logger.log("requestData.industry type: " + typeof requestData.industry);
-        // Logger.log("requestData.industry truthy check: " + (requestData.industry ? "true" : "false"));
+        // Create subindustry reference document (stored in REFERENCE_DOC_FOLDER_ID)
+        Logger.log("=== BEFORE REFERENCE DOC CHECK ===");
+        Logger.log("Line reached: 60");
+        Logger.log("requestData exists: " + (requestData ? "YES" : "NO"));
+        Logger.log("requestData.industry raw value: [" + requestData.industry + "]");
+        Logger.log("requestData.industry type: " + typeof requestData.industry);
 
-        // if (requestData.industry) {
-        //     Logger.log("Industry exists, calling createSubindustryReferenceDoc...");
-        //     try {
-        //         subindustryReferenceUrl = createSubindustryReferenceDoc(requestData);
+        // Try without the if condition first
+        Logger.log("Attempting to call createSubindustryReferenceDoc directly...");
+        try {
+            const testResult = createSubindustryReferenceDoc(requestData);
+            Logger.log("Direct call returned: " + testResult);
+        } catch (e) {
+            Logger.log("Direct call failed: " + e.message);
+        }
 
-        //         Logger.log("Function returned: '" + subindustryReferenceUrl + "'");
-        //         Logger.log("Return type: " + typeof subindustryReferenceUrl);
+        // Now try with the condition
+        if (requestData.industry) {
+            Logger.log("INSIDE IF BLOCK - This should appear if industry exists");
+        } else {
+            Logger.log("INDUSTRY IS FALSY: [" + requestData.industry + "]");
+        }
 
-        //         if (subindustryReferenceUrl) {
-        //             Logger.log("✓ Subindustry reference document created: " + subindustryReferenceUrl);
-        //         } else {
-        //             Logger.log("✗ Function returned null/undefined/empty");
-        //         }
-        //     } catch (error) {
-        //         Logger.log("ERROR calling createSubindustryReferenceDoc: " + error.message);
-        //         Logger.log("Stack: " + error.stack);
-        //     }
-        // } else {
-        //     Logger.log("No industry specified, skipping reference doc");
-        // }
-
-        Logger.log("Final subindustryReferenceUrl value: " + subindustryReferenceUrl);
+        Logger.log("=== AFTER REFERENCE DOC CHECK ===");
 
         if (requestData.createSets === true) {
             const numSets = Math.floor(requestData.quantity / 5);
@@ -142,15 +137,6 @@ function submitSampleRequest(e) {
         } else {
             // For individual documents, no contract set reference document is created
             const docCount = requestData.quantity;
-
-            // ADD THE REFERENCE DOC CREATION HERE:
-            Logger.log("=== CREATING REFERENCE DOC ===");
-            let subindustryReferenceUrl = null;
-            if (requestData.industry) {
-                Logger.log("Industry found: " + requestData.industry);
-                subindustryReferenceUrl = createSubindustryReferenceDoc(requestData);
-                Logger.log("Reference URL: " + subindustryReferenceUrl);
-            }
 
             for (let i = 0; i < docCount; i++) {
                 const docData = generateRandomDocumentRow(requestData);
