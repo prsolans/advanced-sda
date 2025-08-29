@@ -123,7 +123,7 @@ function buildRecitals(recitals, docData) {
       }
     }
     
-    recitalsHtml += `<p><strong>${translations.whereas}</strong>, ${cleanRecital}${index === recitals.length - 1 ? '; and' : ';'}</p>`;
+    recitalsHtml += `<p><strong>${translations.whereas}</strong>, ${cleanRecital}${index === recitals.length - 1 ? '; and' : ''}</p>`;
   });
   recitalsHtml += `<p><strong>${translations.nowTherefore}</strong>, ${translations.inConsideration}:</p>`;
   recitalsHtml += '</div>';
@@ -190,39 +190,39 @@ body {
 }
 .document-header {
   text-align: center;
-  margin-bottom: 30pt;
+  margin-bottom: 15pt;
   page-break-inside: avoid;
 }
 .document-header h1 {
   font-size: 16pt;
   font-weight: bold;
-  margin: 0 0 8pt 0;
+  margin: 0 0 4pt 0;
   text-transform: uppercase;
   letter-spacing: 1pt;
 }
 .document-header h2 {
   font-size: 12pt;
   font-weight: normal;
-  margin: 0 0 16pt 0;
+  margin: 0 0 8pt 0;
   color: #666;
 }
 .preamble {
-  margin-bottom: 24pt;
+  margin-bottom: 12pt;
 }
 .recitals {
-  margin-bottom: 24pt;
+  margin-bottom: 4pt;
 }
 .section {
-  margin-bottom: 18pt;
+  margin-bottom: 9pt;
 }
 .section-header {
   font-weight: bold;
   font-size: 12pt;
-  margin: 18pt 0 12pt 0;
+  margin: 9pt 0 6pt 0;
   text-transform: uppercase;
 }
 p {
-  margin: 0 0 12pt 0;
+  margin: 0 0 6pt 0;
   text-align: justify;
   text-indent: 0;
 }
@@ -230,18 +230,18 @@ strong {
   font-weight: bold;
 }
 .signature-block {
-  margin-top: 36pt;
+  margin-top: 18pt;
   page-break-inside: avoid;
 }
 .signature-table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 24pt;
+  margin-top: 12pt;
 }
 .signature-table td {
   width: 50%;
   vertical-align: top;
-  padding: 12pt;
+  padding: 6pt;
   border: none;
 }
 .signer-name {

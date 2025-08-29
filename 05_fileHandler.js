@@ -204,7 +204,7 @@ body {
   padding: 0;
 }
 p {
-  margin: 0 0 12pt 0;
+  margin: 0 0 6pt 0;
   text-align: justify;
   text-indent: 0;
 }
@@ -215,7 +215,7 @@ h1 {
   font-size: 16pt;
   font-weight: bold;
   text-align: center;
-  margin: 0 0 8pt 0;
+  margin: 0 0 4pt 0;
   text-transform: uppercase;
   letter-spacing: 1pt;
 }
@@ -223,28 +223,28 @@ h2 {
   font-size: 12pt;
   font-weight: normal;
   text-align: center;
-  margin: 0 0 16pt 0;
+  margin: 0 0 8pt 0;
   color: #666;
 }
 .section-header, .section-title {
   font-weight: bold;
   font-size: 12pt;
-  margin: 24pt 0 12pt 0;
+  margin: 12pt 0 6pt 0;
   text-transform: uppercase;
 }
 .signature-block {
-  margin-top: 36pt;
+  margin-top: 18pt;
   page-break-inside: avoid;
 }
 .signature-table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 24pt;
+  margin-top: 12pt;
 }
 .signature-table td {
   width: 50%;
   vertical-align: top;
-  padding: 12pt;
+  padding: 6pt;
   border: none;
 }
 .signer-name {

@@ -64,3 +64,45 @@ function sendSlackNotificationWithReferences(email, successMessage, language, fo
 function sendSlackNotification(email, agreementType, language, fileUrl, referenceDocUrl = null) {
     sendSlackNotificationWithReferences(email, agreementType, language, fileUrl, referenceDocUrl, null);
 }
+
+/**
+ * Sends a Slack notification for feedback submissions
+ * @param {Object} feedbackData - The feedback data object
+ */
+function sendFeedbackSlackNotification(feedbackData) {
+    Logger.log('sendFeedbackSlackNotification called with data: ' + JSON.stringify(feedbackData));
+    
+    const properties = PropertiesService.getScriptProperties();
+    const url = properties.getProperty('SLACK_WEBHOOK_URL');
+
+    Logger.log('SLACK_WEBHOOK_URL retrieved: ' + (url ? 'URL found' : 'URL not found'));
+
+    if (!url) {
+        Logger.log("SLACK_WEBHOOK_URL not set in Script Properties.");
+        throw new Error("SLACK_WEBHOOK_URL not configured");
+    }
+
+    // Create a simple message format compatible with workflow webhooks
+    const message = {
+        "submitter": feedbackData.email || 'Unknown',
+        "link": `📝 New Advanced Sample Document Assistant (ASDA) Feedback\n\n*Name:* ${feedbackData.name || 'Not provided'}\n*Email:* ${feedbackData.email || 'Not provided'}\n*Job Title:* ${feedbackData.jobTitle || 'Not provided'}\n*Location:* ${feedbackData.location || 'Not provided'}\n\n*Feedback:* ${feedbackData.feedback || 'No feedback provided'}\n\n⏰ Submitted: ${new Date().toLocaleString()}`
+    };
+
+    const options = {
+        method: 'post',
+        contentType: 'application/json',
+        payload: JSON.stringify(message)
+    };
+
+    try {
+        Logger.log('Sending Slack webhook request...');
+        const response = UrlFetchApp.fetch(url, options);
+        Logger.log('Slack webhook response code: ' + response.getResponseCode());
+        Logger.log('Slack webhook response: ' + response.getContentText());
+        Logger.log("Feedback Slack notification sent successfully");
+    } catch (error) {
+        Logger.log("Error sending feedback Slack notification: " + error.message);
+        Logger.log("Full error: " + JSON.stringify(error));
+        throw error;
+    }
+}

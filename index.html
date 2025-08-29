@@ -349,6 +349,171 @@
             }
         }
 
+        /* Feedback Modal Styles */
+        .feedback-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .feedback-modal-content {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideIn 0.3s ease;
+        }
+
+        .feedback-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 25px 30px 0 30px;
+            border-bottom: none;
+        }
+
+        .feedback-modal-header h2 {
+            color: #2c3e50;
+            font-size: 24px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .feedback-close-btn {
+            background: none;
+            border: none;
+            font-size: 30px;
+            cursor: pointer;
+            color: #7f8c8d;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+        }
+
+        .feedback-close-btn:hover {
+            background: #f8f9fa;
+            color: #2c3e50;
+        }
+
+        .feedback-modal-body {
+            padding: 20px 30px 30px 30px;
+        }
+
+        .feedback-form-group {
+            margin-bottom: 20px;
+        }
+
+        .feedback-form-group label {
+            display: block;
+            margin-bottom: 6px;
+            color: #2c3e50;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .feedback-form-group input,
+        .feedback-form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+
+        .feedback-form-group input:focus,
+        .feedback-form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .feedback-form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .feedback-submit-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .feedback-submit-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .feedback-submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .feedback-success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #c3e6cb;
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        .feedback-error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #f5c6cb;
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { 
+                opacity: 0;
+                transform: translateY(-50px) scale(0.95);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
         /* Responsive design */
         @media (max-width: 1024px) {
             .content-wrapper {
@@ -358,6 +523,15 @@
                 width: 100%;
                 position: static;
                 margin-top: 20px;
+            }
+            .feedback-modal-content {
+                width: 95%;
+                margin: 20px;
+            }
+            .feedback-modal-header,
+            .feedback-modal-body {
+                padding-left: 20px;
+                padding-right: 20px;
             }
         }
     </style>
@@ -382,7 +556,7 @@
                     <div class="form-group">
                         <label for="email">
                             Email Address
-                            <span class="helper-text">We'll notify you when your documents are ready</span>
+                            <span class="helper-text">We'll notify you by email and Slack when your documents are ready</span>
                         </label>
                         <input type="email" id="email" name="email" required placeholder="your@email.com">
                     </div>
@@ -490,6 +664,67 @@
                     <h3>Expected Document Types</h3>
                     <p id="docTypesDescription">Based on your selected subindustry, you'll receive:</p>
                     <div id="docTypesList"></div>
+                </div>
+
+                <div class="feedback-section" style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #667eea;">
+                    <h3 style="color: #2c3e50; margin-bottom: 10px;">Have Feedback?</h3>
+                    <p style="margin-bottom: 15px; color: #6c757d;">Help us improve Advanced Sample Document Assistant (ASDA) by sharing your thoughts and suggestions.</p>
+                    <a href="javascript:void(0)" onclick="openFeedbackForm()" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 14px; transition: all 0.3s ease;">
+                        📝 Give Feedback
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback Modal -->
+    <div id="feedbackModal" class="feedback-modal" onclick="if(event.target === this) closeFeedbackModal();">
+        <div class="feedback-modal-content">
+            <div class="feedback-modal-header">
+                <h2>Advanced Sample Document Assistant (ASDA) Feedback</h2>
+                <button class="feedback-close-btn" onclick="closeFeedbackModal()">&times;</button>
+            </div>
+            
+            <div class="feedback-modal-body">
+                <p style="margin-bottom: 20px; color: #6c757d;">Help us improve your document generation experience</p>
+                
+                <form id="feedbackForm" onsubmit="submitFeedbackForm(event)">
+                    <div class="feedback-form-group">
+                        <label for="feedbackName">Name <span style="color: #e74c3c;">*</span></label>
+                        <input type="text" id="feedbackName" name="name" required>
+                    </div>
+
+                    <div class="feedback-form-group">
+                        <label for="feedbackEmail">Email <span style="color: #e74c3c;">*</span></label>
+                        <input type="email" id="feedbackEmail" name="email" required>
+                    </div>
+
+                    <div class="feedback-form-group">
+                        <label for="feedbackJobTitle">Job Title</label>
+                        <input type="text" id="feedbackJobTitle" name="jobTitle" placeholder="e.g., Legal Counsel, Business Analyst">
+                    </div>
+
+                    <div class="feedback-form-group">
+                        <label for="feedbackLocation">Location</label>
+                        <input type="text" id="feedbackLocation" name="location" placeholder="e.g., San Francisco, CA">
+                    </div>
+
+                    <div class="feedback-form-group">
+                        <label for="feedbackText">Feedback <span style="color: #e74c3c;">*</span></label>
+                        <textarea id="feedbackText" name="feedback" required placeholder="Please share your thoughts, suggestions, or report any issues you've encountered..."></textarea>
+                    </div>
+
+                    <button type="submit" id="feedbackSubmitBtn" class="feedback-submit-btn">
+                        Submit Feedback
+                    </button>
+                </form>
+
+                <div id="feedbackSuccess" class="feedback-success" style="display: none;">
+                    <strong>Thank you!</strong> Your feedback has been submitted successfully. We appreciate your input!
+                </div>
+
+                <div id="feedbackError" class="feedback-error" style="display: none;">
+                    <strong>Error:</strong> Something went wrong. Please try again.
                 </div>
             </div>
         </div>
@@ -792,6 +1027,94 @@
                 })
                 .getCurrentUserEmail();
         });
+
+        // Open feedback modal
+        function openFeedbackForm() {
+            const modal = document.getElementById('feedbackModal');
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden'; // Prevent background scrolling
+            
+            // Pre-populate user info
+            google.script.run
+                .withSuccessHandler(function(userInfo) {
+                    if (userInfo && userInfo.email) {
+                        document.getElementById('feedbackEmail').value = userInfo.email;
+                    }
+                    if (userInfo && userInfo.name) {
+                        document.getElementById('feedbackName').value = userInfo.name;
+                    }
+                })
+                .withFailureHandler(() => {
+                    console.log('Could not get user info for feedback form');
+                })
+                .getUserInfo();
+        }
+
+        // Close feedback modal
+        function closeFeedbackModal() {
+            const modal = document.getElementById('feedbackModal');
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto'; // Restore scrolling
+            
+            // Reset form
+            document.getElementById('feedbackForm').reset();
+            document.getElementById('feedbackError').style.display = 'none';
+            document.getElementById('feedbackSuccess').style.display = 'none';
+        }
+
+        // Handle feedback form submission
+        function submitFeedbackForm(event) {
+            event.preventDefault();
+            
+            const submitBtn = document.getElementById('feedbackSubmitBtn');
+            const errorDiv = document.getElementById('feedbackError');
+            const successDiv = document.getElementById('feedbackSuccess');
+            
+            // Hide previous messages
+            errorDiv.style.display = 'none';
+            successDiv.style.display = 'none';
+            
+            // Show loading state
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submitting...';
+            
+            // Collect form data
+            const formData = {
+                name: document.getElementById('feedbackName').value,
+                email: document.getElementById('feedbackEmail').value,
+                jobTitle: document.getElementById('feedbackJobTitle').value,
+                location: document.getElementById('feedbackLocation').value,
+                feedback: document.getElementById('feedbackText').value,
+                timestamp: new Date().toISOString()
+            };
+            
+            // Submit to backend
+            google.script.run
+                .withSuccessHandler(function(response) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Submit Feedback';
+                    
+                    if (response.success) {
+                        successDiv.style.display = 'block';
+                        document.getElementById('feedbackForm').reset();
+                        
+                        // Auto-close after 2 seconds
+                        setTimeout(() => {
+                            closeFeedbackModal();
+                        }, 2000);
+                    } else {
+                        errorDiv.innerHTML = `<strong>Error:</strong> ${response.error || 'Submission failed'}`;
+                        errorDiv.style.display = 'block';
+                    }
+                })
+                .withFailureHandler(function(error) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Submit Feedback';
+                    errorDiv.innerHTML = `<strong>Error:</strong> ${error.message || 'Network error occurred'}`;
+                    errorDiv.style.display = 'block';
+                })
+                .submitFeedback(formData);
+        }
     </script>
 </body>
 </html>

@@ -398,6 +398,9 @@ class PromptEngineV2 {
         `ALL content must be in ${language} - section titles, legal terms, and body text`,
         `Use proper ${language} legal terminology and formatting conventions`,
         language !== 'English' ? `NEVER mix English with ${language} - translate ALL terms including "Agreement", "Company", "Corporation", "Effective Date"` : 'Use professional English legal terminology',
+        "VERBOSE AND COMPREHENSIVE: Each section must contain 4-6 detailed paragraphs with extensive legal language and thorough coverage of all relevant terms",
+        "DETAILED EXPLANATIONS: Include comprehensive explanations of rights, obligations, procedures, and consequences in each section", 
+        "EXTENSIVE COVERAGE: Provide thorough treatment of all business terms, risk allocation, compliance requirements, and operational procedures",
         "Complete business terms in sections", 
         "Industry-appropriate terminology",
         "No placeholder text - use realistic data"
@@ -511,7 +514,7 @@ CRITICAL: Generate 100% of content in ${keyData.language} only. This includes:
 - NO English words mixed with ${keyData.language} content
 Use proper ${keyData.language} legal terminology throughout.` : 'Generate content in English with professional legal terminology.'}
 
-CONTENT: Professional legal language | Real data only | Complete business terms${keyData.language !== 'English' ? ` | Example preamble format for ${keyData.language}: "ESTE ACUERDO DE [TIPO] (el "Acuerdo") se celebra a partir del [FECHA] (la "Fecha de Entrada en Vigor") entre: [EMPRESA], una Corporación organizada bajo las leyes de [PAÍS] (la "Compañía"); y [CONTRAPARTE], una Corporación organizada bajo las leyes de [PAÍS] (la "Contraparte");"` : ''}
+CONTENT: VERBOSE AND DETAILED - Generate comprehensive 4-6 paragraph sections with extensive legal language | Professional legal language | Real data only | Complete business terms with thorough explanations | Detailed coverage of rights, obligations, procedures, and consequences${keyData.language !== 'English' ? ` | Example preamble format for ${keyData.language}: "ESTE ACUERDO DE [TIPO] (el "Acuerdo") se celebra a partir del [FECHA] (la "Fecha de Entrada en Vigor") entre: [EMPRESA], una Corporación organizada bajo las leyes de [PAÍS] (la "Compañía"); y [CONTRAPARTE], una Corporación organizada bajo las leyes de [PAÍS] (la "Contraparte");"` : ''}
 
 CONTEXT:
 Industry: ${subindustryGuidance}
