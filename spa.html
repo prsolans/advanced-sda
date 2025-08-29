@@ -1,0 +1,2327 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Sample Document Assistant (ASDA)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: url('https://cdn.bfldr.com/HIN7H4LI/at/bv474f4fm59w3x3sth29wqn7/hero_background_color.png?auto=webp&format=webp&quality=90');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 120px auto 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        /* Header */
+        .header {
+            background: rgba(255, 255, 255, 0.98);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px 40px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+        
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            gap: 20px;
+        }
+        
+        .header img {
+            height: 40px;
+        }
+        
+        .header-title {
+            color: #2d3748;
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        /* Navigation */
+        .navigation {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 15px 40px;
+            border-bottom: 1px solid #dee2e6;
+            position: fixed;
+            top: 70px;
+            left: 0;
+            right: 0;
+            z-index: 900;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .nav-link {
+            color: #495057;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+        }
+
+        .nav-link:hover {
+            background: #fff;
+            color: #667eea;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-link.active {
+            background: #667eea;
+            color: #fff;
+        }
+
+        /* Page Sections */
+        .page {
+            display: none;
+            padding: 40px;
+            min-height: 500px;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* Form Layout */
+        .content-wrapper {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .form-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            flex: 1;
+            max-width: 70%;
+        }
+        
+        .sidebar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            width: 400px;
+            position: sticky;
+            top: 20px;
+            height: fit-content;
+        }
+        
+        .sidebar h2 {
+            color: #2d3748 !important;
+            font-size: 24px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        
+        .sidebar h3 {
+            color: #4a5568;
+            font-size: 18px;
+            margin: 25px 0 10px 0;
+            font-weight: 600;
+        }
+        
+        .sidebar p, .sidebar li {
+            color: #718096;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        .sidebar ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .sidebar li {
+            position: relative;
+            padding-left: 20px;
+            margin-bottom: 8px;
+        }
+        
+        .sidebar li:before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #667eea;
+            font-weight: bold;
+        }
+        
+        .doc-types-section {
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+        }
+        
+        .doc-types-section.hidden {
+            display: none;
+        }
+
+        .doc-type-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin: 4px 4px 4px 0;
+            font-weight: 500;
+        }
+
+        .page h1 {
+            font-size: 2.5rem;
+            font-weight: 300;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+
+        .page h2 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: #e9ecef;
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .helper-text {
+            display: inline;
+            font-size: 13px;
+            color: #6c757d;
+            font-weight: normal;
+            margin-left: 8px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* FAQ Styles */
+        .faq-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        
+        .faq-item {
+            background: #fff;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .faq-item:hover {
+            border-color: #667eea;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        
+        .faq-question {
+            background: #f8f9fa;
+            padding: 20px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #2c3e50;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .faq-question:hover {
+            background: #e9ecef;
+        }
+        
+        .faq-question::after {
+            content: "▼";
+            color: #667eea;
+            font-size: 0.8rem;
+            transition: transform 0.3s ease;
+        }
+        
+        .faq-item.active .faq-question::after {
+            transform: rotate(180deg);
+        }
+        
+        .faq-answer {
+            padding: 0 20px;
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .faq-item.active .faq-answer {
+            padding: 20px;
+            max-height: 500px;
+        }
+        
+        .faq-answer p {
+            color: #495057;
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        
+        .faq-answer ul {
+            color: #495057;
+            margin: 15px 0;
+            padding-left: 20px;
+        }
+        
+        .faq-answer li {
+            margin-bottom: 8px;
+        }
+        
+        .feedback-cta {
+            background: #e3f2fd;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .feedback-cta strong {
+            color: #2c3e50;
+        }
+        
+        .feedback-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .feedback-link:hover {
+            text-decoration: underline;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: #6c757d;
+            margin-bottom: 30px;
+        }
+
+        /* Progress Indicator Styles */
+        .progress-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .progress-container {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            max-width: 500px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        .progress-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid #e9ecef;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .progress-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .progress-message {
+            color: #6c757d;
+            font-size: 1rem;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        .progress-navigation-message {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .progress-navigation-message h3 {
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .progress-navigation-message p {
+            margin: 0;
+            opacity: 0.9;
+        }
+
+        .progress-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #6c757d;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .progress-close:hover {
+            background: #f8f9fa;
+            color: #2c3e50;
+        }
+
+        /* Success Notification */
+        .success-notification {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 20px 25px;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3);
+            z-index: 10000;
+            min-width: 350px;
+            max-width: 400px;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            display: none;
+        }
+
+        .success-notification.show {
+            display: block;
+            transform: translateX(0);
+        }
+
+        .success-notification h3 {
+            margin: 0 0 10px 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .success-notification p {
+            margin: 0;
+            opacity: 0.9;
+            line-height: 1.4;
+        }
+
+        .success-notification .close-success {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            opacity: 0.7;
+            padding: 5px;
+        }
+
+        .success-notification .close-success:hover {
+            opacity: 1;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 8px;
+            }
+            
+            .page {
+                padding: 20px;
+            }
+            
+            .header {
+                padding: 15px 20px;
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+            
+            .navigation {
+                padding: 10px 20px;
+            }
+            
+            .nav-links {
+                justify-content: center;
+                gap: 15px;
+            }
+            
+            .nav-link {
+                font-size: 14px;
+                padding: 6px 12px;
+            }
+            
+            .page h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <img src="https://catalog2.agreementsdemo.com/images/Docusign_Horizontal_Black.png" 
+                 alt="Docusign Logo">
+            <h1 class="header-title">Advanced Sample Document Assistant (ASDA)</h1>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="navigation">
+        <div class="nav-links">
+            <a class="nav-link active" onclick="showPage('home')">
+                Document Generator
+            </a>
+            <a class="nav-link" onclick="showPage('guide')">
+                Document Types Guide
+            </a>
+            <a class="nav-link" onclick="showPage('faq')">
+                FAQ
+            </a>
+            <a class="nav-link" onclick="showPage('feedback')">
+                Feedback
+            </a>
+        </div>
+    </nav>
+
+    <div class="container">
+
+        <!-- HOME PAGE -->
+        <div id="home" class="page active">
+            <div class="content-wrapper">
+                <div class="form-container">
+                    <h1>Sample Document Assistant</h1>
+                    <p class="subtitle">Fill out the form below to generate your custom legal documents</p>
+
+                    <form id="documentForm">
+                        <div class="form-group">
+                            <label for="email">
+                                Email Address
+                                <span class="helper-text">We'll notify you by email and Slack when your documents are ready</span>
+                            </label>
+                            <input type="email" id="email" name="email" required placeholder="your@email.com">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="firstParty">
+                                First Party Name
+                                <span class="helper-text">The primary party in all agreements (defaults to Fontara)</span>
+                            </label>
+                            <input type="text" id="firstParty" name="firstParty" placeholder="Fontara">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="geography">
+                                Geography
+                                <span class="helper-text">Determines the business center locations in agreements</span>
+                            </label>
+                            <select id="geography" name="geography" required>
+                                <option value="">Select a region</option>
+                                <option value="NAMER">NAMER (North America)</option>
+                                <option value="EMEA">EMEA (Europe, Middle East, Africa)</option>
+                                <option value="LATAM">LATAM (Latin America)</option>
+                                <option value="APAC">APAC (Asia-Pacific)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="industry">
+                                Industry
+                                <span class="helper-text">Select your primary industry sector</span>
+                            </label>
+                            <select id="industry" name="industry" required>
+                                <option value="">Select an industry</option>
+                                <option value="Technology">Technology</option>
+                                <option value="Healthcare">Healthcare</option>
+                                <option value="Financial Services">Financial Services</option>
+                                <option value="Manufacturing">Manufacturing</option>
+                                <option value="Energy">Energy</option>
+                                <option value="HR">Human Resources</option>
+                                <option value="Real Estate">Real Estate</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group hidden" id="subindustryGroup">
+                            <label for="subindustry">
+                                Subindustry
+                                <span class="helper-text">Choose a specific sector within your industry</span>
+                            </label>
+                            <select id="subindustry" name="subindustry" required>
+                                <option value="">Select a subindustry</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="language">
+                                Document Language
+                                <span class="helper-text">Select the language for your documents</span>
+                            </label>
+                            <select id="language" name="language" required>
+                                <option value="English">English</option>
+                                <option value="Spanish">Spanish (ES)</option>
+                                <option value="French">French (FR)</option>
+                                <option value="German">German (DE)</option>
+                                <option value="Portuguese (BR)">Portuguese (BR)</option>
+                                <option value="Japanese">Japanese (JA)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="quantity">
+                                Quantity
+                                <span class="helper-text">Number of documents to generate (1-50)</span>
+                            </label>
+                            <input type="number" id="quantity" name="quantity" min="1" max="50" required placeholder="5">
+                        </div>
+
+                        <button type="submit" class="btn" id="submitBtn">
+                            Generate Documents
+                        </button>
+                    </form>
+                </div>
+
+                <div class="sidebar">
+                    <h2>What To Expect</h2>
+                    
+                    <h3>Document Randomization</h3>
+                    <p>Your generated documents will include realistic variations to demonstrate AI capabilities:</p>
+                    <ul>
+                        <li>Key dates within the next 180 days</li>
+                        <li>Random counterparty companies</li>
+                        <li>Initial terms of 1-3 years</li>
+                        <li>Notice periods of 30, 60, or 90 days</li>
+                        <li>Variable assignment and renewal terms</li>
+                        <li>Payment terms ranging from 30-60 days</li>
+                        <li>Industry-specific obligations and clauses</li>
+                    </ul>
+
+                    <div id="docTypesSection" class="doc-types-section hidden">
+                        <h3>Expected Document Types</h3>
+                        <p id="docTypesDescription">Based on your selected subindustry, you'll receive:</p>
+                        <div id="docTypesList"></div>
+                    </div>
+
+                    <div class="feedback-section" style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #667eea;">
+                        <h3 style="color: #2c3e50; margin-bottom: 10px;">Have Feedback?</h3>
+                        <p style="margin-bottom: 15px; color: #6c757d;">Help us improve Advanced Sample Document Assistant (ASDA) by sharing your thoughts and suggestions.</p>
+                        <a href="#" onclick="showPage('feedback')" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 14px; transition: all 0.3s ease;">
+                            Submit Feedback
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FAQ PAGE -->
+        <div id="faq" class="page">
+            <h1>Frequently Asked Questions</h1>
+            <p style="font-size: 1.1rem; color: #6c757d; margin-bottom: 30px;">
+                Everything you need to know about Advanced Sample Document Assistant (ASDA)
+            </p>
+
+            <div class="faq-grid">
+                <div class="faq-item">
+                    <div class="faq-question">
+                        Can I get custom documents or modifications to existing templates?
+                    </div>
+                    <div class="faq-answer">
+                        <p><strong>Yes, we can accommodate custom requests!</strong> While ASDA provides a comprehensive set of industry-specific document types, we understand that every business has unique needs.</p>
+                        
+                        <div class="feedback-cta">
+                            <strong>To request custom documents:</strong><br>
+                            Submit a <a href="#" onclick="showPage('feedback')" class="feedback-link">feedback request</a> with details about your specific requirements. Our team will review your request and work with you to create custom templates or modify existing ones to meet your business needs.
+                        </div>
+                        
+                        <p><strong>What to include in your custom request:</strong></p>
+                        <ul>
+                            <li>Type of document you need</li>
+                            <li>Industry and sub-industry specifics</li>
+                            <li>Special clauses or terms required</li>
+                            <li>Jurisdiction requirements</li>
+                            <li>Timeline for completion</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">
+                        What industries and document types are supported?
+                    </div>
+                    <div class="faq-answer">
+                        <p>ASDA supports multiple industries with specialized document types for each:</p>
+                        
+                        <p><strong>Industries:</strong></p>
+                        <ul>
+                            <li><strong>Healthcare</strong> - Medical Device, Digital Health, Clinical Research, etc.</li>
+                            <li><strong>Financial Services</strong> - Banking, Investment, Insurance, Fintech, etc.</li>
+                            <li><strong>Technology</strong> - Software, Hardware, AI/ML, Cybersecurity, etc.</li>
+                            <li><strong>Energy</strong> - Oil & Gas, Wind, Solar, Nuclear, etc.</li>
+                            <li><strong>Manufacturing</strong> - Automotive, Aerospace, Electronics, etc.</li>
+                            <li><strong>Real Estate</strong> - Commercial, Residential, Development, etc.</li>
+                            <li><strong>HR</strong> - Employment, Benefits, Training, etc.</li>
+                        </ul>
+                        
+                        <p>Each industry includes dozens of specialized document types with appropriate legal obligations and clauses. Visit the <a href="#" onclick="showPage('guide')" class="feedback-link">Document Types Guide</a> to explore all available options.</p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">
+                        How accurate are the generated documents?
+                    </div>
+                    <div class="faq-answer">
+                        <p>ASDA generates professional-quality legal documents with industry-specific terminology, realistic business terms, and proper legal formatting. <strong>These are sample documents created exclusively for demonstration purposes.</strong></p>
+                        
+                        <p><strong>Document characteristics:</strong></p>
+                        <ul>
+                            <li>All financial terms, dates, and party information are generated examples</li>
+                            <li>Documents are intended for educational, training, and demonstration purposes</li>
+                            <li>Generated content showcases document structure and legal terminology</li>
+                            <li>Examples demonstrate realistic contract language and formatting</li>
+                        </ul>
+                        
+                        <p>The AI system uses extensive legal databases and industry best practices to ensure documents follow proper structure and include relevant obligations for each document type.</p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">
+                        What languages are supported?
+                    </div>
+                    <div class="faq-answer">
+                        <p>ASDA supports the following languages:</p>
+                        
+                        <ul>
+                            <li>English</li>
+                            <li>Spanish</li>
+                            <li>French</li>
+                            <li>German</li>
+                            <li>Portuguese (PT)</li>
+                            <li>Portuguese (BR)</li>
+                            <li>Japanese</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">
+                        How do I access my generated documents?
+                    </div>
+                    <div class="faq-answer">
+                        <p>Once your documents are generated, you'll receive notifications via both email and Slack with direct links to access your documents.</p>
+                        
+                        <p><strong>What you'll receive:</strong></p>
+                        <ul>
+                            <li><strong>Email notification</strong> with a direct link to your Google Drive folder</li>
+                            <li><strong>Document Types Guide</strong> filtered for your industry/sub-industry</li>
+                            <li><strong>Slack notification</strong> with document access links</li>
+                        </ul>
+                        
+                        <p>All documents are stored in Google Drive as both PDF and Google Docs formats for easy access and editing.</p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">
+                        Can I generate documents in sets or individually?
+                    </div>
+                    <div class="faq-answer">
+                        <p>Yes! ASDA offers two generation modes:</p>
+                        
+                        <p><strong>Document Sets (5+ documents):</strong></p>
+                        <ul>
+                            <li>Creates complete contract ecosystems (NDA → MSA → SOW → Change Orders)</li>
+                            <li>Documents reference each other with proper parent-child relationships</li>
+                            <li>Consistent parties, terms, and dates across all documents in the set</li>
+                            <li>Minimum quantity: 5 documents per request</li>
+                        </ul>
+                        
+                        <p><strong>Individual Documents (any quantity):</strong></p>
+                        <ul>
+                            <li>Generates standalone documents of various types</li>
+                            <li>Each document is independent with its own parties and terms</li>
+                            <li>Suitable for diverse document libraries and training materials</li>
+                            <li>Any quantity from 1 to 50+ documents</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">
+                        How long does document generation take?
+                    </div>
+                    <div class="faq-answer">
+                        <p>Document generation time varies based on quantity and complexity:</p>
+                        
+                        <ul>
+                            <li><strong>1-5 documents:</strong> 2-5 minutes</li>
+                            <li><strong>6-15 documents:</strong> 5-10 minutes</li>
+                            <li><strong>16+ documents:</strong> 10-20 minutes</li>
+                        </ul>
+                        
+                        <p>Factors affecting generation time include:</p>
+                        <ul>
+                            <li>Document complexity and length</li>
+                            <li>Language translation requirements</li>
+                            <li>Industry-specific legal obligations</li>
+                            <li>Current system load</li>
+                        </ul>
+                        
+                        <p>You'll receive notifications as soon as your documents are ready, so you don't need to wait on the page.</p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">
+                        Is there a limit to how many documents I can generate?
+                    </div>
+                    <div class="faq-answer">
+                        <p>ASDA allows flexible document generation with reasonable limits:</p>
+                        
+                        <ul>
+                            <li><strong>Per request:</strong> Up to 50 documents</li>
+                            <li><strong>Daily limits:</strong> Contact us for high-volume needs</li>
+                            <li><strong>Document sets:</strong> Minimum 5 documents (generates in multiples of 5)</li>
+                        </ul>
+                        
+                        <p>For enterprise or high-volume usage requirements, please <a href="#" onclick="showPage('feedback')" class="feedback-link">submit a feedback request</a> with your specific needs and we'll work with you to accommodate them.</p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">
+                        How do I report issues or request new features?
+                    </div>
+                    <div class="faq-answer">
+                        <p>We welcome your feedback and feature requests! Here's how to get in touch:</p>
+                        
+                        <div class="feedback-cta">
+                            <strong>Submit Feedback:</strong><br>
+                            Use the <a href="#" onclick="showPage('feedback')" class="feedback-link">feedback form</a> to report issues, request features, or share suggestions for improvement.
+                        </div>
+                        
+                        <p><strong>What to include:</strong></p>
+                        <ul>
+                            <li>Clear description of the issue or request</li>
+                            <li>Steps to reproduce (for bugs)</li>
+                            <li>Expected vs. actual behavior</li>
+                            <li>Browser and operating system information</li>
+                            <li>Screenshots if applicable</li>
+                        </ul>
+                        
+                        <p>Our team monitors feedback submissions and will respond to your request promptly.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- GUIDE PAGE -->
+        <div id="guide" class="page">
+            <h1>Document Types Guide</h1>
+            <p style="font-size: 1.1rem; color: #6c757d; margin-bottom: 30px;">
+                Explore available document types and their legal obligations
+            </p>
+
+
+            <!-- Filters -->
+            <div style="background: #f8f9fa; padding: 30px; border-radius: 8px; margin-bottom: 30px;">
+                <h3 style="margin-bottom: 20px; color: #2c3e50;">Filter by Industry & Subindustry</h3>
+                <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
+                    <div>
+                        <label for="guideIndustry" style="display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50;">Industry</label>
+                        <select id="guideIndustry" style="width: 200px; padding: 8px 12px; border: 2px solid #e1e8ed; border-radius: 6px;">
+                            <option value="">All Industries</option>
+                            <option value="Technology">Technology</option>
+                            <option value="Healthcare">Healthcare</option>
+                            <option value="Financial Services">Financial Services</option>
+                            <option value="Manufacturing">Manufacturing</option>
+                            <option value="Energy">Energy</option>
+                            <option value="HR">Human Resources</option>
+                            <option value="Real Estate">Real Estate</option>
+                        </select>
+                    </div>
+                    <div id="guideSubindustryGroup" style="display: none;">
+                        <label for="guideSubindustry" style="display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50;">Subindustry</label>
+                        <select id="guideSubindustry" style="width: 200px; padding: 8px 12px; border: 2px solid #e1e8ed; border-radius: 6px;">
+                            <option value="">All Subindustries</option>
+                        </select>
+                    </div>
+                    <div>
+                        <button onclick="clearGuideFilters()" style="background: #6c757d; color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; margin-top: 24px;">Clear Filters</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Document Types Display -->
+            <div id="guideDocumentTypes">
+                <div style="text-align: center; padding: 40px; color: #6c757d;">
+                    <h3>Select an industry above to view available document types and their legal obligations</h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- FEEDBACK PAGE -->
+        <div id="feedback" class="page">
+            <div class="content-wrapper">
+                <div class="form-container">
+                    <h1>Feedback & Custom Requests</h1>
+                    <p class="subtitle">Help us improve ASDA or request custom document types</p>
+
+                    <form id="feedbackForm">
+                        <div class="form-group">
+                            <label for="feedbackName">
+                                Name (Optional)
+                                <span class="helper-text">Your name for follow-up communication</span>
+                            </label>
+                            <input type="text" id="feedbackName" name="name" placeholder="Your name">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="feedbackEmail">
+                                Email (Optional)
+                                <span class="helper-text">We'll use this to respond to your feedback</span>
+                            </label>
+                            <input type="email" id="feedbackEmail" name="email" placeholder="your@email.com">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="feedbackType">
+                                Feedback Type
+                                <span class="helper-text">Select the category that best describes your feedback</span>
+                            </label>
+                            <select id="feedbackType" name="type" required>
+                                <option value="">Select feedback type</option>
+                                <option value="bug">Bug Report</option>
+                                <option value="feature">Feature Request</option>
+                                <option value="custom">Custom Document Request</option>
+                                <option value="improvement">Improvement Suggestion</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="feedbackMessage">
+                                Your Feedback
+                                <span class="helper-text">Please provide detailed information about your request or issue</span>
+                            </label>
+                            <textarea id="feedbackMessage" name="message" rows="6" required 
+                                      placeholder="Describe your feedback, feature request, or custom document needs..."></textarea>
+                        </div>
+
+                        <button type="submit" class="btn" id="feedbackSubmitBtn">
+                            Submit Feedback
+                        </button>
+                    </form>
+                </div>
+
+                <div class="sidebar">
+                    <h2>We Value Your Input</h2>
+                    <p>Your feedback helps us improve the document generation experience for everyone. We review all submissions and respond promptly.</p>
+
+                    <h3>For Custom Document Requests</h3>
+                    <p>When requesting custom documents or modifications, please include:</p>
+                    <ul>
+                        <li>Type of document you need</li>
+                        <li>Industry and sub-industry specifics</li>
+                        <li>Special clauses or terms required</li>
+                        <li>Jurisdiction requirements</li>
+                        <li>Timeline for completion</li>
+                        <li>Intended use case or business purpose</li>
+                        <li>Number of documents needed</li>
+                    </ul>
+
+                    <h3>Response Timeline</h3>
+                    <p>We typically respond to feedback within:</p>
+                    <ul>
+                        <li><strong>Bug reports:</strong> 1-2 business days</li>
+                        <li><strong>Feature requests:</strong> 3-5 business days</li>
+                        <li><strong>Custom document requests:</strong> 5-10 business days</li>
+                        <li><strong>General feedback:</strong> 2-3 business days</li>
+                    </ul>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress Indicator Overlay -->
+    <div id="progressOverlay" class="progress-overlay">
+        <div class="progress-container">
+            <button id="progressCloseBtn" class="progress-close" title="Close">&times;</button>
+            <div class="progress-spinner"></div>
+            <div class="progress-title">Generating Your Documents</div>
+            <div class="progress-message">
+                Please wait while we create your custom legal documents with industry-specific terminology and realistic business terms.
+            </div>
+            <div id="progressNavigationMessage" class="progress-navigation-message">
+                <h3>✨ You can navigate away from this page</h3>
+                <p>We'll notify you by email and Slack when your documents are ready. Feel free to continue using the application.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Notification -->
+    <div id="successNotification" class="success-notification"></div>
+
+    <script>
+        // Document-specific obligations mapping
+        const documentObligations = {
+            "Software License Agreement": [
+                "License scope and usage restrictions",
+                "Software maintenance and support requirements",
+                "Intellectual property protection and ownership",
+                "User compliance and audit rights",
+                "Termination and license revocation procedures"
+            ],
+            "Cloud Services Agreement": [
+                "Service level commitments (SLA) and uptime guarantees",
+                "Data security and privacy protection measures",
+                "Service availability and disaster recovery",
+                "Data portability and export rights",
+                "Service modification and discontinuation notice"
+            ],
+            "Data Processing Agreement (DPA)": [
+                "GDPR and privacy law compliance requirements",
+                "Data subject rights and response procedures",
+                "Data breach notification and incident response",
+                "Cross-border data transfer safeguards",
+                "Data retention and deletion obligations"
+            ],
+            "Business Associate Agreement (BAA)": [
+                "HIPAA compliance and protected health information safeguards",
+                "Minimum necessary standard for data access",
+                "Security incident reporting and breach notification",
+                "Business associate liability and indemnification",
+                "Audit rights and compliance monitoring"
+            ],
+            "Power Purchase Agreement (PPA)": [
+                "Energy delivery commitments and scheduling",
+                "Renewable energy certificate (REC) transfer",
+                "Grid interconnection and transmission requirements",
+                "Force majeure and curtailment procedures",
+                "Environmental compliance and reporting"
+            ],
+            "Commercial Lease Agreement": [
+                "Rent payment terms and escalation clauses",
+                "Property maintenance and repair responsibilities",
+                "Permitted use restrictions and zoning compliance",
+                "Insurance requirements and liability allocation",
+                "Lease termination and renewal options"
+            ],
+            "Non-Disclosure Agreement (NDA)": [
+                "Confidential information definition and scope",
+                "Use restrictions and permitted disclosures",
+                "Return or destruction of confidential materials",
+                "Term duration and survival of obligations",
+                "Legal remedies for breach and enforcement"
+            ],
+            "Master Service Agreement (MSA)": [
+                "Service delivery standards and performance metrics",
+                "Payment terms and invoicing procedures",
+                "Change management and scope modification process",
+                "Intellectual property ownership and licensing",
+                "Termination rights and transition services"
+            ],
+            "Statement Of Work (SOW)": [
+                "Project deliverables and acceptance criteria",
+                "Timeline milestones and completion deadlines",
+                "Resource allocation and project management",
+                "Change order procedures and cost adjustments",
+                "Quality assurance and testing requirements"
+            ],
+            "Supply Agreement": [
+                "Product specifications and quality standards",
+                "Delivery schedules and shipping requirements",
+                "Pricing terms and cost adjustment mechanisms",
+                "Warranty provisions and defect remediation",
+                "Supply chain security and compliance verification"
+            ],
+            "Investment Advisory Agreement": [
+                "Fiduciary duties and investment standard of care",
+                "Fee structure and compensation disclosure",
+                "Investment strategy and risk parameters",
+                "Performance reporting and account statements",
+                "Regulatory compliance and registration requirements"
+            ],
+            "Loan Agreement": [
+                "Principal amount and interest rate terms",
+                "Repayment schedule and payment obligations",
+                "Collateral requirements and security interests",
+                "Default events and acceleration triggers",
+                "Borrower covenants and financial reporting"
+            ],
+            "Clinical Trial Agreement": [
+                "Protocol compliance and regulatory adherence",
+                "Patient safety monitoring and adverse event reporting",
+                "Data collection and study endpoint requirements",
+                "Institutional review board (IRB) approval maintenance",
+                "Study termination and data retention obligations"
+            ],
+            "Joint Operating Agreement (JOA)": [
+                "Operational control and decision-making procedures",
+                "Cost sharing and accounting methodologies",
+                "Work program approval and budget authorization",
+                "Environmental compliance and remediation responsibilities",
+                "Abandonment and decommissioning obligations"
+            ],
+            "Offer Letter": [
+                "Compensation structure and benefit entitlements",
+                "Job duties and performance expectations",
+                "Employment term and probationary period",
+                "Confidentiality and non-compete restrictions",
+                "At-will employment and termination procedures"
+            ],
+            "Enterprise License Agreement": [
+                "Enterprise-wide deployment and user seat limitations",
+                "Volume licensing terms and scaling provisions",
+                "Technical support and professional services entitlements",
+                "Software customization and integration rights",
+                "Multi-year licensing terms and renewal options"
+            ],
+            "Support & Maintenance Agreement": [
+                "Technical support response time commitments",
+                "Software updates and patch deployment obligations",
+                "Bug fix and error correction procedures",
+                "System maintenance windows and downtime notification",
+                "Support escalation procedures and expert consultation"
+            ],
+            "API Terms of Service": [
+                "API usage limits and rate throttling restrictions",
+                "Authentication and security token management",
+                "Data format standards and version compatibility",
+                "Service availability guarantees and downtime credits",
+                "Developer compliance and acceptable use policies"
+            ],
+            "Telehealth Service Agreement": [
+                "Virtual care delivery standards and protocols",
+                "Technology platform security and HIPAA compliance",
+                "Patient consent and informed care procedures",
+                "Emergency care escalation and referral protocols",
+                "Medical record integration and documentation requirements"
+            ],
+            "Patient Portal Agreement": [
+                "Patient data access rights and authentication procedures",
+                "Health information sharing consent and permissions",
+                "Portal security measures and breach notification",
+                "Patient communication and messaging protocols",
+                "Medical record accuracy and update procedures"
+            ],
+            "Health Data Agreement": [
+                "Protected health information handling and storage",
+                "Patient privacy rights and consent management",
+                "Data sharing limitations and authorized use cases",
+                "Healthcare analytics and research compliance",
+                "Data retention policies and destruction procedures"
+            ],
+            "EMR Integration Agreement": [
+                "Electronic medical record system interoperability",
+                "Patient data synchronization and accuracy requirements",
+                "Clinical workflow integration and user training",
+                "System backup and disaster recovery procedures",
+                "Regulatory compliance and audit trail maintenance"
+            ],
+            "Medical Device Supply Agreement": [
+                "FDA regulatory compliance and device certification",
+                "Product specifications and quality control standards",
+                "Delivery schedules and inventory management",
+                "Warranty provisions and device malfunction procedures",
+                "Clinical training and technical support obligations"
+            ],
+            "Medical Equipment Lease": [
+                "Equipment installation and commissioning requirements",
+                "Preventive maintenance and calibration schedules",
+                "Operator training and certification obligations",
+                "Equipment performance monitoring and reporting",
+                "End-of-lease return and refurbishment procedures"
+            ],
+            "Drug Supply Agreement": [
+                "Pharmaceutical manufacturing and quality standards",
+                "Supply chain security and cold storage requirements",
+                "Regulatory compliance and lot tracking procedures",
+                "Product recall and adverse event reporting",
+                "Pricing stability and volume commitment terms"
+            ],
+            "Research Collaboration Agreement": [
+                "Research objectives and milestone deliverables",
+                "Intellectual property ownership and licensing rights",
+                "Publication rights and data sharing protocols",
+                "Regulatory approval and ethics committee compliance",
+                "Research funding and cost-sharing arrangements"
+            ],
+            "Diagnostic Services Agreement": [
+                "Laboratory testing accuracy and quality standards",
+                "Sample collection and transportation procedures",
+                "Results reporting timelines and communication protocols",
+                "Regulatory compliance and accreditation maintenance",
+                "Billing and insurance coverage coordination"
+            ],
+            "Credit Facility Agreement": [
+                "Credit line availability and drawdown procedures",
+                "Interest rate terms and payment scheduling",
+                "Financial covenant compliance and monitoring",
+                "Collateral requirements and security perfection",
+                "Default remedies and acceleration provisions"
+            ],
+            "Deposit Account Agreement": [
+                "Account opening and customer verification requirements",
+                "Deposit insurance coverage and protection limits",
+                "Transaction processing and fee disclosures",
+                "Account closure and fund transfer procedures",
+                "Regulatory reporting and compliance obligations"
+            ],
+            "Alternative Lending Agreement": [
+                "Non-traditional underwriting and risk assessment criteria",
+                "Alternative credit scoring and evaluation methods",
+                "Flexible repayment terms and modification procedures",
+                "Technology-enabled loan servicing and management",
+                "Consumer protection and fair lending compliance"
+            ],
+            "Portfolio Management Agreement": [
+                "Investment strategy implementation and rebalancing",
+                "Asset allocation and risk management procedures",
+                "Performance benchmarking and reporting standards",
+                "Fee calculation and expense management",
+                "Client communication and investment review meetings"
+            ],
+            "Fee-Based Advisory Agreement": [
+                "Advisory fee structure and billing procedures",
+                "Investment advice standards and suitability requirements",
+                "Client goal assessment and strategy development",
+                "Conflict of interest disclosure and management",
+                "Regulatory supervision and compliance monitoring"
+            ],
+            "ERISA Fiduciary Agreement": [
+                "Employee benefit plan fiduciary responsibilities",
+                "Investment option selection and monitoring procedures",
+                "Participant communication and education requirements",
+                "Fee disclosure and transparency obligations",
+                "Department of Labor compliance and reporting"
+            ],
+            "Underwriting Agreement": [
+                "Securities offering structure and pricing terms",
+                "Due diligence and disclosure obligations",
+                "Market making and price stabilization commitments",
+                "Regulatory filing and approval coordination",
+                "Risk allocation and indemnification provisions"
+            ],
+            "M&A Advisory Agreement": [
+                "Transaction advisory services and strategic guidance",
+                "Valuation analysis and fairness opinion delivery",
+                "Buyer identification and negotiation support",
+                "Due diligence coordination and management",
+                "Success fee calculation and payment terms"
+            ],
+            "Payment Processing Agreement": [
+                "Transaction processing speed and reliability standards",
+                "Payment card industry (PCI) compliance requirements",
+                "Fraud detection and chargeback management procedures",
+                "Settlement timing and fund availability guarantees",
+                "Merchant account setup and underwriting processes"
+            ],
+            "Merchant Agreement": [
+                "Point-of-sale system integration and support",
+                "Transaction fee structure and processing costs",
+                "Chargeback liability and dispute resolution procedures",
+                "Equipment lease and maintenance obligations",
+                "Risk monitoring and account review procedures"
+            ],
+            "Digital Wallet Agreement": [
+                "Mobile payment security and authentication protocols",
+                "Stored value management and fund protection",
+                "Transaction limits and velocity controls",
+                "Customer verification and anti-money laundering compliance",
+                "Digital currency conversion and exchange procedures"
+            ],
+            "Insurance Policy Contract": [
+                "Coverage scope and policy limit definitions",
+                "Premium payment obligations and grace periods",
+                "Claims reporting and investigation procedures",
+                "Policy renewal and modification terms",
+                "Regulatory compliance and solvency requirements"
+            ],
+            "Reinsurance Agreement": [
+                "Risk transfer mechanisms and retention levels",
+                "Claims sharing and settlement procedures",
+                "Premium calculation and payment schedules",
+                "Catastrophic loss protection and aggregate limits",
+                "Regulatory capital relief and solvency support"
+            ],
+            "Agent/Broker Agreement": [
+                "Sales commission structure and payment terms",
+                "Customer relationship management and service standards",
+                "Product training and certification requirements",
+                "Compliance monitoring and regulatory oversight",
+                "Territory restrictions and non-compete provisions"
+            ],
+            "Insurtech Platform Agreement": [
+                "Insurance technology integration and API connectivity",
+                "Data analytics and risk assessment capabilities",
+                "Customer experience and digital service delivery",
+                "Regulatory technology compliance and reporting",
+                "Platform scalability and performance requirements"
+            ],
+            "Risk Assessment Agreement": [
+                "Risk identification and evaluation methodologies",
+                "Risk scoring and rating procedures",
+                "Risk mitigation recommendations and implementation",
+                "Risk monitoring and periodic reassessment",
+                "Risk reporting and communication protocols"
+            ],
+            "Distribution Agreement": [
+                "Product distribution channels and territory rights",
+                "Sales performance targets and volume commitments",
+                "Marketing support and brand protection obligations",
+                "Inventory management and order fulfillment procedures",
+                "Distributor training and certification requirements"
+            ],
+            "Quality Assurance Agreement": [
+                "Product quality standards and testing procedures",
+                "Manufacturing process control and validation",
+                "Quality audit rights and inspection protocols",
+                "Non-conforming product handling and correction",
+                "Continuous improvement and corrective action processes"
+            ],
+            "Automotive Supplier Agreement": [
+                "Automotive industry quality standards (TS 16949) compliance",
+                "Just-in-time delivery and supply chain integration",
+                "Product liability and recall participation obligations",
+                "Supplier development and performance monitoring",
+                "Cost reduction and value engineering commitments"
+            ],
+            "Tier 1 Supplier Agreement": [
+                "Direct OEM relationship management and communication",
+                "Sub-supplier management and supply chain oversight",
+                "Engineering change management and product development",
+                "Warranty support and field failure analysis",
+                "Global supply capability and multi-site coordination"
+            ],
+            "Aerospace Certification Agreement": [
+                "Aviation regulatory compliance and certification maintenance",
+                "Quality management system (AS9100) implementation",
+                "Traceability and configuration control procedures",
+                "Supplier approval and qualification processes",
+                "Continuous airworthiness monitoring and support"
+            ],
+            "Defense Contractor Agreement": [
+                "Government security clearance and facility requirements",
+                "Export control compliance and ITAR restrictions",
+                "Cost accounting standards and government auditing",
+                "Performance-based logistics and sustainment support",
+                "Technology transfer and intellectual property protection"
+            ],
+            "Retail Supplier Agreement": [
+                "Product placement and merchandising requirements",
+                "Promotional support and marketing contributions",
+                "Inventory turns and sell-through performance",
+                "Private label manufacturing and brand compliance",
+                "Electronic data interchange and system integration"
+            ],
+            "Private Label Manufacturing": [
+                "Brand specification compliance and quality control",
+                "Packaging design and labeling requirements",
+                "Manufacturing capacity allocation and priority scheduling",
+                "Intellectual property protection and confidentiality",
+                "Retailer audit rights and facility inspections"
+            ],
+            "OEM Agreement": [
+                "Original equipment manufacturer specifications and standards",
+                "Product customization and engineering support",
+                "Technical documentation and service manual provision",
+                "Field service support and technical training",
+                "End-of-life product support and obsolescence management"
+            ],
+            "Manufacturing Services Agreement": [
+                "Contract manufacturing capacity and capability requirements",
+                "Raw material sourcing and supply chain management",
+                "Manufacturing process control and yield optimization",
+                "Packaging and labeling services coordination",
+                "Quality control testing and certificate of analysis provision"
+            ],
+            "Tolling Agreement": [
+                "Customer-supplied raw material processing and conversion",
+                "Processing fees and yield-based compensation structure",
+                "Facility dedicating and contamination prevention procedures",
+                "Inventory management and material tracking systems",
+                "Process optimization and efficiency improvement commitments"
+            ],
+            "Electronics Assembly Agreement": [
+                "Printed circuit board assembly and testing procedures",
+                "Component sourcing and supply chain management",
+                "Electrostatic discharge protection and handling protocols",
+                "Final assembly testing and quality validation",
+                "Packaging and shipping coordination services"
+            ],
+            "Industrial Distribution Agreement": [
+                "Industrial product expertise and technical support",
+                "Customer application engineering and solution development",
+                "Inventory stocking and availability commitments",
+                "Field service and maintenance support coordination",
+                "Industrial market development and customer relationship management"
+            ],
+            "Food Safety Agreement": [
+                "HACCP compliance and food safety plan implementation",
+                "FDA registration and facility inspection readiness",
+                "Allergen control and cross-contamination prevention",
+                "Traceability systems and recall procedure coordination",
+                "Third-party food safety certification and auditing"
+            ],
+            "Co-Packing Agreement": [
+                "Food processing and packaging service coordination",
+                "Recipe formulation and ingredient sourcing management",
+                "Private label packaging and brand compliance",
+                "Shelf-life testing and nutritional analysis provision",
+                "Regulatory compliance and labeling accuracy assurance"
+            ],
+            "Energy Services Agreement": [
+                "Energy efficiency improvement and measurement procedures",
+                "Demand response program participation and coordination",
+                "Energy management system installation and monitoring",
+                "Utility incentive program administration and optimization",
+                "Carbon footprint reduction and sustainability reporting"
+            ],
+            "Solar Installation Agreement": [
+                "Solar panel installation and system commissioning",
+                "Grid interconnection and net metering setup",
+                "System performance monitoring and maintenance schedules",
+                "Warranty coverage for equipment and installation workmanship",
+                "Permit acquisition and regulatory compliance coordination"
+            ],
+            "Battery Storage Agreement": [
+                "Energy storage system installation and integration",
+                "Grid stabilization and frequency regulation services",
+                "Peak shaving and load management optimization",
+                "Battery performance monitoring and degradation tracking",
+                "Safety protocols and emergency response procedures"
+            ],
+            "Solar Lease Agreement": [
+                "Solar equipment lease terms and monthly payment structure",
+                "System maintenance and performance guarantee provisions",
+                "Property access rights and installation permissions",
+                "Insurance coverage and liability allocation",
+                "End-of-lease equipment removal and site restoration"
+            ],
+            "Wind Farm Development Agreement": [
+                "Wind turbine installation and grid connection coordination",
+                "Environmental impact assessment and mitigation measures",
+                "Community engagement and stakeholder consultation processes",
+                "Power purchase agreement negotiation and execution",
+                "Operations and maintenance service coordination"
+            ],
+            "Wind Turbine Supply Agreement": [
+                "Wind turbine manufacturing and delivery schedules",
+                "Performance testing and acceptance criteria",
+                "Warranty coverage for equipment and performance guarantees",
+                "Technical support and maintenance service provision",
+                "Spare parts availability and lifecycle support"
+            ],
+            "Utility Interconnection Agreement": [
+                "Grid connection standards and technical requirements",
+                "System impact study and interconnection cost allocation",
+                "Protection and control system coordination",
+                "Operating procedures and communication protocols",
+                "Maintenance coordination and outage scheduling"
+            ],
+            "Wholesale Power Agreement": [
+                "Bulk power supply and transmission service coordination",
+                "Market participation and bidding strategy implementation",
+                "Ancillary service provision and grid support obligations",
+                "Settlement and billing procedure coordination",
+                "Regulatory compliance and market rule adherence"
+            ],
+            "Grid-Scale Storage Agreement": [
+                "Large-scale energy storage deployment and operation",
+                "Grid services provision and market participation",
+                "System reliability and black-start capability provision",
+                "Regulatory compliance and grid code adherence",
+                "Performance monitoring and optimization services"
+            ],
+            "Drilling Services Agreement": [
+                "Oil and gas well drilling and completion services",
+                "Drilling equipment and crew provision",
+                "Safety protocols and environmental compliance procedures",
+                "Well log and geological data collection and reporting",
+                "Casing and cementing service coordination"
+            ],
+            "Production Sharing Agreement": [
+                "Hydrocarbon exploration and production rights allocation",
+                "Cost recovery and profit sharing mechanisms",
+                "Government participation and local content requirements",
+                "Environmental protection and decommissioning obligations",
+                "Technology transfer and workforce development commitments"
+            ],
+            "Seismic Survey Agreement": [
+                "Geophysical survey data acquisition and processing",
+                "Land access and stakeholder consultation procedures",
+                "Environmental impact mitigation and restoration",
+                "Data quality standards and delivery specifications",
+                "Confidentiality and data ownership provisions"
+            ],
+            "Refining Services Agreement": [
+                "Crude oil processing and refined product production",
+                "Product quality specifications and testing procedures",
+                "Refinery capacity allocation and scheduling coordination",
+                "Environmental compliance and emissions monitoring",
+                "Product transportation and delivery logistics"
+            ],
+            "Smart Grid Integration Agreement": [
+                "Advanced metering infrastructure deployment and management",
+                "Demand response system integration and optimization",
+                "Grid automation and control system implementation",
+                "Cybersecurity protocols and threat monitoring procedures",
+                "Data analytics and grid optimization services"
+            ],
+            "Demand Response Agreement": [
+                "Load reduction commitments and performance verification",
+                "Economic incentive structure and payment mechanisms",
+                "Communication system integration and automation",
+                "Customer engagement and education program coordination",
+                "Grid reliability support and emergency response procedures"
+            ],
+            "Employee Separation Agreement": [
+                "Severance payment calculation and disbursement schedule",
+                "Benefits continuation and COBRA election procedures",
+                "Non-disclosure and non-disparagement obligations",
+                "Return of company property and confidential information",
+                "Release of claims and legal waiver provisions"
+            ],
+            "Stock Option Agreement": [
+                "Option grant terms and vesting schedule requirements",
+                "Exercise price determination and adjustment procedures",
+                "Tax implications and withholding obligations",
+                "Transfer restrictions and company repurchase rights",
+                "Termination provisions and post-employment exercise periods"
+            ],
+            "Non-Compete Agreement": [
+                "Competitive restriction scope and geographic limitations",
+                "Prohibited activities and customer solicitation restrictions",
+                "Time duration and enforceability provisions",
+                "Consideration and compensation for restrictions",
+                "Modification and waiver procedures"
+            ],
+            "Office Space License Agreement": [
+                "Office space usage rights and occupancy terms",
+                "Shared facility access and common area usage",
+                "Utility and service allocation procedures",
+                "Building security and access control protocols",
+                "License termination and space vacation requirements"
+            ],
+            "Tenant Improvement Agreement": [
+                "Construction project scope and specification requirements",
+                "Landlord and tenant improvement cost allocation",
+                "Construction timeline and completion milestones",
+                "Quality standards and inspection procedures",
+                "Permit acquisition and regulatory compliance coordination"
+            ],
+            "Retail Lease Agreement": [
+                "Retail space usage and permitted business operations",
+                "Percentage rent calculation and sales reporting",
+                "Common area maintenance and operating expense allocation",
+                "Store hours and operational requirements",
+                "Exclusive use provisions and tenant mix coordination"
+            ],
+            "Shopping Center Management": [
+                "Property management and maintenance service coordination",
+                "Tenant relation management and lease administration",
+                "Common area maintenance and capital improvement planning",
+                "Marketing and promotional event coordination",
+                "Security services and property protection measures"
+            ],
+            "Industrial Lease Agreement": [
+                "Industrial facility usage and manufacturing permissions",
+                "Utility capacity and infrastructure requirements",
+                "Environmental compliance and hazardous material handling",
+                "Loading dock and transportation access provisions",
+                "Zoning compliance and permitted use restrictions"
+            ],
+            "Cold Storage Agreement": [
+                "Temperature-controlled storage and monitoring procedures",
+                "Food safety compliance and regulatory adherence",
+                "Inventory management and rotation procedures",
+                "Quality control and product integrity maintenance",
+                "Emergency backup systems and contingency procedures"
+            ],
+            "Warehouse Distribution Agreement": [
+                "Inventory receiving and storage management procedures",
+                "Order fulfillment and shipping service coordination",
+                "Warehouse management system integration and reporting",
+                "Quality control and damage prevention protocols",
+                "Transportation and logistics coordination services"
+            ],
+            "Logistics Center Agreement": [
+                "Multi-modal transportation and distribution services",
+                "Cross-docking and transshipment operations",
+                "Supply chain optimization and route planning",
+                "Customs clearance and international shipping coordination",
+                "Technology integration and tracking system management"
+            ],
+            "Purchase and Sale Agreement": [
+                "Property transfer terms and closing coordination",
+                "Due diligence and inspection period provisions",
+                "Title insurance and ownership verification procedures",
+                "Financing contingencies and loan approval requirements",
+                "Closing cost allocation and escrow management"
+            ],
+            "Property Management Agreement": [
+                "Property maintenance and repair service coordination",
+                "Tenant screening and lease administration",
+                "Rent collection and financial reporting procedures",
+                "Vendor management and contractor coordination",
+                "Property marketing and vacancy management"
+            ],
+            "Residential Property Management": [
+                "Rental property marketing and tenant placement services",
+                "Lease agreement preparation and execution",
+                "Maintenance request coordination and emergency response",
+                "Rent collection and late payment enforcement",
+                "Property inspection and condition reporting"
+            ],
+            "Apartment Management Agreement": [
+                "Multi-unit residential property operations management",
+                "Amenity maintenance and community area management",
+                "Resident services and complaint resolution procedures",
+                "Lease renewal and rent adjustment coordination",
+                "Building security and safety protocol implementation"
+            ],
+            "Investment Property Agreement": [
+                "Real estate investment analysis and acquisition services",
+                "Property performance monitoring and optimization",
+                "Market analysis and investment strategy development",
+                "Property disposition and exit strategy planning",
+                "Investor reporting and financial performance tracking"
+            ],
+            "Real Estate Syndication Agreement": [
+                "Investment opportunity structuring and investor solicitation",
+                "Capital raise coordination and investor qualification",
+                "Property acquisition and due diligence management",
+                "Investment performance monitoring and distribution procedures",
+                "Investor communication and reporting obligations"
+            ],
+            "Land Development Agreement": [
+                "Development project planning and permitting coordination",
+                "Infrastructure installation and utility connection",
+                "Environmental assessment and mitigation procedures",
+                "Zoning approval and land use compliance",
+                "Project financing and construction timeline management"
+            ],
+            "Design-Build Agreement": [
+                "Integrated design and construction service delivery",
+                "Project scope definition and change management procedures",
+                "Design development and approval coordination",
+                "Construction quality control and inspection protocols",
+                "Project completion and warranty service provision"
+            ],
+            "Mixed-Use Development Agreement": [
+                "Complex property development coordination and management",
+                "Mixed-use zoning compliance and approval procedures",
+                "Multi-phase construction and occupancy coordination",
+                "Commercial and residential component integration",
+                "Community impact assessment and mitigation planning"
+            ],
+            "REIT Management Agreement": [
+                "Real estate investment trust portfolio management",
+                "Property acquisition and disposition strategy implementation",
+                "Investor relations and dividend distribution coordination",
+                "Regulatory compliance and SEC reporting obligations",
+                "Performance benchmarking and market analysis"
+            ],
+            "Construction Agreement": [
+                "Construction project execution and timeline management",
+                "Material procurement and subcontractor coordination",
+                "Quality control and building code compliance",
+                "Safety protocols and risk management procedures",
+                "Project completion and final inspection coordination"
+            ],
+            "General Contractor Agreement": [
+                "Overall project management and construction oversight",
+                "Subcontractor selection and coordination procedures",
+                "Project scheduling and critical path management",
+                "Budget management and cost control procedures",
+                "Client communication and progress reporting"
+            ],
+            "Infrastructure Development Agreement": [
+                "Public infrastructure project development and execution",
+                "Government agency coordination and permit acquisition",
+                "Community engagement and stakeholder consultation",
+                "Environmental impact assessment and compliance",
+                "Long-term maintenance and operation planning"
+            ],
+            "Game Publishing Agreement": [
+                "Video game publishing rights and distribution channels",
+                "Marketing campaign development and execution coordination",
+                "Platform certification and submission procedures",
+                "Revenue sharing and royalty payment structures",
+                "Intellectual property protection and licensing management"
+            ],
+            "In-App Purchase Terms": [
+                "Digital content purchasing and delivery procedures",
+                "Payment processing and refund policy implementation",
+                "Age verification and parental consent requirements",
+                "Virtual currency and digital asset management",
+                "Platform compliance and app store approval maintenance"
+            ],
+            "Infrastructure Service Agreement": [
+                "IT infrastructure provisioning and management services",
+                "Network connectivity and bandwidth guarantee provisions",
+                "System monitoring and performance optimization",
+                "Disaster recovery and business continuity planning",
+                "Security monitoring and incident response procedures"
+            ],
+            "Marketplace Agreement": [
+                "Multi-vendor platform operation and management",
+                "Seller onboarding and verification procedures",
+                "Transaction facilitation and payment processing",
+                "Dispute resolution and customer service coordination",
+                "Platform governance and policy enforcement"
+            ],
+            "Drop-Ship Agreement": [
+                "Direct-to-consumer fulfillment and shipping procedures",
+                "Inventory management and product availability coordination",
+                "Order processing and tracking system integration",
+                "Customer service and return handling procedures",
+                "Brand representation and packaging requirements"
+            ],
+            "Marketing Automation Agreement": [
+                "Automated marketing campaign development and execution",
+                "Customer segmentation and targeting procedures",
+                "Performance tracking and analytics reporting",
+                "Compliance with marketing regulations and privacy laws",
+                "Integration with existing marketing technology stack"
+            ],
+            "Lead Generation Agreement": [
+                "Qualified lead identification and delivery procedures",
+                "Lead scoring and qualification criteria definition",
+                "Performance metrics and conversion tracking",
+                "Data quality standards and verification procedures",
+                "Compliance with telemarketing and privacy regulations"
+            ],
+            "HRIS Integration Agreement": [
+                "Human resources information system connectivity and data synchronization",
+                "Employee data privacy and security protection",
+                "Payroll system integration and benefits administration",
+                "Compliance reporting and audit trail maintenance",
+                "System upgrade and maintenance coordination"
+            ],
+            "Payroll Processing Agreement": [
+                "Payroll calculation and payment processing services",
+                "Tax withholding and regulatory compliance procedures",
+                "Direct deposit and payment method coordination",
+                "Payroll reporting and record keeping requirements",
+                "Year-end tax document preparation and distribution"
+            ],
+            "Data Analytics Platform Agreement": [
+                "Business intelligence and analytics platform operation",
+                "Data visualization and dashboard development",
+                "Predictive analytics and machine learning implementation",
+                "Data governance and quality management procedures",
+                "Performance optimization and scalability planning"
+            ],
+            "Data Warehouse Agreement": [
+                "Enterprise data storage and management services",
+                "Data integration and ETL process coordination",
+                "Data modeling and schema design procedures",
+                "Query performance optimization and tuning",
+                "Backup and disaster recovery procedures implementation"
+            ]
+        };
+
+        // Default obligations for documents not specifically mapped
+        const defaultObligations = [
+            "Performance and delivery requirements",
+            "Payment terms and financial obligations",
+            "Compliance with applicable laws and regulations", 
+            "Confidentiality and data protection measures",
+            "Termination procedures and post-contract obligations"
+        ];
+
+        // Global data structures
+        const docTypesByIndustry = {
+            "Technology": {
+                "SaaS": ["Software License Agreement", "Cloud Services Agreement", "Data Processing Agreement (DPA)", "Enterprise License Agreement", "Support & Maintenance Agreement", "API Terms of Service"],
+                "Enterprise Software": ["Software License Agreement", "Enterprise License Agreement", "Support & Maintenance Agreement"],
+                "Mobile Apps": ["Software License Agreement", "Support & Maintenance Agreement", "Game Publishing Agreement", "In-App Purchase Terms"],
+                "Gaming": ["Software License Agreement", "Game Publishing Agreement", "In-App Purchase Terms"],
+                "Cloud Infrastructure": ["Cloud Services Agreement", "Data Processing Agreement (DPA)", "Infrastructure Service Agreement"],
+                "Fintech": ["API Terms of Service", "Data Processing Agreement (DPA)", "Payment Processing Agreement", "Digital Wallet Agreement"],
+                "E-commerce": ["API Terms of Service", "Marketplace Agreement", "Drop-Ship Agreement", "Payment Processing Agreement"],
+                "Marketing Tech": ["Data Processing Agreement (DPA)", "Marketing Automation Agreement", "Lead Generation Agreement"],
+                "HR Tech": ["Data Processing Agreement (DPA)", "HRIS Integration Agreement", "Payroll Processing Agreement"],
+                "Data Analytics": ["Cloud Services Agreement", "Data Analytics Platform Agreement", "Data Warehouse Agreement"]
+            },
+            "Healthcare": {
+                "Digital Health": ["Business Associate Agreement (BAA)", "Telehealth Service Agreement", "Patient Portal Agreement", "Health Data Agreement", "EMR Integration Agreement"],
+                "Medical Devices": ["Business Associate Agreement (BAA)", "Clinical Trial Agreement", "Medical Device Supply Agreement", "Health Data Agreement", "Diagnostic Services Agreement", "Medical Equipment Lease"],
+                "Telehealth": ["Business Associate Agreement (BAA)", "Telehealth Service Agreement"],
+                "Healthcare IT": ["Business Associate Agreement (BAA)", "Telehealth Service Agreement", "Patient Portal Agreement", "EMR Integration Agreement"],
+                "Pharmaceuticals": ["Clinical Trial Agreement", "Drug Supply Agreement", "Research Collaboration Agreement"],
+                "Biotechnology": ["Clinical Trial Agreement", "Drug Supply Agreement", "Research Collaboration Agreement"],
+                "Diagnostics": ["Medical Device Supply Agreement", "Diagnostic Services Agreement"],
+                "Surgical Equipment": ["Medical Device Supply Agreement", "Medical Equipment Lease"]
+            },
+            "Financial Services": {
+                "Banking": ["Loan Agreement", "Credit Facility Agreement", "Deposit Account Agreement"],
+                "Credit Unions": ["Loan Agreement", "Credit Facility Agreement", "Deposit Account Agreement"],
+                "Alternative Lending": ["Loan Agreement", "Alternative Lending Agreement"],
+                "Wealth Management": ["Investment Advisory Agreement", "Portfolio Management Agreement", "Fee-Based Advisory Agreement", "ERISA Fiduciary Agreement"],
+                "Investment Banking": ["Investment Advisory Agreement", "Underwriting Agreement", "M&A Advisory Agreement"],
+                "Asset Management": ["Investment Advisory Agreement", "Portfolio Management Agreement", "ERISA Fiduciary Agreement"],
+                "Fintech": ["Payment Processing Agreement", "Alternative Lending Agreement", "Merchant Agreement", "Digital Wallet Agreement"],
+                "Payment Processors": ["Payment Processing Agreement", "Merchant Agreement", "Digital Wallet Agreement"],
+                "Insurance": ["Insurance Policy Contract", "Reinsurance Agreement", "Agent/Broker Agreement"],
+                "Insurtech": ["Insurance Policy Contract", "Agent/Broker Agreement", "Insurtech Platform Agreement"],
+                "Risk Management": ["Insurance Policy Contract", "Risk Assessment Agreement"]
+            },
+            "Manufacturing": {
+                "Automotive": ["Supply Agreement", "Distribution Agreement", "Quality Assurance Agreement", "Automotive Supplier Agreement", "Tier 1 Supplier Agreement"],
+                "Aerospace": ["Supply Agreement", "Quality Assurance Agreement", "Aerospace Certification Agreement", "Defense Contractor Agreement"],
+                "Consumer Goods": ["Supply Agreement", "Distribution Agreement", "Retail Supplier Agreement", "Private Label Manufacturing"],
+                "Industrial Equipment": ["Supply Agreement", "Distribution Agreement", "OEM Agreement"],
+                "Contract Manufacturing": ["Manufacturing Services Agreement", "Tolling Agreement"],
+                "Private Label": ["Manufacturing Services Agreement", "Private Label Manufacturing"],
+                "Electronics": ["Manufacturing Services Agreement", "Tolling Agreement", "Electronics Assembly Agreement"],
+                "Industrial Products": ["Distribution Agreement", "Industrial Distribution Agreement"],
+                "Food & Beverage": ["Quality Assurance Agreement", "Food Safety Agreement", "Co-Packing Agreement"]
+            },
+            "Energy": {
+                "Renewable Energy": ["Power Purchase Agreement (PPA)", "Energy Services Agreement", "Solar Installation Agreement", "Battery Storage Agreement"],
+                "Solar": ["Power Purchase Agreement (PPA)", "Solar Installation Agreement", "Solar Lease Agreement"],
+                "Wind": ["Power Purchase Agreement (PPA)", "Wind Farm Development Agreement", "Wind Turbine Supply Agreement"],
+                "Utilities": ["Power Purchase Agreement (PPA)", "Utility Interconnection Agreement", "Wholesale Power Agreement", "Grid-Scale Storage Agreement"],
+                "Oil & Gas": ["Joint Operating Agreement (JOA)", "Drilling Services Agreement", "Production Sharing Agreement"],
+                "Exploration": ["Joint Operating Agreement (JOA)", "Drilling Services Agreement", "Seismic Survey Agreement"],
+                "Production": ["Joint Operating Agreement (JOA)", "Production Sharing Agreement", "Refining Services Agreement"],
+                "Energy Management": ["Energy Services Agreement", "Smart Grid Integration Agreement", "Demand Response Agreement"],
+                "Smart Grid": ["Energy Services Agreement", "Smart Grid Integration Agreement", "Demand Response Agreement"],
+                "Energy Storage": ["Energy Services Agreement", "Battery Storage Agreement", "Grid-Scale Storage Agreement"]
+            },
+            "HR": {
+                "All": ["Offer Letter", "Employee Separation Agreement", "Stock Option Agreement", "Non-Compete Agreement"]
+            },
+            "Real Estate": {
+                "Office": ["Commercial Lease Agreement", "Office Space License Agreement", "Tenant Improvement Agreement"],
+                "Retail": ["Commercial Lease Agreement", "Retail Lease Agreement", "Shopping Center Management"],
+                "Industrial": ["Commercial Lease Agreement", "Industrial Lease Agreement", "Cold Storage Agreement"],
+                "Warehouse": ["Commercial Lease Agreement", "Cold Storage Agreement", "Warehouse Distribution Agreement", "Logistics Center Agreement"],
+                "Commercial": ["Purchase and Sale Agreement", "Property Management Agreement"],
+                "Residential": ["Purchase and Sale Agreement", "Property Management Agreement", "Residential Property Management", "Apartment Management Agreement"],
+                "Investment": ["Purchase and Sale Agreement", "Investment Property Agreement", "Real Estate Syndication Agreement"],
+                "Development": ["Purchase and Sale Agreement", "Construction Agreement", "Land Development Agreement", "Design-Build Agreement"],
+                "Mixed-Use": ["Property Management Agreement", "Mixed-Use Development Agreement"],
+                "REITs": ["Property Management Agreement", "REIT Management Agreement"],
+                "Construction": ["Construction Agreement", "Design-Build Agreement", "General Contractor Agreement"],
+                "Infrastructure": ["Construction Agreement", "General Contractor Agreement", "Infrastructure Development Agreement"]
+            }
+        };
+
+        // Guide page functions
+        function updateGuideDisplay() {
+            const industry = document.getElementById('guideIndustry').value;
+            const subindustry = document.getElementById('guideSubindustry').value;
+            const container = document.getElementById('guideDocumentTypes');
+            
+            if (!industry) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #6c757d;">
+                        <h3>Select an industry above to view available document types and their legal obligations</h3>
+                    </div>
+                `;
+                return;
+            }
+            
+            let documentTypes = [];
+            let displayTitle = industry;
+            
+            if (subindustry && docTypesByIndustry[industry] && docTypesByIndustry[industry][subindustry]) {
+                documentTypes = docTypesByIndustry[industry][subindustry];
+                displayTitle = `${industry} - ${subindustry}`;
+            } else if (docTypesByIndustry[industry]) {
+                // Get all document types for the industry
+                Object.keys(docTypesByIndustry[industry]).forEach(sub => {
+                    documentTypes = documentTypes.concat(docTypesByIndustry[industry][sub]);
+                });
+                // Remove duplicates
+                documentTypes = [...new Set(documentTypes)];
+            }
+            
+            if (documentTypes.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #6c757d;">
+                        <h3>No documents found for the selected filters</h3>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = `
+                <div style="margin-bottom: 30px;">
+                    <h2 style="color: #2c3e50; margin-bottom: 15px;">${displayTitle}</h2>
+                    <p style="color: #6c757d; margin-bottom: 25px;">Available document types and their key legal obligations:</p>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px;">
+            `;
+            
+            documentTypes.forEach(docType => {
+                // Get specific obligations for this document type, or use defaults
+                const obligations = documentObligations[docType] || defaultObligations;
+                const obligationsList = obligations.map(obligation => `<li>${obligation}</li>`).join('');
+                
+                html += `
+                    <div style="background: #fff; border: 2px solid #e9ecef; border-radius: 12px; padding: 20px; transition: all 0.3s ease;" onmouseover="this.style.borderColor='#667eea'; this.style.boxShadow='0 8px 25px rgba(0,0,0,0.1)'" onmouseout="this.style.borderColor='#e9ecef'; this.style.boxShadow='none'">
+                        <h3 style="color: #667eea; margin-bottom: 15px; font-size: 1.1rem;">${docType}</h3>
+                        <div style="margin-bottom: 15px;">
+                            <span class="doc-type-badge">${industry}</span>
+                            ${subindustry ? `<span class="doc-type-badge">${subindustry}</span>` : ''}
+                        </div>
+                        <div style="color: #495057; font-size: 14px; line-height: 1.5;">
+                            <strong>Key Legal Obligations:</strong>
+                            <ul style="margin-top: 8px; padding-left: 20px; line-height: 1.6;">
+                                ${obligationsList}
+                            </ul>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        function clearGuideFilters() {
+            document.getElementById('guideIndustry').value = '';
+            document.getElementById('guideSubindustry').value = '';
+            document.getElementById('guideSubindustryGroup').style.display = 'none';
+            updateGuideDisplay();
+        }
+
+        // Simple page navigation
+        function showPage(pageId) {
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // Show selected page
+            document.getElementById(pageId).classList.add('active');
+            
+            // Scroll to top of page to avoid nav obstruction
+            window.scrollTo(0, 0);
+            
+            // Update navigation active state
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            
+            // Find and activate the correct nav link
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                if ((pageId === 'home' && link.textContent.includes('Document Generator')) ||
+                    (pageId === 'guide' && link.textContent.includes('Document Types Guide')) ||
+                    (pageId === 'faq' && link.textContent.includes('FAQ')) ||
+                    (pageId === 'feedback' && link.textContent.includes('Feedback'))) {
+                    link.classList.add('active');
+                }
+            });
+            
+            // Update URL hash
+            window.location.hash = pageId === 'home' ? '' : pageId;
+        }
+        
+        // Handle URL hash navigation
+        function handleHashChange() {
+            const hash = window.location.hash.substring(1); // Remove #
+            const validPages = ['guide', 'faq', 'feedback'];
+            
+            if (hash && validPages.includes(hash)) {
+                showPage(hash);
+            } else {
+                showPage('home');
+            }
+        }
+        
+        // Initialize page based on URL hash
+        function initializePage() {
+            handleHashChange();
+        }
+
+        // Progress modal functions
+        function closeProgressModal() {
+            const progressOverlay = document.getElementById('progressOverlay');
+            const navigationMessage = document.getElementById('progressNavigationMessage');
+            progressOverlay.style.display = 'none';
+            navigationMessage.style.display = 'none';
+        }
+
+        // Success notification functions
+        function showSuccessNotification(message) {
+            const notification = document.getElementById('successNotification');
+            
+            // Create the content dynamically
+            notification.innerHTML = `
+                <button class="close-success" onclick="closeSuccessNotification()">&times;</button>
+                <h3>✅ Documents Generated Successfully!</h3>
+                <p id="successMessage">${message || 'Your documents have been created and you\'ll receive notifications via email and Slack with download links.'}</p>
+            `;
+            
+            notification.classList.add('show');
+            
+            // Auto-hide after 10 seconds
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 10000);
+        }
+
+        function closeSuccessNotification() {
+            const notification = document.getElementById('successNotification');
+            notification.classList.remove('show');
+        }
+
+        // Auto-populate email field with logged in Google user
+        function populateUserEmail() {
+            google.script.run
+                .withSuccessHandler(function(email) {
+                    if (email) {
+                        const emailField = document.getElementById('email');
+                        const feedbackEmailField = document.getElementById('feedbackEmail');
+                        
+                        // Populate main form email
+                        if (emailField) {
+                            emailField.value = email;
+                        }
+                        
+                        // Populate feedback form email
+                        if (feedbackEmailField) {
+                            feedbackEmailField.value = email;
+                        }
+                    }
+                })
+                .withFailureHandler(function(error) {
+                    console.log('Could not get user email:', error);
+                })
+                .getCurrentUserEmail();
+        }
+
+        // FAQ accordion functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize page based on URL hash
+            initializePage();
+            
+            // Add hash change listener for browser back/forward buttons
+            window.addEventListener('hashchange', handleHashChange);
+
+            // Add event listener for progress modal close button
+            document.getElementById('progressCloseBtn').addEventListener('click', closeProgressModal);
+            
+            // Auto-populate email field with logged in Google user
+            populateUserEmail();
+            
+            const faqItems = document.querySelectorAll('.faq-item');
+            
+            faqItems.forEach(item => {
+                const question = item.querySelector('.faq-question');
+                
+                question.addEventListener('click', () => {
+                    // Toggle current item
+                    item.classList.toggle('active');
+                });
+            });
+
+
+            // Industry/subindustry form logic
+            const subindustries = {
+                "Technology": ["SaaS", "Enterprise Software", "Mobile Apps", "Gaming", "Cloud Infrastructure", "Fintech", "E-commerce", "Marketing Tech", "HR Tech", "Data Analytics"],
+                "Healthcare": ["Digital Health", "Medical Devices", "Telehealth", "Healthcare IT", "Pharmaceuticals", "Biotechnology", "Diagnostics", "Surgical Equipment"],
+                "Financial Services": ["Banking", "Credit Unions", "Alternative Lending", "Wealth Management", "Investment Banking", "Asset Management", "Fintech", "Payment Processors", "Insurance", "Insurtech", "Risk Management"],
+                "Manufacturing": ["Automotive", "Aerospace", "Consumer Goods", "Industrial Equipment", "Contract Manufacturing", "Private Label", "Electronics", "Industrial Products", "Food & Beverage"],
+                "Energy": ["Renewable Energy", "Solar", "Wind", "Utilities", "Oil & Gas", "Exploration", "Production", "Energy Management", "Smart Grid", "Energy Storage"],
+                "HR": ["All"],
+                "Real Estate": ["Office", "Retail", "Industrial", "Warehouse", "Commercial", "Residential", "Investment", "Development", "Mixed-Use", "REITs", "Construction", "Infrastructure"]
+            };
+
+            // Handle industry change
+            document.getElementById('industry').addEventListener('change', function() {
+                const industry = this.value;
+                const subindustrySelect = document.getElementById('subindustry');
+                const subindustryGroup = document.getElementById('subindustryGroup');
+                
+                // Clear existing options
+                subindustrySelect.innerHTML = '<option value="">Select a subindustry</option>';
+                
+                if (industry && subindustries[industry]) {
+                    // Show subindustry dropdown
+                    subindustryGroup.classList.remove('hidden');
+                    
+                    subindustries[industry].forEach(sub => {
+                        const option = document.createElement('option');
+                        option.value = sub;
+                        option.textContent = sub;
+                        subindustrySelect.appendChild(option);
+                    });
+                } else {
+                    // Hide subindustry dropdown
+                    subindustryGroup.classList.add('hidden');
+                }
+            });
+
+            // Handle subindustry change - show expected document types
+            document.getElementById('subindustry').addEventListener('change', function() {
+                const industry = document.getElementById('industry').value;
+                const subindustry = this.value;
+                const docTypesSection = document.getElementById('docTypesSection');
+                const docTypesList = document.getElementById('docTypesList');
+                
+                if (industry && subindustry && docTypesByIndustry[industry] && docTypesByIndustry[industry][subindustry]) {
+                    // Show the document types section
+                    docTypesSection.classList.remove('hidden');
+                    
+                    // Update the description
+                    const description = document.getElementById('docTypesDescription');
+                    description.textContent = `Based on your selected ${industry} - ${subindustry} combination, you'll receive:`;
+                    
+                    // Clear existing list
+                    docTypesList.innerHTML = '';
+                    
+                    // Add document types as pills
+                    const docTypes = docTypesByIndustry[industry][subindustry];
+                    
+                    docTypes.forEach(docType => {
+                        const badge = document.createElement('span');
+                        badge.className = 'doc-type-badge';
+                        badge.textContent = docType;
+                        docTypesList.appendChild(badge);
+                    });
+                } else {
+                    // Hide the document types section
+                    docTypesSection.classList.add('hidden');
+                }
+            });
+
+            // Guide page filters
+            document.getElementById('guideIndustry').addEventListener('change', function() {
+                const industry = this.value;
+                const subindustrySelect = document.getElementById('guideSubindustry');
+                const subindustryGroup = document.getElementById('guideSubindustryGroup');
+                
+                // Clear subindustry options
+                subindustrySelect.innerHTML = '<option value="">All Subindustries</option>';
+                
+                if (industry && subindustries[industry]) {
+                    // Show subindustry dropdown
+                    subindustryGroup.style.display = 'block';
+                    
+                    subindustries[industry].forEach(sub => {
+                        const option = document.createElement('option');
+                        option.value = sub;
+                        option.textContent = sub;
+                        subindustrySelect.appendChild(option);
+                    });
+                } else {
+                    // Hide subindustry dropdown
+                    subindustryGroup.style.display = 'none';
+                }
+                
+                // Update display
+                updateGuideDisplay();
+            });
+
+            document.getElementById('guideSubindustry').addEventListener('change', updateGuideDisplay);
+
+            // Handle form submissions
+            document.getElementById('documentForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const submitBtn = document.getElementById('submitBtn');
+                const progressOverlay = document.getElementById('progressOverlay');
+                const navigationMessage = document.getElementById('progressNavigationMessage');
+                
+                // Show progress indicator
+                progressOverlay.style.display = 'flex';
+                
+                // Start 15-second timer for navigation message
+                setTimeout(function() {
+                    navigationMessage.style.display = 'block';
+                }, 15000);
+                
+                const formData = {
+                    email: document.getElementById('email').value,
+                    firstParty: document.getElementById('firstParty').value || 'Fontara',
+                    geography: document.getElementById('geography').value,
+                    industry: document.getElementById('industry').value,
+                    subindustry: document.getElementById('subindustry').value,
+                    quantity: parseInt(document.getElementById('quantity').value),
+                    language: document.getElementById('language').value
+                };
+
+                // Call Google Apps Script function
+                google.script.run
+                    .withSuccessHandler(function(response) {
+                        // Hide progress indicator
+                        closeProgressModal();
+                        
+                        // Show elegant success notification
+                        showSuccessNotification(response.message || 'Your documents have been created and you\'ll receive notifications via email and Slack with download links.');
+                    })
+                    .withFailureHandler(function(error) {
+                        // Hide progress indicator
+                        closeProgressModal();
+                        
+                        // Show error message (keep alert for errors since they're rare)
+                        alert('Error: ' + error.message);
+                    })
+                    .processFormSubmission(formData);
+            });
+
+            // Handle feedback form submission
+            document.getElementById('feedbackForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const submitBtn = document.getElementById('feedbackSubmitBtn');
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Submitting...';
+                
+                const feedbackData = {
+                    name: document.getElementById('feedbackName').value,
+                    email: document.getElementById('feedbackEmail').value,
+                    type: document.getElementById('feedbackType').value,
+                    message: document.getElementById('feedbackMessage').value
+                };
+
+                // Call Google Apps Script function
+                google.script.run
+                    .withSuccessHandler(function(response) {
+                        alert('Thank you for your feedback!');
+                        document.getElementById('feedbackForm').reset();
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Submit Feedback';
+                    })
+                    .withFailureHandler(function(error) {
+                        alert('Error submitting feedback: ' + error.message);
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Submit Feedback';
+                    })
+                    .submitFeedback(feedbackData);
+            });
+        });
+    </script>
+</body>
+</html>

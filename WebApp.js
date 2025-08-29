@@ -1,9 +1,19 @@
 // WebApp.js - Complete file
 
-function doGet() {
-  return HtmlService.createHtmlOutputFromFile('index')
-    .setTitle('Document Generation Request Form')
-    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+function doGet(e) {
+  try {
+    Logger.log('doGet called with parameters: ' + JSON.stringify(e.parameter));
+    
+    // Serve the single-page application
+    Logger.log('Serving single-page application');
+    return HtmlService.createHtmlOutputFromFile('spa')
+      .setTitle('Advanced Sample Document Assistant (ASDA)')
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+      
+  } catch (error) {
+    Logger.log('Error in doGet: ' + error.message);
+    return HtmlService.createHtmlOutput('<h1>Error: ' + error.message + '</h1>');
+  }
 }
 
 function doPost(e) {
@@ -117,13 +127,14 @@ function processRowDirectly(sheet, rowNumber, formData) {
     const subfolder = rootFolder.createFolder(folderName);
 
     let successMessage = "";
+    let userGuideUrl = null;
 
-    // Generate the reference document first
+    // Generate user guide URL with industry and subindustry filters
     try {
-      createSubindustryReferenceDoc(requestData, subfolder);
-      Logger.log("Reference document created successfully");
+      userGuideUrl = generateUserGuideUrl(requestData.industry, requestData.subindustry);
+      Logger.log("Generated user guide URL: " + userGuideUrl);
     } catch (refError) {
-      Logger.log("Could not create reference document: " + refError.message);
+      Logger.log("Could not generate user guide URL: " + refError.message);
     }
 
     if (requestData.createSets === true) {
@@ -236,10 +247,17 @@ function processRowDirectly(sheet, rowNumber, formData) {
     statusRange.setValue(successMessage);
     
     // Send email notification to requester
-    sendDocumentReadyEmail(requestData, successMessage, subfolder.getUrl());
+    sendDocumentReadyEmail(requestData, successMessage, subfolder.getUrl(), userGuideUrl);
     
-    // Send Slack notification 
-    sendSlackNotification(requestData.email, successMessage, requestData.language, subfolder.getUrl());
+    // Send Slack notification with user guide link
+    sendSlackNotificationWithReferences(
+      requestData.email, 
+      successMessage, 
+      requestData.language, 
+      subfolder.getUrl(),
+      null, // No contract set reference
+      userGuideUrl
+    );
     Logger.log("Email and Slack notifications sent with folder link.");
 
   } catch (error) {
@@ -443,7 +461,7 @@ function testWebApp() {
 /**
  * Send email notification to document requester when documents are ready
  */
-function sendDocumentReadyEmail(requestData, successMessage, folderUrl) {
+function sendDocumentReadyEmail(requestData, successMessage, folderUrl, userGuideUrl = null) {
   try {
     if (!requestData.email) {
       Logger.log('No email provided for document ready notification');
@@ -495,9 +513,16 @@ function sendDocumentReadyEmail(requestData, successMessage, folderUrl) {
           </div>
           
           <div style="text-align: center; margin: 30px 0;">
-            <a href="${folderUrl}" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 30px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);">
+            <a href="${folderUrl}" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 30px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3); margin-bottom: 15px;">
               📁 Access Your Documents
             </a>
+            ${userGuideUrl ? `
+            <div style="margin-top: 15px;">
+              <a href="${userGuideUrl}" style="display: inline-block; background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 12px 25px; border-radius: 6px; text-decoration: none; font-weight: 500; font-size: 14px; box-shadow: 0 3px 10px rgba(40, 167, 69, 0.3);">
+                📖 Document Types & Obligations Guide
+              </a>
+            </div>
+            ` : ''}
           </div>
           
           <div style="background: #e8f4fd; padding: 20px; border-radius: 8px; border-left: 4px solid #667eea; margin: 25px 0;">
@@ -545,6 +570,7 @@ ${successMessage}
 - Generated: ${new Date().toLocaleString()}
 
 📁 Access your documents: ${folderUrl}
+${userGuideUrl ? `📖 Document Types & Obligations Guide: ${userGuideUrl}` : ''}
 
 💡 What's Included:
 - Professional legal documents ready for review
@@ -874,5 +900,118 @@ Submitted on ${new Date().toLocaleString()}
   } catch (error) {
     Logger.log(`Error sending feedback confirmation email: ${error.message}`);
     return 'failed';
+  }
+}
+
+/**
+ * Map industry names to their category names in DOC_TYPE_LIBRARY
+ * This handles inconsistencies between form submission names and library categories
+ */
+function mapIndustryToCategory(industry) {
+  const industryMapping = {
+    'Financial Services': 'Financial'  // Maps "Financial Services" to "Financial-Specific"
+  };
+  
+  return industryMapping[industry] || industry;
+}
+
+/**
+ * Get document library data for user guide
+ * Returns filtered document data based on industry/subindustry
+ */
+function getDocumentLibraryData(industry = null, subindustry = null) {
+  try {
+    if (!industry) {
+      // Return all industry-specific documents
+      const filtered = {};
+      Object.entries(DOC_TYPE_LIBRARY).forEach(([docName, docData]) => {
+        if (docData.category && docData.category.includes('-Specific')) {
+          filtered[docName] = docData;
+        }
+      });
+      return filtered;
+    }
+    
+    // Map industry name to category name
+    const categoryIndustry = mapIndustryToCategory(industry);
+    
+    // Filter by industry and optionally subindustry
+    const filtered = {};
+    Object.entries(DOC_TYPE_LIBRARY).forEach(([docName, docData]) => {
+      if (docData.category === `${categoryIndustry}-Specific`) {
+        // Check subindustry filter
+        if (!subindustry || 
+            docData.subindustries.includes(subindustry) || 
+            docData.subindustries.includes('All')) {
+          filtered[docName] = docData;
+        }
+      }
+    });
+    
+    Logger.log(`Filtered document library: ${Object.keys(filtered).length} documents for ${industry}${subindustry ? '/' + subindustry : ''} (mapped to ${categoryIndustry})`);
+    return filtered;
+    
+  } catch (error) {
+    Logger.log(`Error getting document library data: ${error.message}`);
+    return {};
+  }
+}
+
+/**
+ * Get obligation library data for user guide
+ * Returns obligation examples organized by obligation type
+ */
+function getObligationLibraryData() {
+  try {
+    // Generate obligation examples for all known obligation types
+    const obligationExamples = {};
+    const sampleCompany = "Company"; // Generic company name for examples
+    
+    // Get all unique obligation types from document library
+    const obligationTypes = new Set();
+    Object.values(DOC_TYPE_LIBRARY).forEach(doc => {
+      if (doc.obligations && Array.isArray(doc.obligations)) {
+        doc.obligations.forEach(obligation => {
+          obligationTypes.add(obligation);
+        });
+      }
+    });
+    
+    // Generate examples for each obligation type
+    obligationTypes.forEach(obligationType => {
+      const examples = generateObligationExamples(obligationType, sampleCompany);
+      if (examples && examples.length > 0) {
+        obligationExamples[obligationType] = examples;
+      }
+    });
+    
+    return obligationExamples;
+    
+  } catch (error) {
+    Logger.log(`Error getting obligation library data: ${error.message}`);
+    return {};
+  }
+}
+
+/**
+ * Generate URL for user guide with hash-based navigation
+ * @param {string} industry - Optional industry filter (now ignored due to SPA navigation)
+ * @param {string} subindustry - Optional subindustry filter (now ignored due to SPA navigation)
+ * @returns {string} - Complete URL to user guide using hash navigation
+ */
+function generateUserGuideUrl(industry = null, subindustry = null) {
+  try {
+    // Get the web app URL
+    const webAppUrl = ScriptApp.getService().getUrl();
+    
+    // Use hash-based navigation for single-page application
+    const url = webAppUrl + '#guide';
+    
+    Logger.log(`Generated user guide URL with hash navigation: ${url}`);
+    return url;
+    
+  } catch (error) {
+    Logger.log(`Error generating user guide URL: ${error.message}`);
+    return ScriptApp.getService().getUrl() + '#guide';
   }
 }

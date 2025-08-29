@@ -59,14 +59,14 @@ function submitSampleRequest(e) {
         const subfolder = rootFolder.createFolder(folderName);
 
         let successMessage = "";
-        let referenceDocUrl = null;
-        let subindustryReferenceUrl = null;
+        let userGuideUrl = null;
 
-        // Create subindustry reference document (stored in REFERENCE_DOC_FOLDER_ID)
+        // Generate user guide URL with industry and subindustry filters
         try {
-            subindustryReferenceUrl = createSubindustryReferenceDoc(requestData);
+            userGuideUrl = generateUserGuideUrl(requestData.industry, requestData.subindustry);
+            Logger.log(`Generated user guide URL: ${userGuideUrl}`);
         } catch (e) {
-            Logger.log("Could not create subindustry reference document: " + e.message);
+            Logger.log("Could not generate user guide URL: " + e.message);
         }
 
         if (requestData.createSets === true) {
@@ -101,16 +101,13 @@ function submitSampleRequest(e) {
                     processAndCreateFile(docData, subfolder);
                 }
 
-                // Create contract set reference document for first set only (stored in REFERENCE_DOC_FOLDER_ID)
-                if (setIndex === 0) {
-                    referenceDocUrl = createReferenceDocument(setDocuments, setCounterparty, requestData);
-                }
+                // Contract set reference documents are now replaced by the user guide URL
             }
 
             successMessage = `Success! ${docCount} documents (${numSets} sets) created.`;
 
         } else {
-            // For individual documents, no contract set reference document is created
+            // For individual documents, user guide provides document type details
             const docCount = requestData.quantity;
 
             for (let i = 0; i < docCount; i++) {
@@ -122,14 +119,14 @@ function submitSampleRequest(e) {
 
         statusRange.setValue(successMessage);
 
-        // Send Slack notification with both reference document URLs if available
+        // Send Slack notification with user guide URL
         sendSlackNotificationWithReferences(
             requestData.email,
             successMessage,
             requestData.language,
             subfolder.getUrl(),
-            referenceDocUrl,
-            subindustryReferenceUrl
+            null, // No longer using contract set reference
+            userGuideUrl
         );
 
     } catch (error) {
