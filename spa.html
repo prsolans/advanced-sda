@@ -594,7 +594,10 @@
                 Document Generator
             </a>
             <a class="nav-link" onclick="showPage('guide')">
-                Document Types Guide
+                User Guide
+            </a>
+            <a class="nav-link" onclick="showPage('doctypes')">
+                Document Types
             </a>
             <a class="nav-link" onclick="showPage('faq')">
                 FAQ
@@ -733,6 +736,77 @@
             </div>
         </div>
 
+        <!-- DOCUMENT TYPES PAGE -->
+        <div id="doctypes" class="page">
+            <h1>Document Types Explorer</h1>
+            <p style="font-size: 1.1rem; color: #6c757d; margin-bottom: 30px; text-align: center;">
+                Explore available document types and their legal obligations by industry and subindustry
+            </p>
+
+            <!-- Filters -->
+            <div style="background: #f8f9fa; padding: 30px; border-radius: 12px; margin-bottom: 30px;">
+                <h3 style="margin-bottom: 20px; color: #2c3e50;">Filter by Industry & Subindustry</h3>
+                <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
+                    <div>
+                        <label for="guideIndustry" style="display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50;">Industry</label>
+                        <select id="guideIndustry" style="width: 200px; padding: 8px 12px; border: 2px solid #e1e8ed; border-radius: 6px;">
+                            <option value="">All Industries</option>
+                            <option value="Technology">Technology</option>
+                            <option value="Healthcare">Healthcare</option>
+                            <option value="Financial Services">Financial Services</option>
+                            <option value="Manufacturing">Manufacturing</option>
+                            <option value="Energy">Energy</option>
+                            <option value="HR">Human Resources</option>
+                            <option value="Real Estate">Real Estate</option>
+                        </select>
+                    </div>
+                    <div id="guideSubindustryGroup" style="display: none;">
+                        <label for="guideSubindustry" style="display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50;">Subindustry</label>
+                        <select id="guideSubindustry" style="width: 200px; padding: 8px 12px; border: 2px solid #e1e8ed; border-radius: 6px;">
+                            <option value="">All Subindustries</option>
+                        </select>
+                    </div>
+                    <div>
+                        <button onclick="clearGuideFilters()" style="background: #6c757d; color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; margin-top: 24px;">Clear Filters</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Key Information -->
+            <div style="background: linear-gradient(135deg, #e3f2fd, #f3e5f5); border-left: 4px solid #667eea; padding: 25px; border-radius: 0 8px 8px 0; margin-bottom: 30px;">
+                <h3 style="color: #2c3e50; margin-bottom: 15px;">💡 Understanding Document Types</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px;">
+                    <div>
+                        <p style="color: #6c757d; line-height: 1.6; margin-bottom: 12px;">Each document type is designed with:</p>
+                        <ul style="color: #6c757d; line-height: 1.6; margin-left: 20px;">
+                            <li>Industry-specific legal obligations</li>
+                            <li>Appropriate regulatory compliance</li>
+                            <li>Realistic business terms and clauses</li>
+                            <li>Professional legal formatting</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <p style="color: #6c757d; line-height: 1.6; margin-bottom: 12px;">Perfect for demonstrating:</p>
+                        <ul style="color: #6c757d; line-height: 1.6; margin-left: 20px;">
+                            <li>Docusign Navigator analytics capabilities</li>
+                            <li>Industry expertise and understanding</li>
+                            <li>Contract lifecycle management features</li>
+                            <li>AI-powered document intelligence</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Document Types Display -->
+            <div id="guideDocumentTypes">
+                <div style="text-align: center; padding: 60px 20px; color: #6c757d; background: #f8f9fa; border-radius: 8px;">
+                    <div style="font-size: 3rem; margin-bottom: 20px;">📚</div>
+                    <h3 style="margin-bottom: 15px; color: #495057;">Select an industry above to explore document types</h3>
+                    <p style="max-width: 500px; margin: 0 auto; line-height: 1.6;">Choose an industry from the dropdown to view all available document types, their descriptions, and the specific legal obligations included in each document.</p>
+                </div>
+            </div>
+        </div>
+
         <!-- FAQ PAGE -->
         <div id="faq" class="page">
             <h1>Frequently Asked Questions</h1>
@@ -782,7 +856,7 @@
                             <li><strong>HR</strong> - Employment, Benefits, Training, etc.</li>
                         </ul>
                         
-                        <p>Each industry includes dozens of specialized document types with appropriate legal obligations and clauses. Visit the <a href="#" onclick="showPage('guide')" class="feedback-link">Document Types Guide</a> to explore all available options.</p>
+                        <p>Each industry includes dozens of specialized document types with appropriate legal obligations and clauses. Visit the <a href="#" onclick="showPage('doctypes')" class="feedback-link">Document Types</a> to explore all available options or the <a href="#" onclick="showPage('guide')" class="feedback-link">User Guide</a> to learn how to use ASDA effectively.</p>
                     </div>
                 </div>
 
@@ -834,7 +908,7 @@
                         <p><strong>What you'll receive:</strong></p>
                         <ul>
                             <li><strong>Email notification</strong> with a direct link to your Google Drive folder</li>
-                            <li><strong>Document Types Guide</strong> filtered for your industry/sub-industry</li>
+                            <li><strong>User Guide</strong> with document types filtered for your industry/sub-industry</li>
                             <li><strong>Slack notification</strong> with document access links</li>
                         </ul>
                         
@@ -938,45 +1012,226 @@
 
         <!-- GUIDE PAGE -->
         <div id="guide" class="page">
-            <h1>Document Types Guide</h1>
-            <p style="font-size: 1.1rem; color: #6c757d; margin-bottom: 30px;">
-                Explore available document types and their legal obligations
+            <h1>ASDA User Guide</h1>
+            <p style="font-size: 1.1rem; color: #6c757d; margin-bottom: 40px; text-align: center;">
+                Your complete guide to generating professional legal documents with Advanced Sample Document Assistant
             </p>
 
-
-            <!-- Filters -->
-            <div style="background: #f8f9fa; padding: 30px; border-radius: 8px; margin-bottom: 30px;">
-                <h3 style="margin-bottom: 20px; color: #2c3e50;">Filter by Industry & Subindustry</h3>
-                <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
-                    <div>
-                        <label for="guideIndustry" style="display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50;">Industry</label>
-                        <select id="guideIndustry" style="width: 200px; padding: 8px 12px; border: 2px solid #e1e8ed; border-radius: 6px;">
-                            <option value="">All Industries</option>
-                            <option value="Technology">Technology</option>
-                            <option value="Healthcare">Healthcare</option>
-                            <option value="Financial Services">Financial Services</option>
-                            <option value="Manufacturing">Manufacturing</option>
-                            <option value="Energy">Energy</option>
-                            <option value="HR">Human Resources</option>
-                            <option value="Real Estate">Real Estate</option>
-                        </select>
+            <!-- 5-Step Workflow -->
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px; border-radius: 12px; margin-bottom: 40px;">
+                <h2 style="color: white; text-align: center; margin-bottom: 30px; font-size: 1.8rem;">🚀 How ASDA Works - 5 Simple Steps</h2>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 30px; margin-top: 30px;">
+                    <div style="text-align: center;">
+                        <div style="background: rgba(255,255,255,0.2); border-radius: 50%; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; font-size: 1.5rem; font-weight: bold;">1</div>
+                        <h3 style="margin-bottom: 10px; color: white;">Submit Form</h3>
+                        <p style="opacity: 0.9; font-size: 0.9rem;">Fill out the simple form with your industry, geography, and document requirements</p>
                     </div>
-                    <div id="guideSubindustryGroup" style="display: none;">
-                        <label for="guideSubindustry" style="display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50;">Subindustry</label>
-                        <select id="guideSubindustry" style="width: 200px; padding: 8px 12px; border: 2px solid #e1e8ed; border-radius: 6px;">
-                            <option value="">All Subindustries</option>
-                        </select>
+                    
+                    <div style="text-align: center;">
+                        <div style="background: rgba(255,255,255,0.2); border-radius: 50%; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; font-size: 1.5rem; font-weight: bold;">2</div>
+                        <h3 style="margin-bottom: 10px; color: white;">Get Notified</h3>
+                        <p style="opacity: 0.9; font-size: 0.9rem;">Receive email and Slack notifications when your documents are ready (usually 5-15 minutes)</p>
                     </div>
-                    <div>
-                        <button onclick="clearGuideFilters()" style="background: #6c757d; color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; margin-top: 24px;">Clear Filters</button>
+                    
+                    <div style="text-align: center;">
+                        <div style="background: rgba(255,255,255,0.2); border-radius: 50%; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; font-size: 1.5rem; font-weight: bold;">3</div>
+                        <h3 style="margin-bottom: 10px; color: white;">Download Docs</h3>
+                        <p style="opacity: 0.9; font-size: 0.9rem;">Access your professional-grade documents via the Google Drive link provided</p>
+                    </div>
+                    
+                    <div style="text-align: center;">
+                        <div style="background: rgba(255,255,255,0.2); border-radius: 50%; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; font-size: 1.5rem; font-weight: bold;">4</div>
+                        <h3 style="margin-bottom: 10px; color: white;">Upload to Navigator</h3>
+                        <p style="opacity: 0.9; font-size: 0.9rem;">Import all documents for rich analytics reporting, then customize your best one for targeted demo scenarios</p>
+                    </div>
+                    
+                    <div style="text-align: center;">
+                        <div style="background: rgba(255,255,255,0.2); border-radius: 50%; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; font-size: 1.5rem; font-weight: bold;">5</div>
+                        <h3 style="margin-bottom: 10px; color: white;">Profit! 💰</h3>
+                        <p style="opacity: 0.9; font-size: 0.9rem;">Deliver compelling demos with industry-specific, realistic legal documents</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Document Types Display -->
-            <div id="guideDocumentTypes">
-                <div style="text-align: center; padding: 40px; color: #6c757d;">
-                    <h3>Select an industry above to view available document types and their legal obligations</h3>
+            <!-- Key Benefits Section -->
+            <div style="background: white; border: 2px solid #28a745; padding: 40px; border-radius: 12px; margin-bottom: 40px;">
+                <h2 style="color: #28a745; text-align: center; margin-bottom: 30px; font-size: 1.6rem;">🎯 Why ASDA Transforms Your Demos</h2>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px;">
+                    <div style="background: #f8f9fa; padding: 25px; border-radius: 8px; border-left: 4px solid #17a2b8;">
+                        <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                            <div style="background: #17a2b8; color: white; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; margin-right: 15px; font-size: 1.2rem;">📊</div>
+                            <h3 style="color: #17a2b8; margin: 0;">Rich Navigator Reporting</h3>
+                        </div>
+                        <p style="color: #6c757d; line-height: 1.6; margin-bottom: 15px;">Upload your ASDA documents to Navigator and instantly generate <strong>detailed analytics reports</strong> that showcase Docusign's AI capabilities.</p>
+                        <ul style="color: #6c757d; line-height: 1.6; margin-left: 20px;">
+                            <li>Comprehensive clause analysis and risk assessment</li>
+                            <li>Contract intelligence metrics and insights</li>
+                            <li>Visual reporting that impresses prospects</li>
+                            <li>Full document lifecycle analytics</li>
+                        </ul>
+                    </div>
+                    
+                    <div style="background: #f8f9fa; padding: 25px; border-radius: 8px; border-left: 4px solid #ffc107;">
+                        <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                            <div style="background: #ffc107; color: white; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; margin-right: 15px; font-size: 1.2rem;">🎯</div>
+                            <h3 style="color: #ffc107; margin: 0;">Customer-Aligned Content</h3>
+                        </div>
+                        <p style="color: #6c757d; line-height: 1.6; margin-bottom: 15px;">Every document is tailored to your prospect's specific industry and business context, making your demo immediately <strong>relevant and relatable</strong>.</p>
+                        <ul style="color: #6c757d; line-height: 1.6; margin-left: 20px;">
+                            <li>Industry-specific legal obligations and terminology</li>
+                            <li>Regulatory compliance relevant to their business</li>
+                            <li>Realistic business terms and scenarios</li>
+                            <li>Geographic and cultural customization</li>
+                        </ul>
+                    </div>
+                    
+                    <div style="background: #f8f9fa; padding: 25px; border-radius: 8px; border-left: 4px solid #6f42c1;">
+                        <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                            <div style="background: #6f42c1; color: white; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; margin-right: 15px; font-size: 1.2rem;">✨</div>
+                            <h3 style="color: #6f42c1; margin: 0;">Demo Customization</h3>
+                        </div>
+                        <p style="color: #6c757d; line-height: 1.6; margin-bottom: 15px;">Select your best document and <strong>enhance it further</strong> by adding custom clauses, specific terms, or targeted extractions that directly address prospect needs.</p>
+                        <ul style="color: #6c757d; line-height: 1.6; margin-left: 20px;">
+                            <li>Add prospect-specific clauses and terms</li>
+                            <li>Customize key data points and extractions</li>
+                            <li>Highlight relevant risk areas for discussion</li>
+                            <li>Create compelling before/after scenarios</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div style="background: linear-gradient(135deg, #28a745, #20c997); color: white; padding: 20px; border-radius: 8px; margin-top: 30px; text-align: center;">
+                    <h4 style="color: white; margin-bottom: 10px;">💡 Pro Tip for Maximum Impact</h4>
+                    <p style="margin: 0; opacity: 0.95;">Generate 5-10 documents, upload all to Navigator for rich reporting, then select the most relevant one for deep customization. This approach gives you both breadth (comprehensive analytics) and depth (targeted demonstration) in a single demo.</p>
+                </div>
+            </div>
+
+            <!-- Quick Start Guide -->
+            <div style="background: #f8f9fa; padding: 30px; border-radius: 12px; margin-bottom: 40px;">
+                <h2 style="color: #2c3e50; margin-bottom: 20px;">⚡ Quick Start</h2>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                    <div>
+                        <h3 style="color: #495057; margin-bottom: 15px;">For Your First Demo:</h3>
+                        <ul style="color: #6c757d; line-height: 1.8;">
+                            <li><strong>Quantity:</strong> Start with 3-5 documents</li>
+                            <li><strong>Industry:</strong> Match your prospect's industry</li>
+                            <li><strong>Geography:</strong> Select their business region</li>
+                            <li><strong>Language:</strong> Choose their preferred language</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 style="color: #495057; margin-bottom: 15px;">Navigator Demo Strategy:</h3>
+                        <ul style="color: #6c757d; line-height: 1.8;">
+                            <li>Generate 5-10 documents for comprehensive Navigator reporting</li>
+                            <li>Upload all documents to showcase full analytics capabilities</li>
+                            <li>Select 1-2 most relevant docs for detailed customization</li>
+                            <li>Add custom clauses that address specific prospect pain points</li>
+                            <li>Prepare extraction scenarios relevant to their business</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Field Guide -->
+            <div style="background: white; border: 1px solid #e1e8ed; padding: 30px; border-radius: 12px; margin-bottom: 40px;">
+                <h2 style="color: #2c3e50; margin-bottom: 20px;">📝 Form Field Guide</h2>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                    <div>
+                        <h3 style="color: #495057; margin-bottom: 15px;">🌍 Geography Impact</h3>
+                        <ul style="color: #6c757d; line-height: 1.8; margin-bottom: 25px;">
+                            <li><strong>NAMER:</strong> USD currency, MM/DD/YYYY dates</li>
+                            <li><strong>EMEA:</strong> EUR currency, DD/MM/YYYY dates</li>
+                            <li><strong>APAC:</strong> Local currencies, DD/MM/YYYY dates</li>
+                            <li><strong>LATAM:</strong> USD/Local currency, DD/MM/YYYY dates</li>
+                        </ul>
+                        
+                        <h3 style="color: #495057; margin-bottom: 15px;">🏭 Industry Selection</h3>
+                        <p style="color: #6c757d; line-height: 1.6;">Industries determine available document types and legal obligations. Each industry includes 15-30 specialized document types with appropriate regulatory compliance.</p>
+                    </div>
+                    
+                    <div>
+                        <h3 style="color: #495057; margin-bottom: 15px;">🎯 Subindustry Benefits</h3>
+                        <ul style="color: #6c757d; line-height: 1.8; margin-bottom: 25px;">
+                            <li>More targeted legal obligations</li>
+                            <li>Industry-specific terminology</li>
+                            <li>Relevant regulatory references</li>
+                            <li>Specialized business terms</li>
+                        </ul>
+                        
+                        <h3 style="color: #495057; margin-bottom: 15px;">🌐 Language Support</h3>
+                        <p style="color: #6c757d; line-height: 1.6;">Full translation including legal terminology, proper formatting, and cultural business practices. Available in English, Spanish, French, German, Portuguese (BR), and Japanese.</p>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Understanding Your Documents -->
+            <div style="background: #e8f4fd; border-left: 4px solid #667eea; padding: 30px; border-radius: 0 12px 12px 0; margin-bottom: 40px;">
+                <h2 style="color: #2c3e50; margin-bottom: 20px;">🧠 Understanding Your Documents</h2>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                    <div>
+                        <h3 style="color: #495057; margin-bottom: 15px;">What Makes Them Realistic?</h3>
+                        <ul style="color: #6c757d; line-height: 1.8;">
+                            <li><strong>Dynamic Counterparties:</strong> Randomly selected from 200+ realistic company names</li>
+                            <li><strong>Realistic Dates:</strong> Contract dates, terms, and deadlines within reasonable business timelines</li>
+                            <li><strong>Variable Terms:</strong> 1-3 year initial terms, 30-90 day notice periods</li>
+                            <li><strong>Financial Variety:</strong> Payment terms from 15-60 days, realistic contract values</li>
+                        </ul>
+                    </div>
+                    
+                    <div>
+                        <h3 style="color: #495057; margin-bottom: 15px;">Industry-Specific Elements</h3>
+                        <ul style="color: #6c757d; line-height: 1.8;">
+                            <li><strong>Regulatory Compliance:</strong> HIPAA for healthcare, SOX for financial services, etc.</li>
+                            <li><strong>Specialized Terminology:</strong> Industry-standard language and definitions</li>
+                            <li><strong>Risk Allocation:</strong> Appropriate limitation of liability for each industry</li>
+                            <li><strong>Legal Obligations:</strong> 40+ different obligation types tailored to document purpose</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 20px; border-radius: 8px; margin-top: 25px;">
+                    <h4 style="color: #856404; margin-bottom: 10px;">⚠️ Important Legal Disclaimer</h4>
+                    <p style="color: #856404; margin: 0; font-size: 0.95rem;">These documents contain sample data and are intended for demonstration purposes only. They should be reviewed by qualified legal counsel before use in actual business situations. All company names, terms, and obligations are fictional and for illustrative purposes.</p>
+                </div>
+            </div>
+
+            <!-- Tips & Troubleshooting -->
+            <div style="background: white; border: 1px solid #e1e8ed; padding: 30px; border-radius: 12px;">
+                <h2 style="color: #2c3e50; margin-bottom: 20px;">💡 Tips & Troubleshooting</h2>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                    <div>
+                        <h3 style="color: #28a745; margin-bottom: 15px;">✅ Best Practices</h3>
+                        <ul style="color: #6c757d; line-height: 1.8;">
+                            <li>Generate 3-10 documents for variety in demos</li>
+                            <li>Use specific subindustries for targeted prospects</li>
+                            <li>Request documents 24-48 hours before demos</li>
+                            <li>Keep multiple language sets for global prospects</li>
+                            <li>Review documents for prospect relevance before demos</li>
+                        </ul>
+                    </div>
+                    
+                    <div>
+                        <h3 style="color: #dc3545; margin-bottom: 15px;">⚠️ Common Issues</h3>
+                        <ul style="color: #6c757d; line-height: 1.8;">
+                            <li><strong>Generation takes 15+ minutes:</strong> Normal during peak usage</li>
+                            <li><strong>No email notification:</strong> Check spam folder, verify email address</li>
+                            <li><strong>Documents seem generic:</strong> Try using more specific subindustries</li>
+                            <li><strong>Missing Slack notifications:</strong> Ensure webhooks are configured</li>
+                            <li><strong>Translation issues:</strong> English versions are most comprehensive</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-top: 25px; text-align: center;">
+                    <h4 style="color: #2c3e50; margin-bottom: 10px;">Need Help?</h4>
+                    <p style="color: #6c757d; margin-bottom: 15px;">For technical support or custom document requests:</p>
+                    <button onclick="showPage('feedback')" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Submit Feedback & Requests</button>
                 </div>
             </div>
         </div>
@@ -2036,7 +2291,8 @@
             const navLinks = document.querySelectorAll('.nav-link');
             navLinks.forEach(link => {
                 if ((pageId === 'home' && link.textContent.includes('Document Generator')) ||
-                    (pageId === 'guide' && link.textContent.includes('Document Types Guide')) ||
+                    (pageId === 'guide' && link.textContent.includes('User Guide')) ||
+                    (pageId === 'doctypes' && link.textContent.includes('Document Types')) ||
                     (pageId === 'faq' && link.textContent.includes('FAQ')) ||
                     (pageId === 'feedback' && link.textContent.includes('Feedback'))) {
                     link.classList.add('active');
@@ -2050,7 +2306,7 @@
         // Handle URL hash navigation
         function handleHashChange() {
             const hash = window.location.hash.substring(1); // Remove #
-            const validPages = ['guide', 'faq', 'feedback'];
+            const validPages = ['guide', 'doctypes', 'faq', 'feedback'];
             
             if (hash && validPages.includes(hash)) {
                 showPage(hash);
