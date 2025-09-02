@@ -121,6 +121,11 @@ function processRowDirectly(sheet, rowNumber, formData) {
       throw new Error("Invalid or missing Email or Quantity.");
     }
 
+    // Enforce 25-document cap
+    if (requestData.quantity > 25) {
+      throw new Error("Document quantity cannot exceed 25 documents per submission.");
+    }
+
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
     const folderName = `${requestData.email}_${requestData.industry}_${requestData.subindustry || 'General'}_${timestamp}`;
     const rootFolder = DriveApp.getFolderById(rootFolderId);
@@ -167,78 +172,137 @@ function processRowDirectly(sheet, rowNumber, formData) {
       successMessage = `Success! ${docCount} documents (${numSets} sets) created.`;
 
     } else {
-      // Individual documents
+      // Individual documents - Handle specific quantities per document type
       const docCount = requestData.quantity;
 
-      // Get valid document types for this industry/subindustry
-      const validDocTypes = [];
-      for (const [docType, meta] of Object.entries(DOC_TYPE_LIBRARY)) {
-        const industryMatch = meta.industries.includes(requestData.industry) || meta.industries.includes('All');
-        const subindustryMatch = !requestData.subindustry ||
-          meta.subindustries.includes(requestData.subindustry) ||
-          meta.subindustries.includes('All');
+      // Check if we have specific document type quantities
+      if (formData.docTypeQuantities && Object.keys(formData.docTypeQuantities).length > 0) {
+        Logger.log(`Processing specific document type quantities: ${JSON.stringify(formData.docTypeQuantities)}`);
+        
+        // Generate documents based on specific quantities
+        for (const [agreementType, quantity] of Object.entries(formData.docTypeQuantities)) {
+          for (let i = 0; i < quantity; i++) {
+            const counterparty = pick(COUNTERPARTIES);
 
-        if (industryMatch && subindustryMatch) {
-          validDocTypes.push(docType);
-        }
-      }
+            Logger.log(`Creating document ${i + 1}/${quantity} of type: ${agreementType}`);
 
-      Logger.log(`Found ${validDocTypes.length} valid doc types for ${requestData.industry}/${requestData.subindustry}`);
+            // Create document data directly
+            const contractNumber = generateContractNumber(agreementType);
+            const detailsObject = buildAgreementDetails(agreementType, contractNumber);
 
-      if (validDocTypes.length === 0) {
-        throw new Error(`No document types found for ${requestData.industry}/${requestData.subindustry}`);
-      }
+            const docData = {
+              email: requestData.email,
+              language: requestData.language || 'English',
+              firstParty: requestData.firstParty,
+              counterparty: counterparty,
+              agreementType: agreementType,
+              industry: requestData.industry,
+              subindustry: requestData.subindustry,
+              geography: requestData.geography,
+              specialInstructions: detailsObject.parts.join(", "),
+              effectiveDate: detailsObject.effectiveDate,
+              contractNumber: contractNumber
+            };
 
-      // Generate documents
-      for (let i = 0; i < docCount; i++) {
-        const counterparty = pick(COUNTERPARTIES);
-        const agreementType = pick(validDocTypes);
-
-        Logger.log(`Creating document ${i + 1}: ${agreementType}`);
-
-        // Create document data directly
-        const contractNumber = generateContractNumber(agreementType);
-        const detailsObject = buildAgreementDetails(agreementType, contractNumber);
-
-        // THIS IS WHERE docData IS CREATED
-        const docData = {
-          email: requestData.email,
-          language: requestData.language || 'English', // Ensure language is set
-          firstParty: requestData.firstParty,
-          counterparty: counterparty,
-          agreementType: agreementType, // Critical - must be set!
-          industry: requestData.industry,
-          subindustry: requestData.subindustry,
-          geography: requestData.geography,
-          specialInstructions: detailsObject.parts.join(", "),
-          effectiveDate: detailsObject.effectiveDate,
-          contractNumber: contractNumber
-        };
-
-        // Add financial terms for applicable document types
-        if (shouldIncludeFinancialValuesWebApp(agreementType)) {
-          const financialValues = generateFinancialValuesWebApp(agreementType, formData.industry, formData.geography);
-          
-          docData.specialInstructions += `, Total Contract Value: ${financialValues.contractValue}`;
-          docData.specialInstructions += `, Deposit Amount: ${financialValues.depositAmount}, Deposit Due: ${financialValues.depositDue}`;
-          docData.specialInstructions += `, Payment Amount: ${financialValues.oneTimeAmount}, Due: ${financialValues.firstPaymentDue}`;
-          docData.specialInstructions += `, Monthly Amount: ${financialValues.monthlyAmount}`;
-        }
-
-        // Add obligations
-        const meta = getDocMetaByName(agreementType);
-        if (meta && meta.obligations) {
-          const shuffle = arr => arr.sort(() => Math.random() - 0.5);
-          const selected = shuffle([...meta.obligations]).slice(0, pick([1, 2, 3]));
-          selected.forEach(key => {
-            if (OBL_TEXT[key]) {
-              docData.specialInstructions += ", " + OBL_TEXT[key];
+            // Add financial terms for applicable document types
+            if (shouldIncludeFinancialValuesWebApp(agreementType)) {
+              const financialValues = generateFinancialValuesWebApp(agreementType, formData.industry, formData.geography);
+              
+              docData.specialInstructions += `, Total Contract Value: ${financialValues.contractValue}`;
+              docData.specialInstructions += `, Deposit Amount: ${financialValues.depositAmount}, Deposit Due: ${financialValues.depositDue}`;
+              docData.specialInstructions += `, Payment Amount: ${financialValues.oneTimeAmount}, Due: ${financialValues.firstPaymentDue}`;
+              docData.specialInstructions += `, Monthly Amount: ${financialValues.monthlyAmount}`;
             }
-          });
+
+            // Add obligations
+            const meta = getDocMetaByName(agreementType);
+            if (meta && meta.obligations) {
+              const shuffle = arr => arr.sort(() => Math.random() - 0.5);
+              const selected = shuffle([...meta.obligations]).slice(0, pick([1, 2, 3]));
+              selected.forEach(key => {
+                if (OBL_TEXT[key]) {
+                  docData.specialInstructions += ", " + OBL_TEXT[key];
+                }
+              });
+            }
+
+            Logger.log(`Processing document with data: ${JSON.stringify(docData)}`);
+            processAndCreateFile(docData, subfolder);
+          }
+        }
+      } else {
+        // Fallback to original random generation for backwards compatibility
+        Logger.log("No specific document type quantities provided, using random generation");
+        
+        // Get valid document types for this industry/subindustry
+        const validDocTypes = [];
+        for (const [docType, meta] of Object.entries(DOC_TYPE_LIBRARY)) {
+          const industryMatch = meta.industries.includes(requestData.industry) || meta.industries.includes('All');
+          const subindustryMatch = !requestData.subindustry ||
+            meta.subindustries.includes(requestData.subindustry) ||
+            meta.subindustries.includes('All');
+
+          if (industryMatch && subindustryMatch) {
+            validDocTypes.push(docType);
+          }
         }
 
-        Logger.log(`Processing document with data: ${JSON.stringify(docData)}`);
-        processAndCreateFile(docData, subfolder);
+        Logger.log(`Found ${validDocTypes.length} valid doc types for ${requestData.industry}/${requestData.subindustry}`);
+
+        if (validDocTypes.length === 0) {
+          throw new Error(`No document types found for ${requestData.industry}/${requestData.subindustry}`);
+        }
+
+        // Generate documents randomly
+        for (let i = 0; i < docCount; i++) {
+          const counterparty = pick(COUNTERPARTIES);
+          const agreementType = pick(validDocTypes);
+
+          Logger.log(`Creating document ${i + 1}: ${agreementType}`);
+
+          // Create document data directly
+          const contractNumber = generateContractNumber(agreementType);
+          const detailsObject = buildAgreementDetails(agreementType, contractNumber);
+
+          const docData = {
+            email: requestData.email,
+            language: requestData.language || 'English',
+            firstParty: requestData.firstParty,
+            counterparty: counterparty,
+            agreementType: agreementType,
+            industry: requestData.industry,
+            subindustry: requestData.subindustry,
+            geography: requestData.geography,
+            specialInstructions: detailsObject.parts.join(", "),
+            effectiveDate: detailsObject.effectiveDate,
+            contractNumber: contractNumber
+          };
+
+          // Add financial terms for applicable document types
+          if (shouldIncludeFinancialValuesWebApp(agreementType)) {
+            const financialValues = generateFinancialValuesWebApp(agreementType, formData.industry, formData.geography);
+            
+            docData.specialInstructions += `, Total Contract Value: ${financialValues.contractValue}`;
+            docData.specialInstructions += `, Deposit Amount: ${financialValues.depositAmount}, Deposit Due: ${financialValues.depositDue}`;
+            docData.specialInstructions += `, Payment Amount: ${financialValues.oneTimeAmount}, Due: ${financialValues.firstPaymentDue}`;
+            docData.specialInstructions += `, Monthly Amount: ${financialValues.monthlyAmount}`;
+          }
+
+          // Add obligations
+          const meta = getDocMetaByName(agreementType);
+          if (meta && meta.obligations) {
+            const shuffle = arr => arr.sort(() => Math.random() - 0.5);
+            const selected = shuffle([...meta.obligations]).slice(0, pick([1, 2, 3]));
+            selected.forEach(key => {
+              if (OBL_TEXT[key]) {
+                docData.specialInstructions += ", " + OBL_TEXT[key];
+              }
+            });
+          }
+
+          Logger.log(`Processing document with data: ${JSON.stringify(docData)}`);
+          processAndCreateFile(docData, subfolder);
+        }
       }
 
       successMessage = `Success! ${docCount} individual documents created.`;
@@ -519,7 +583,7 @@ function sendDocumentReadyEmail(requestData, successMessage, folderUrl, userGuid
             ${userGuideUrl ? `
             <div style="margin-top: 15px;">
               <a href="${userGuideUrl}" style="display: inline-block; background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 12px 25px; border-radius: 6px; text-decoration: none; font-weight: 500; font-size: 14px; box-shadow: 0 3px 10px rgba(40, 167, 69, 0.3);">
-                📖 Document Types & Obligations Guide
+                📖 User Guide
               </a>
             </div>
             ` : ''}
@@ -570,7 +634,7 @@ ${successMessage}
 - Generated: ${new Date().toLocaleString()}
 
 📁 Access your documents: ${folderUrl}
-${userGuideUrl ? `📖 Document Types & Obligations Guide: ${userGuideUrl}` : ''}
+${userGuideUrl ? `📖 User Guide: ${userGuideUrl}` : ''}
 
 💡 What's Included:
 - Professional legal documents ready for review

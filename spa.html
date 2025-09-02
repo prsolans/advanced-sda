@@ -205,6 +205,130 @@
             font-weight: 500;
         }
 
+        /* Quantity Selector Styles */
+        .quantity-selector {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: white;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .quantity-selector:hover {
+            border-color: #667eea;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+        }
+
+        .quantity-selector.has-quantity {
+            border-color: #28a745;
+            background: #f8fff9;
+        }
+
+        .quantity-selector-label {
+            flex: 1;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-right: 15px;
+        }
+
+        .quantity-selector-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .quantity-input {
+            width: 60px;
+            text-align: center;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .quantity-btn {
+            width: 30px;
+            border: none;
+            border-radius: 50%;
+            background: #667eea;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            aspect-ratio: 1;
+        }
+
+        .quantity-btn:hover {
+            background: #5a67d8;
+            transform: scale(1.1);
+        }
+
+        .quantity-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .total-warning {
+            background: #fff3cd !important;
+            border-color: #ffc107 !important;
+        }
+
+        .total-warning span {
+            color: #856404 !important;
+        }
+
+        .total-error {
+            background: #f8d7da !important;
+            border-color: #dc3545 !important;
+        }
+
+        .total-error span {
+            color: #721c24 !important;
+        }
+
+        .doc-section {
+            margin-bottom: 25px;
+        }
+
+        .doc-section-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 12px 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .doc-section-header.common {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+
+        .doc-section-icon {
+            margin-right: 10px;
+            font-size: 18px;
+        }
+
+        .doc-section-description {
+            font-size: 12px;
+            color: #6c757d;
+            margin: -10px 0 15px 0;
+            padding-left: 15px;
+            font-style: italic;
+        }
+
         .page h1 {
             font-size: 2.5rem;
             font-weight: 300;
@@ -649,6 +773,21 @@
                         </div>
 
                         <div class="form-group">
+                            <label for="language">
+                                Document Language
+                                <span class="helper-text">Select the language for your documents</span>
+                            </label>
+                            <select id="language" name="language" required>
+                                <option value="English">English</option>
+                                <option value="Spanish">Spanish (ES)</option>
+                                <option value="French">French (FR)</option>
+                                <option value="German">German (DE)</option>
+                                <option value="Portuguese (BR)">Portuguese (BR)</option>
+                                <option value="Japanese">Japanese (JA)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
                             <label for="industry">
                                 Industry
                                 <span class="helper-text">Select your primary industry sector</span>
@@ -675,27 +814,23 @@
                             </select>
                         </div>
 
-                        <div class="form-group">
-                            <label for="language">
-                                Document Language
-                                <span class="helper-text">Select the language for your documents</span>
+                        <div class="form-group" id="quantitySelectionGroup" style="display: none;">
+                            <label>
+                                Document Quantities
+                                <span class="helper-text">Select quantity for each document type (max 25 total)</span>
                             </label>
-                            <select id="language" name="language" required>
-                                <option value="English">English</option>
-                                <option value="Spanish">Spanish (ES)</option>
-                                <option value="French">French (FR)</option>
-                                <option value="German">German (DE)</option>
-                                <option value="Portuguese (BR)">Portuguese (BR)</option>
-                                <option value="Japanese">Japanese (JA)</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="quantity">
-                                Quantity
-                                <span class="helper-text">Number of documents to generate (1-50)</span>
-                            </label>
-                            <input type="number" id="quantity" name="quantity" min="1" max="50" required placeholder="5">
+                            <div id="quantitySelectors" style="background: #f8f9fa; padding: 20px; border-radius: 8px; border: 2px solid #e1e8ed;">
+                                <div style="text-align: center; color: #6c757d; padding: 20px;">
+                                    Please select an industry and subindustry to see available document types
+                                </div>
+                            </div>
+                            <div style="margin-top: 15px; padding: 10px; background: #e3f2fd; border-radius: 6px; border-left: 4px solid #2196f3;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span style="font-weight: 600; color: #1976d2;">Total Documents:</span>
+                                    <span id="totalCount" style="font-size: 18px; font-weight: 700; color: #1976d2;">0</span>
+                                </div>
+                                <div style="font-size: 12px; color: #666; margin-top: 5px;">Maximum: 25 documents per submission</div>
+                            </div>
                         </div>
 
                         <button type="submit" class="btn" id="submitBtn">
@@ -1064,12 +1199,12 @@
                             <div style="background: #17a2b8; color: white; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; margin-right: 15px; font-size: 1.2rem;">📊</div>
                             <h3 style="color: #17a2b8; margin: 0;">Rich Navigator Reporting</h3>
                         </div>
-                        <p style="color: #6c757d; line-height: 1.6; margin-bottom: 15px;">Upload your ASDA documents to Navigator and instantly generate <strong>detailed analytics reports</strong> that showcase Docusign's AI capabilities.</p>
+                        <p style="color: #6c757d; line-height: 1.6; margin-bottom: 15px;">Upload your ASDA documents to Navigator and instantly showcase <strong>AI-driven contract intelligence</strong> with comprehensive analytics and stunning visual dashboards.</p>
                         <ul style="color: #6c757d; line-height: 1.6; margin-left: 20px;">
-                            <li>Comprehensive clause analysis and risk assessment</li>
-                            <li>Contract intelligence metrics and insights</li>
-                            <li>Visual reporting that impresses prospects</li>
-                            <li>Full document lifecycle analytics</li>
+                            <li>AI-powered common data extractions (dates, parties, values)</li>
+                            <li>Comprehensive reporting on obligations and key terms</li>
+                            <li>Beautiful, interactive dashboards that wow prospects</li>
+                            <li>Full contract portfolio analytics and insights</li>
                         </ul>
                     </div>
                     
@@ -1102,7 +1237,7 @@
                     </div>
                 </div>
                 
-                <div style="background: linear-gradient(135deg, #28a745, #20c997); color: white; padding: 20px; border-radius: 8px; margin-top: 30px; text-align: center;">
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px; margin-top: 30px;">
                     <h4 style="color: white; margin-bottom: 10px;">💡 Pro Tip for Maximum Impact</h4>
                     <p style="margin: 0; opacity: 0.95;">Generate 5-10 documents, upload all to Navigator for rich reporting, then select the most relevant one for deep customization. This approach gives you both breadth (comprehensive analytics) and depth (targeted demonstration) in a single demo.</p>
                 </div>
@@ -1111,26 +1246,19 @@
             <!-- Quick Start Guide -->
             <div style="background: #f8f9fa; padding: 30px; border-radius: 12px; margin-bottom: 40px;">
                 <h2 style="color: #2c3e50; margin-bottom: 20px;">⚡ Quick Start</h2>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
-                    <div>
-                        <h3 style="color: #495057; margin-bottom: 15px;">For Your First Demo:</h3>
-                        <ul style="color: #6c757d; line-height: 1.8;">
-                            <li><strong>Quantity:</strong> Start with 3-5 documents</li>
-                            <li><strong>Industry:</strong> Match your prospect's industry</li>
-                            <li><strong>Geography:</strong> Select their business region</li>
-                            <li><strong>Language:</strong> Choose their preferred language</li>
-                        </ul>
-                    </div>
-                    <div>
-                        <h3 style="color: #495057; margin-bottom: 15px;">Navigator Demo Strategy:</h3>
-                        <ul style="color: #6c757d; line-height: 1.8;">
-                            <li>Generate 5-10 documents for comprehensive Navigator reporting</li>
-                            <li>Upload all documents to showcase full analytics capabilities</li>
-                            <li>Select 1-2 most relevant docs for detailed customization</li>
-                            <li>Add custom clauses that address specific prospect pain points</li>
-                            <li>Prepare extraction scenarios relevant to their business</li>
-                        </ul>
-                    </div>
+                <div style="margin-bottom: 25px;">
+                    <h3 style="color: #495057; margin-bottom: 15px;">Recommended Demo Strategy:</h3>
+                    <ol style="color: #6c757d; line-height: 1.8; padding-left: 20px;">
+                        <li><strong>Generate 10 documents</strong> matching your prospect's industry and geography</li>
+                        <li><strong>Upload all to Navigator</strong> for comprehensive AI-driven reporting and beautiful dashboards</li>
+                        <li><strong>Review the analytics</strong> to understand the portfolio insights Navigator provides</li>
+                        <li><strong>Customize 1-2 key documents</strong> if needed to tell a more tailored story for specific use cases</li>
+                    </ol>
+                </div>
+
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px;">
+                    <h4 style="color: white; margin-bottom: 10px;">💡 Pro Tip: Agreement Sets</h4>
+                    <p style="margin: 0; opacity: 0.95;">Add your documents to Agreement Sets in Navigator for easy organization and filtering. This demonstrates how customers can manage different document categories, projects, or business units with powerful grouping and search capabilities.</p>
                 </div>
             </div>
 
@@ -2439,38 +2567,180 @@
                 }
             });
 
-            // Handle subindustry change - show expected document types
+            // Handle subindustry change - show quantity selectors
             document.getElementById('subindustry').addEventListener('change', function() {
                 const industry = document.getElementById('industry').value;
                 const subindustry = this.value;
-                const docTypesSection = document.getElementById('docTypesSection');
-                const docTypesList = document.getElementById('docTypesList');
+                const quantityGroup = document.getElementById('quantitySelectionGroup');
+                const quantitySelectors = document.getElementById('quantitySelectors');
                 
                 if (industry && subindustry && docTypesByIndustry[industry] && docTypesByIndustry[industry][subindustry]) {
-                    // Show the document types section
-                    docTypesSection.classList.remove('hidden');
+                    // Show the quantity selection section
+                    quantityGroup.style.display = 'block';
                     
-                    // Update the description
-                    const description = document.getElementById('docTypesDescription');
-                    description.textContent = `Based on your selected ${industry} - ${subindustry} combination, you'll receive:`;
+                    // Get document types for this combination
+                    const specificDocTypes = docTypesByIndustry[industry][subindustry];
                     
-                    // Clear existing list
-                    docTypesList.innerHTML = '';
+                    // Common document types (available for all industries)
+                    const commonDocTypes = [
+                        "Non-Disclosure Agreement (NDA)",
+                        "Master Service Agreement (MSA)", 
+                        "Consulting Agreement"
+                    ];
                     
-                    // Add document types as pills
-                    const docTypes = docTypesByIndustry[industry][subindustry];
+                    // Generate quantity selectors HTML with sections
+                    let selectorsHTML = '';
                     
-                    docTypes.forEach(docType => {
-                        const badge = document.createElement('span');
-                        badge.className = 'doc-type-badge';
-                        badge.textContent = docType;
-                        docTypesList.appendChild(badge);
+                    // Common Documents Section
+                    selectorsHTML += `
+                        <div class="doc-section">
+                            <div class="doc-section-header common">
+                                <span class="doc-section-icon">📋</span>
+                                Common Documents
+                            </div>
+                            <div class="doc-section-description">
+                                Standard legal documents available across all industries
+                            </div>
+                    `;
+                    
+                    commonDocTypes.forEach(docType => {
+                        const safeDocType = docType.replace(/['"]/g, '&quot;');
+                        selectorsHTML += `
+                            <div class="quantity-selector" data-doctype="${safeDocType}">
+                                <div class="quantity-selector-label">${docType}</div>
+                                <div class="quantity-selector-controls">
+                                    <button type="button" class="quantity-btn minus" onclick="adjustQuantity('${safeDocType}', -1)">−</button>
+                                    <input type="number" class="quantity-input" value="0" min="0" max="25" 
+                                           onchange="updateQuantity('${safeDocType}', this.value)" 
+                                           data-doctype="${safeDocType}">
+                                    <button type="button" class="quantity-btn plus" onclick="adjustQuantity('${safeDocType}', 1)">+</button>
+                                </div>
+                            </div>
+                        `;
                     });
+                    
+                    selectorsHTML += '</div>'; // Close common section
+                    
+                    // Industry-Specific Documents Section
+                    selectorsHTML += `
+                        <div class="doc-section">
+                            <div class="doc-section-header">
+                                <span class="doc-section-icon">🏢</span>
+                                ${industry} - ${subindustry} Specific Documents
+                            </div>
+                            <div class="doc-section-description">
+                                Specialized documents tailored for your industry and subindustry
+                            </div>
+                    `;
+                    
+                    specificDocTypes.forEach(docType => {
+                        const safeDocType = docType.replace(/['"]/g, '&quot;');
+                        selectorsHTML += `
+                            <div class="quantity-selector" data-doctype="${safeDocType}">
+                                <div class="quantity-selector-label">${docType}</div>
+                                <div class="quantity-selector-controls">
+                                    <button type="button" class="quantity-btn minus" onclick="adjustQuantity('${safeDocType}', -1)">−</button>
+                                    <input type="number" class="quantity-input" value="0" min="0" max="25" 
+                                           onchange="updateQuantity('${safeDocType}', this.value)" 
+                                           data-doctype="${safeDocType}">
+                                    <button type="button" class="quantity-btn plus" onclick="adjustQuantity('${safeDocType}', 1)">+</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    selectorsHTML += '</div>'; // Close specific section
+                    
+                    quantitySelectors.innerHTML = selectorsHTML;
+                    updateTotalCount();
                 } else {
-                    // Hide the document types section
-                    docTypesSection.classList.add('hidden');
+                    // Hide the quantity selection section
+                    quantityGroup.style.display = 'none';
+                    quantitySelectors.innerHTML = `
+                        <div style="text-align: center; color: #6c757d; padding: 20px;">
+                            Please select an industry and subindustry to see available document types
+                        </div>
+                    `;
+                    updateTotalCount();
                 }
             });
+
+            // Quantity selection functions
+            window.adjustQuantity = function(docType, change) {
+                const input = document.querySelector(`input[data-doctype="${docType}"]`);
+                if (input) {
+                    const currentValue = parseInt(input.value) || 0;
+                    const newValue = Math.max(0, Math.min(25, currentValue + change));
+                    input.value = newValue;
+                    updateQuantity(docType, newValue);
+                }
+            };
+
+            window.updateQuantity = function(docType, value) {
+                const numValue = Math.max(0, Math.min(25, parseInt(value) || 0));
+                const input = document.querySelector(`input[data-doctype="${docType}"]`);
+                const selector = document.querySelector(`div[data-doctype="${docType}"]`);
+                
+                if (input) {
+                    input.value = numValue;
+                }
+                
+                if (selector) {
+                    if (numValue > 0) {
+                        selector.classList.add('has-quantity');
+                    } else {
+                        selector.classList.remove('has-quantity');
+                    }
+                }
+                
+                updateTotalCount();
+            };
+
+            window.updateTotalCount = function() {
+                let total = 0;
+                const inputs = document.querySelectorAll('.quantity-input');
+                inputs.forEach(input => {
+                    total += parseInt(input.value) || 0;
+                });
+                
+                const totalCountElement = document.getElementById('totalCount');
+                const totalContainer = totalCountElement.parentElement.parentElement;
+                const submitBtn = document.getElementById('submitBtn');
+                
+                if (totalCountElement) {
+                    totalCountElement.textContent = total;
+                }
+                
+                // Update styling based on total count
+                totalContainer.classList.remove('total-warning', 'total-error');
+                
+                if (total > 25) {
+                    totalContainer.classList.add('total-error');
+                    submitBtn.disabled = true;
+                } else if (total > 20) {
+                    totalContainer.classList.add('total-warning');
+                    submitBtn.disabled = false;
+                } else if (total === 0) {
+                    submitBtn.disabled = true;
+                } else {
+                    submitBtn.disabled = false;
+                }
+                
+                // Update button states
+                inputs.forEach(input => {
+                    const docType = input.getAttribute('data-doctype');
+                    const plusBtn = document.querySelector(`div[data-doctype="${docType}"] .plus`);
+                    const minusBtn = document.querySelector(`div[data-doctype="${docType}"] .minus`);
+                    const currentValue = parseInt(input.value) || 0;
+                    
+                    if (plusBtn) {
+                        plusBtn.disabled = total >= 25 || currentValue >= 25;
+                    }
+                    if (minusBtn) {
+                        minusBtn.disabled = currentValue <= 0;
+                    }
+                });
+            };
 
             // Guide page filters
             document.getElementById('guideIndustry').addEventListener('change', function() {
@@ -2518,13 +2788,28 @@
                     navigationMessage.style.display = 'block';
                 }, 15000);
                 
+                // Collect document type quantities
+                const docTypeQuantities = {};
+                let totalQuantity = 0;
+                const quantityInputs = document.querySelectorAll('.quantity-input');
+                
+                quantityInputs.forEach(input => {
+                    const docType = input.getAttribute('data-doctype');
+                    const quantity = parseInt(input.value) || 0;
+                    if (quantity > 0) {
+                        docTypeQuantities[docType] = quantity;
+                        totalQuantity += quantity;
+                    }
+                });
+
                 const formData = {
                     email: document.getElementById('email').value,
                     firstParty: document.getElementById('firstParty').value || 'Fontara',
                     geography: document.getElementById('geography').value,
                     industry: document.getElementById('industry').value,
                     subindustry: document.getElementById('subindustry').value,
-                    quantity: parseInt(document.getElementById('quantity').value),
+                    quantity: totalQuantity, // Keep for backwards compatibility
+                    docTypeQuantities: docTypeQuantities, // New: specific quantities per doc type
                     language: document.getElementById('language').value
                 };
 

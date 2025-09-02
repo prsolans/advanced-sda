@@ -38,7 +38,7 @@ function sendSlackNotificationWithReferences(email, successMessage, language, fo
     }
     
     if (subindustryRefUrl) {
-        message += "\n📖 Document Types & Obligations Guide: " + subindustryRefUrl;
+        message += "\n📖 User Guide: " + subindustryRefUrl;
     }
     
     const formData = {
