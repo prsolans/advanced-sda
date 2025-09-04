@@ -278,6 +278,65 @@
             transform: none;
         }
 
+        /* Document Mode Radio Button Styles */
+        .radio-option {
+            transition: all 0.3s ease;
+        }
+
+        .radio-option:hover {
+            border-color: #667eea !important;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+        }
+
+        .radio-option input[type="radio"]:checked + div {
+            color: #667eea;
+        }
+
+        .radio-option:has(input[type="radio"]:checked) {
+            border-color: #667eea !important;
+            background: #f8f9ff !important;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
+        }
+
+        /* Document Sets Configuration */
+        .set-info {
+            background: #e8f4fd;
+            border: 1px solid #b8daff;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+
+        .set-preview {
+            background: white;
+            border: 1px solid #e1e8ed;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 10px;
+        }
+
+        .template-name {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .template-description {
+            color: #6c757d;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .document-hierarchy {
+            font-family: monospace;
+            font-size: 12px;
+            color: #495057;
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            white-space: pre-line;
+        }
+
         .total-warning {
             background: #fff3cd !important;
             border-color: #ffc107 !important;
@@ -363,6 +422,11 @@
             border-radius: 8px;
             font-size: 16px;
             transition: all 0.3s ease;
+        }
+
+        /* Override width for radio buttons in document mode group */
+        #documentModeGroup input[type="radio"] {
+            width: auto;
         }
 
         .form-group input:focus,
@@ -738,8 +802,8 @@
         <div id="home" class="page active">
             <div class="content-wrapper">
                 <div class="form-container">
-                    <h1>Sample Document Assistant</h1>
-                    <p class="subtitle">Fill out the form below to generate your custom legal documents</p>
+                    <h1>Advanced Sample Document Assistant (ASDA)</h1>
+                    <p class="subtitle">Generate individual documents or hierarchical document sets with realistic parent-child relationships</p>
 
                     <form id="documentForm">
                         <div class="form-group">
@@ -814,6 +878,29 @@
                             </select>
                         </div>
 
+                        <div class="form-group hidden" id="documentModeGroup">
+                            <label>
+                                Document Generation Mode
+                                <span class="helper-text">Choose between individual documents or hierarchical document sets</span>
+                            </label>
+                            <div style="display: flex; gap: 15px; margin-top: 10px;">
+                                <label class="radio-option" style="display: flex; align-items: center; cursor: pointer; padding: 12px; border: 2px solid #e1e8ed; border-radius: 8px; background: white; transition: all 0.3s ease; flex: 1;">
+                                    <input type="radio" name="documentMode" value="individual" id="individualMode" checked style="margin-right: 8px;">
+                                    <div>
+                                        <div style="font-weight: 600; color: #2c3e50; margin-bottom: 4px;">📄 Individual Documents</div>
+                                        <div style="font-size: 11px; color: #6c757d; line-height: 1.3;">Select specific quantities for each document type</div>
+                                    </div>
+                                </label>
+                                <label class="radio-option" style="display: flex; align-items: center; cursor: pointer; padding: 12px; border: 2px solid #e1e8ed; border-radius: 8px; background: white; transition: all 0.3s ease; flex: 1;">
+                                    <input type="radio" name="documentMode" value="sets" id="setsMode" style="margin-right: 8px;">
+                                    <div>
+                                        <div style="font-weight: 600; color: #2c3e50; margin-bottom: 4px;">🔗 Document Sets</div>
+                                        <div style="font-size: 11px; color: #6c757d; line-height: 1.3;">Generate hierarchical document relationships</div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
                         <div class="form-group" id="quantitySelectionGroup" style="display: none;">
                             <label>
                                 Document Quantities
@@ -830,6 +917,39 @@
                                     <span id="totalCount" style="font-size: 18px; font-weight: 700; color: #1976d2;">0</span>
                                 </div>
                                 <div style="font-size: 12px; color: #666; margin-top: 5px;">Maximum: 25 documents per submission</div>
+                            </div>
+                        </div>
+
+                        <div class="form-group" id="documentSetsGroup" style="display: none;">
+                            <label>
+                                Document Sets Configuration
+                                <span class="helper-text">Generate hierarchical document relationships based on industry templates</span>
+                            </label>
+                            
+                            <div class="set-info">
+                                <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                                    <span style="font-size: 20px; margin-right: 10px;">🔗</span>
+                                    <div>
+                                        <div style="font-weight: 600; color: #2c3e50;">Hierarchical Document Sets</div>
+                                        <div style="font-size: 14px; color: #6c757d;">Documents will be generated with proper parent-child relationships</div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="setQuantity">Number of Document Sets</label>
+                                    <div style="display: flex; align-items: center; gap: 15px; margin-top: 8px;">
+                                        <button type="button" class="quantity-btn" onclick="adjustSetQuantity(-1)">−</button>
+                                        <input type="number" id="setQuantity" value="1" min="1" max="5" class="quantity-input" readonly style="width: 80px;">
+                                        <button type="button" class="quantity-btn" onclick="adjustSetQuantity(1)">+</button>
+                                        <span style="font-size: 14px; color: #6c757d; margin-left: 10px;">Maximum: 5 sets per request</span>
+                                    </div>
+                                </div>
+
+                                <div id="templatePreview" class="set-preview">
+                                    <div style="text-align: center; color: #6c757d; padding: 20px;">
+                                        Select an industry and subindustry to see the document set template
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -875,8 +995,17 @@
         <div id="doctypes" class="page">
             <h1>Document Types Explorer</h1>
             <p style="font-size: 1.1rem; color: #6c757d; margin-bottom: 30px; text-align: center;">
-                Explore available document types and their legal obligations by industry and subindustry
+                Explore our comprehensive library of 168+ document types and hierarchical document set templates
             </p>
+            
+            <!-- Individual Document Types -->
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 12px; margin-bottom: 30px;">
+                <h2 style="color: white; text-align: center; margin-bottom: 20px; font-size: 1.6rem;">Individual Document Types</h2>
+                
+                <div style="text-align: center;">
+                    <p style="opacity: 0.95; line-height: 1.6; font-size: 1.1rem;">168+ standalone document types across 7 industries, each with specialized legal obligations and realistic business terms.</p>
+                </div>
+            </div>
 
             <!-- Filters -->
             <div style="background: #f8f9fa; padding: 30px; border-radius: 12px; margin-bottom: 30px;">
@@ -938,6 +1067,136 @@
                     <div style="font-size: 3rem; margin-bottom: 20px;">📚</div>
                     <h3 style="margin-bottom: 15px; color: #495057;">Select an industry above to explore document types</h3>
                     <p style="max-width: 500px; margin: 0 auto; line-height: 1.6;">Choose an industry from the dropdown to view all available document types, their descriptions, and the specific legal obligations included in each document.</p>
+                </div>
+            </div>
+
+            <!-- Document Sets Section -->
+            <div style="background: linear-gradient(135deg, #28a745, #20c997); color: white; padding: 40px; border-radius: 12px; margin-top: 40px;">
+                <h2 style="color: white; text-align: center; margin-bottom: 30px; font-size: 1.6rem;">🔗 Hierarchical Document Sets</h2>
+                
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <p style="opacity: 0.95; line-height: 1.6; font-size: 1.1rem;">15+ industry-specific templates that create realistic parent-child document relationships with proper cross-references and consistent business terms.</p>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px;">
+                    <!-- Technology Template -->
+                    <div style="background: rgba(255,255,255,0.15); padding: 25px; border-radius: 8px;">
+                        <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                            <span style="font-size: 1.8rem; margin-right: 12px;">💻</span>
+                            <h4 style="color: white; margin: 0; font-size: 1rem;">SaaS Enterprise Stack</h4>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 6px; margin-bottom: 12px;">
+                            <div style="font-size: 0.85rem; color: white; line-height: 1.5; opacity: 0.95;">
+                                <strong>Master Subscription Agreement</strong><br>
+                                ├── Service Schedule<br>
+                                │   ├── API Terms of Service<br>
+                                │   └── Support & Maintenance<br>
+                                └── Data Processing Agreement (DPA)<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;└── Security Exhibit
+                            </div>
+                        </div>
+                        <p style="color: white; font-size: 0.8rem; line-height: 1.4; opacity: 0.9; margin: 0;"><strong>Best for:</strong> Cloud Infrastructure, Enterprise Software, SaaS prospects</p>
+                    </div>
+                    
+                    <!-- Healthcare Template -->
+                    <div style="background: rgba(255,255,255,0.15); padding: 25px; border-radius: 8px;">
+                        <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                            <span style="font-size: 1.8rem; margin-right: 12px;">🏥</span>
+                            <h4 style="color: white; margin: 0; font-size: 1rem;">Healthcare Network</h4>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 6px; margin-bottom: 12px;">
+                            <div style="font-size: 0.85rem; color: white; line-height: 1.5; opacity: 0.95;">
+                                <strong>Master Affiliation Agreement</strong><br>
+                                └── Facility Service Agreement<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;├── Provider Agreement<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;│   └── Credentialing Exhibit<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;└── Compensation Schedule
+                            </div>
+                        </div>
+                        <p style="color: white; font-size: 0.8rem; line-height: 1.4; opacity: 0.9; margin: 0;"><strong>Best for:</strong> Digital Health, Healthcare IT, Medical Device prospects</p>
+                    </div>
+                    
+                    <!-- Financial Services Template -->
+                    <div style="background: rgba(255,255,255,0.15); padding: 25px; border-radius: 8px;">
+                        <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                            <span style="font-size: 1.8rem; margin-right: 12px;">💰</span>
+                            <h4 style="color: white; margin: 0; font-size: 1rem;">Investment Management</h4>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 6px; margin-bottom: 12px;">
+                            <div style="font-size: 0.85rem; color: white; line-height: 1.5; opacity: 0.95;">
+                                <strong>Investment Advisory Agreement</strong><br>
+                                ├── Portfolio Management Agreement<br>
+                                │   ├── Investment Policy Statement<br>
+                                │   └── Risk Parameters<br>
+                                └── Fee-Based Advisory Agreement
+                            </div>
+                        </div>
+                        <p style="color: white; font-size: 0.8rem; line-height: 1.4; opacity: 0.9; margin: 0;"><strong>Best for:</strong> Wealth Management, Asset Management, Investment Banking prospects</p>
+                    </div>
+                    
+                    <!-- Manufacturing Template -->
+                    <div style="background: rgba(255,255,255,0.15); padding: 25px; border-radius: 8px;">
+                        <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                            <span style="font-size: 1.8rem; margin-right: 12px;">🏭</span>
+                            <h4 style="color: white; margin: 0; font-size: 1rem;">Supply Chain Model</h4>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 6px; margin-bottom: 12px;">
+                            <div style="font-size: 0.85rem; color: white; line-height: 1.5; opacity: 0.95;">
+                                <strong>Master Supply Agreement</strong><br>
+                                ├── Quality Assurance Agreement<br>
+                                │   ├── Testing Procedures<br>
+                                │   └── Certification Requirements<br>
+                                └── Manufacturing Services Agreement
+                            </div>
+                        </div>
+                        <p style="color: white; font-size: 0.8rem; line-height: 1.4; opacity: 0.9; margin: 0;"><strong>Best for:</strong> Automotive, Aerospace, Industrial Equipment prospects</p>
+                    </div>
+                    
+                    <!-- Energy Template -->
+                    <div style="background: rgba(255,255,255,0.15); padding: 25px; border-radius: 8px;">
+                        <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                            <span style="font-size: 1.8rem; margin-right: 12px;">⚡</span>
+                            <h4 style="color: white; margin: 0; font-size: 1rem;">Energy Projects</h4>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 6px; margin-bottom: 12px;">
+                            <div style="font-size: 0.85rem; color: white; line-height: 1.5; opacity: 0.95;">
+                                <strong>Master Development Agreement</strong><br>
+                                ├── Power Purchase Agreement (PPA)<br>
+                                │   └── Environmental Attributes<br>
+                                ├── Equipment Supply Agreement<br>
+                                └── Utility Interconnection Agreement
+                            </div>
+                        </div>
+                        <p style="color: white; font-size: 0.8rem; line-height: 1.4; opacity: 0.9; margin: 0;"><strong>Best for:</strong> Solar, Wind, Renewable Energy, Oil & Gas prospects</p>
+                    </div>
+                    
+                    <!-- Real Estate Template -->
+                    <div style="background: rgba(255,255,255,0.15); padding: 25px; border-radius: 8px;">
+                        <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                            <span style="font-size: 1.8rem; margin-right: 12px;">🏢</span>
+                            <h4 style="color: white; margin: 0; font-size: 1rem;">Development Projects</h4>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 6px; margin-bottom: 12px;">
+                            <div style="font-size: 0.85rem; color: white; line-height: 1.5; opacity: 0.95;">
+                                <strong>Master Development Agreement</strong><br>
+                                ├── General Contractor Agreement<br>
+                                │   ├── Subcontractor Agreement<br>
+                                │   └── Performance Bond<br>
+                                └── Design-Build Agreement
+                            </div>
+                        </div>
+                        <p style="color: white; font-size: 0.8rem; line-height: 1.4; opacity: 0.9; margin: 0;"><strong>Best for:</strong> Commercial Real Estate, Construction, Development prospects</p>
+                    </div>
+                </div>
+                
+                <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 8px; margin-top: 30px; text-align: center;">
+                    <h4 style="color: white; margin-bottom: 10px;">🎯 Key Benefits</h4>
+                    <ul style="color: white; opacity: 0.95; line-height: 1.8; text-align: left; max-width: 600px; margin: 0 auto;">
+                        <li><strong>Realistic Business Relationships:</strong> Documents that naturally reference each other</li>
+                        <li><strong>Professional Contract Structures:</strong> Multi-level agreement hierarchies</li>
+                        <li><strong>Cross-Referenced Terms:</strong> Consistent parties, dates, and contract numbers</li>
+                        <li><strong>Industry-Specific Content:</strong> Tailored legal obligations and terminology</li>
+                    </ul>
                 </div>
             </div>
         </div>
@@ -1056,23 +1315,106 @@
                         Can I generate documents in sets or individually?
                     </div>
                     <div class="faq-answer">
-                        <p>Yes! ASDA offers two generation modes:</p>
+                        <p>Yes! ASDA offers two powerful generation modes:</p>
                         
-                        <p><strong>Document Sets (5+ documents):</strong></p>
+                        <p><strong>🔗 Hierarchical Document Sets (NEW!):</strong></p>
                         <ul>
-                            <li>Creates complete contract ecosystems (NDA → MSA → SOW → Change Orders)</li>
-                            <li>Documents reference each other with proper parent-child relationships</li>
-                            <li>Consistent parties, terms, and dates across all documents in the set</li>
-                            <li>Minimum quantity: 5 documents per request</li>
+                            <li><strong>Industry-Specific Templates:</strong> 15+ templates including SaaS Enterprise Stack, Healthcare Network Model, Investment Management Model, and more</li>
+                            <li><strong>Realistic Relationships:</strong> Documents reference each other with proper parent-child hierarchies and cross-references</li>
+                            <li><strong>Multi-Level Structure:</strong> Up to 4 levels deep (e.g., Master Agreement → Service Schedule → API Terms → Rate Limits)</li>
+                            <li><strong>Professional Document Ecosystems:</strong> Complete business relationship structures</li>
+                            <li><strong>Flexible Quantity:</strong> Generate 1-5 sets, each containing 5-12 related documents</li>
                         </ul>
                         
-                        <p><strong>Individual Documents (any quantity):</strong></p>
+                        <p><strong>How Document Sets Work:</strong></p>
                         <ul>
-                            <li>Generates standalone documents of various types</li>
+                            <li><strong>Consistent Parties:</strong> All documents in a set share the same contracting parties and company information</li>
+                            <li><strong>Cross-References:</strong> Child documents reference parent contract numbers, defined terms, and key provisions</li>
+                            <li><strong>Realistic Timelines:</strong> Documents have logically sequenced effective dates and renewal periods</li>
+                            <li><strong>Professional Structure:</strong> Master agreements govern subsidiary documents like schedules, exhibits, and amendments</li>
+                        </ul>
+
+                        <p><strong>Example Set Structures:</strong></p>
+                        <ul>
+                            <li><strong>SaaS Enterprise:</strong> Master Subscription Agreement → Service Schedule → API Terms → Rate Limiting Schedule</li>
+                            <li><strong>Healthcare Network:</strong> Master Affiliation Agreement → Facility Service Agreement → Provider Agreement → Credentialing Exhibit</li>
+                            <li><strong>Investment Management:</strong> Investment Advisory Agreement → Portfolio Management Agreement → Investment Policy Statement → Risk Parameters</li>
+                            <li><strong>Manufacturing Supply:</strong> Master Supply Agreement → Quality Assurance Agreement → Testing Procedures → Inspection Protocol</li>
+                        </ul>
+                        
+                        <p><strong>📄 Individual Documents:</strong></p>
+                        <ul>
+                            <li>Generates standalone documents of various types from our 168+ document library</li>
                             <li>Each document is independent with its own parties and terms</li>
                             <li>Suitable for diverse document libraries and training materials</li>
-                            <li>Any quantity from 1 to 50+ documents</li>
+                            <li>Any quantity from 1 to 25 documents per request</li>
                         </ul>
+                        
+                        <div style="background: #e8f5e8; border-left: 4px solid #28a745; padding: 15px; margin-top: 15px; border-radius: 0 4px 4px 0;">
+                            <strong style="color: #155724;">🎯 When to Use Document Sets:</strong>
+                            <ul style="margin: 10px 0 0 20px; color: #155724;">
+                                <li>Demonstrating realistic business relationships and contract families</li>
+                                <li>Showcasing how agreements build upon each other in the real world</li>
+                                <li>Training scenarios that require related documents with consistent terms</li>
+                                <li>Portfolio-level analytics demonstrations across related agreements</li>
+                            </ul>
+                        </div>
+                        
+                        <div style="background: #e3f2fd; border-left: 4px solid #2196f3; padding: 15px; margin-top: 15px; border-radius: 0 4px 4px 0;">
+                            <strong style="color: #1976d2;">💡 Pro Tip:</strong> For the most compelling demos, use Hierarchical Document Sets to generate realistic contract relationships with consistent parties, terms, and cross-references across all related documents.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">
+                        What industries have hierarchical document set templates?
+                    </div>
+                    <div class="faq-answer">
+                        <p>ASDA includes 15+ industry-specific document set templates designed to reflect real-world business relationships:</p>
+                        
+                        <p><strong>Technology Industry Templates:</strong></p>
+                        <ul>
+                            <li><strong>SaaS Enterprise Stack:</strong> Master Subscription → Service Schedule → API Terms → Security Exhibit</li>
+                            <li><strong>Cloud Infrastructure Model:</strong> Cloud Services → SLA → Disaster Recovery Plan → Backup Procedures</li>
+                            <li><strong>Data Analytics Platform:</strong> Data Processing Agreement → Privacy Notice → Data Warehouse Agreement</li>
+                        </ul>
+
+                        <p><strong>Healthcare Industry Templates:</strong></p>
+                        <ul>
+                            <li><strong>Healthcare Network Model:</strong> Master Affiliation → Facility Service → Provider Agreement → Credentialing Exhibit</li>
+                            <li><strong>Clinical Research Model:</strong> Master Research Agreement → Protocol Amendment → Site Agreement → IP Assignment</li>
+                            <li><strong>Digital Health Platform:</strong> Business Associate Agreement → Patient Portal Agreement → EMR Integration Agreement</li>
+                        </ul>
+
+                        <p><strong>Financial Services Templates:</strong></p>
+                        <ul>
+                            <li><strong>Investment Management Model:</strong> Investment Advisory → Portfolio Management → Investment Policy Statement → Risk Parameters</li>
+                            <li><strong>Banking Relationship Model:</strong> Master Banking Agreement → Account Terms → Security Agreement → UCC Filing</li>
+                            <li><strong>Trading Platform Model:</strong> Master Trading Agreement → Product Schedule → Transaction Confirmation</li>
+                        </ul>
+
+                        <p><strong>Manufacturing & Supply Chain Templates:</strong></p>
+                        <ul>
+                            <li><strong>Supply Chain Model:</strong> Master Supply Agreement → Quality Assurance → Testing Procedures → Inspection Protocol</li>
+                            <li><strong>Automotive Supplier Model:</strong> Automotive Supplier Agreement → Production Schedule → Capacity Allocation</li>
+                        </ul>
+
+                        <p><strong>Energy Industry Templates:</strong></p>
+                        <ul>
+                            <li><strong>Renewable Energy Projects:</strong> Master Development Agreement → Power Purchase Agreement → Environmental Attributes</li>
+                            <li><strong>Solar Installation Model:</strong> Solar Installation Agreement → Equipment Supply → Warranty Terms</li>
+                        </ul>
+
+                        <p><strong>Real Estate Templates:</strong></p>
+                        <ul>
+                            <li><strong>Development Projects:</strong> Master Development Agreement → General Contractor → Subcontractor Agreement</li>
+                            <li><strong>Commercial Property Management:</strong> Property Management Agreement → Tenant Services → Lease Amendment</li>
+                        </ul>
+
+                        <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin-top: 15px; border-radius: 0 4px 4px 0;">
+                            <strong style="color: #856404;">📋 Template Selection:</strong> When you select Document Sets mode, ASDA automatically chooses the most appropriate template based on your selected industry and subindustry combination.
+                        </div>
                     </div>
                 </div>
 
@@ -1355,6 +1697,175 @@
                         </ul>
                     </div>
                 </div>
+            </div>
+
+            <!-- Hierarchical Document Sets Guide -->
+            <div style="background: linear-gradient(135deg, #28a745, #20c997); color: white; padding: 40px; border-radius: 12px; margin-bottom: 40px;">
+                <h2 style="color: white; text-align: center; margin-bottom: 30px; font-size: 1.8rem;">🔗 NEW: Hierarchical Document Sets</h2>
+                
+                <div style="background: rgba(255,255,255,0.1); padding: 30px; border-radius: 8px; margin-bottom: 30px;">
+                    <h3 style="color: white; margin-bottom: 20px;">What are Hierarchical Document Sets?</h3>
+                    <p style="opacity: 0.95; line-height: 1.6; margin-bottom: 20px;">Instead of generating random individual documents, ASDA now creates <strong>realistic parent-child document relationships</strong> that mirror how legal agreements actually work in the real world. Think Master Service Agreement → Statement of Work → Change Orders, or Investment Advisory Agreement → Portfolio Management Agreement → Risk Parameters.</p>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 25px;">
+                        <div style="background: rgba(255,255,255,0.15); padding: 20px; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 2rem; margin-bottom: 10px;">🏗️</div>
+                            <h4 style="color: white; margin-bottom: 8px;">Realistic Relationships</h4>
+                            <p style="opacity: 0.9; font-size: 0.9rem; margin: 0;">Documents that naturally reference and depend on each other</p>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.15); padding: 20px; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 2rem; margin-bottom: 10px;">📊</div>
+                            <h4 style="color: white; margin-bottom: 8px;">15+ Industry Templates</h4>
+                            <p style="opacity: 0.9; font-size: 0.9rem; margin: 0;">Technology, Healthcare, Financial Services, Manufacturing, Energy, and more</p>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.15); padding: 20px; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 2rem; margin-bottom: 10px;">🎯</div>
+                            <h4 style="color: white; margin-bottom: 8px;">Professional Relationships</h4>
+                            <p style="opacity: 0.9; font-size: 0.9rem; margin: 0;">Realistic contract ecosystems with proper cross-references</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                    <div>
+                        <h3 style="color: white; margin-bottom: 15px;">🎯 Enhanced Demo Capabilities</h3>
+                        <ul style="opacity: 0.95; line-height: 1.8;">
+                            <li><strong>Realistic Business Relationships:</strong> Documents that naturally reference each other</li>
+                            <li><strong>Professional Contract Structures:</strong> Multi-level agreement hierarchies</li>
+                            <li><strong>Cross-Referenced Terms:</strong> Consistent parties, dates, and contract numbers</li>
+                            <li><strong>Industry-Specific Content:</strong> Tailored legal obligations and terminology</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 style="color: white; margin-bottom: 15px;">🏗️ Real-World Examples</h3>
+                        <ul style="opacity: 0.95; line-height: 1.8;">
+                            <li><strong>SaaS Enterprise:</strong> Master Subscription → Service Schedules → API Terms</li>
+                            <li><strong>Healthcare Network:</strong> Affiliation Agreement → Provider Agreements → Credentialing</li>
+                            <li><strong>Investment Management:</strong> Advisory Agreement → Portfolio Management → Risk Parameters</li>
+                            <li><strong>Manufacturing Supply:</strong> Master Supply → Quality Assurance → Testing Procedures</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- How to Use Document Sets -->
+            <div style="background: #e8f5e8; border-left: 4px solid #28a745; padding: 40px; border-radius: 0 12px 12px 0; margin-bottom: 40px;">
+                <h2 style="color: #2c3e50; margin-bottom: 25px;">📖 How to Use Hierarchical Document Sets</h2>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; margin-bottom: 30px;">
+                    <div style="background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <div style="background: #28a745; color: white; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; margin-bottom: 15px; font-size: 1.2rem; font-weight: bold;">1</div>
+                        <h3 style="color: #28a745; margin-bottom: 15px;">Select Document Sets Mode</h3>
+                        <p style="color: #6c757d; line-height: 1.6;">After choosing your industry and subindustry, select <strong>"🔗 Document Sets"</strong> instead of individual documents. ASDA will automatically show you the best template for your selection.</p>
+                    </div>
+                    
+                    <div style="background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <div style="background: #28a745; color: white; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; margin-bottom: 15px; font-size: 1.2rem; font-weight: bold;">2</div>
+                        <h3 style="color: #28a745; margin-bottom: 15px;">Review Template Preview</h3>
+                        <p style="color: #6c757d; line-height: 1.6;">See exactly which documents will be generated and their relationships. Each template includes 5-12 documents with realistic parent-child connections and proper cross-references.</p>
+                    </div>
+                    
+                    <div style="background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <div style="background: #28a745; color: white; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; margin-bottom: 15px; font-size: 1.2rem; font-weight: bold;">3</div>
+                        <h3 style="color: #28a745; margin-bottom: 15px;">Choose Quantity (1-5 Sets)</h3>
+                        <p style="color: #6c757d; line-height: 1.6;">Each set generates multiple documents (5-12 depending on template). Great for creating variety or showing how the same business relationships can have different terms and structures.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Industry Template Examples -->
+            <div style="background: white; border: 1px solid #e1e8ed; padding: 40px; border-radius: 12px; margin-bottom: 40px;">
+                <h2 style="color: #2c3e50; margin-bottom: 25px;">🏭 Industry Template Examples</h2>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 25px;">
+                    <!-- Technology Template -->
+                    <div style="background: #f8f9fa; border-left: 4px solid #007bff; padding: 25px; border-radius: 0 8px 8px 0;">
+                        <h3 style="color: #007bff; margin-bottom: 15px; display: flex; align-items: center;">
+                            <span style="margin-right: 10px;">💻</span> SaaS Enterprise Stack
+                        </h3>
+                        <div style="background: white; padding: 15px; border-radius: 6px; margin-bottom: 15px;">
+                            <div style="font-size: 0.9rem; color: #6c757d; line-height: 1.6;">
+                                <strong>Master Subscription Agreement</strong><br>
+                                ├── Service Schedule<br>
+                                │   ├── API Terms of Service<br>
+                                │   │   └── Rate Limiting Schedule<br>
+                                │   └── Support & Maintenance Agreement<br>
+                                └── Data Processing Agreement (DPA)<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;├── Security Exhibit<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;└── Privacy Notice
+                            </div>
+                        </div>
+                        <p style="color: #6c757d; font-size: 0.9rem; line-height: 1.5;"><strong>Best for:</strong> Cloud Infrastructure, Enterprise Software, Data Analytics prospects</p>
+                    </div>
+                    
+                    <!-- Healthcare Template -->
+                    <div style="background: #f8f9fa; border-left: 4px solid #dc3545; padding: 25px; border-radius: 0 8px 8px 0;">
+                        <h3 style="color: #dc3545; margin-bottom: 15px; display: flex; align-items: center;">
+                            <span style="margin-right: 10px;">🏥</span> Healthcare Network Model
+                        </h3>
+                        <div style="background: white; padding: 15px; border-radius: 6px; margin-bottom: 15px;">
+                            <div style="font-size: 0.9rem; color: #6c757d; line-height: 1.6;">
+                                <strong>Master Affiliation Agreement</strong><br>
+                                └── Facility Service Agreement<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;├── Provider Agreement<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;│   ├── Credentialing Exhibit<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;│   └── Malpractice Coverage<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;└── Compensation Schedule<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── Payment Terms
+                            </div>
+                        </div>
+                        <p style="color: #6c757d; font-size: 0.9rem; line-height: 1.5;"><strong>Best for:</strong> Digital Health, Healthcare IT, Medical Device prospects</p>
+                    </div>
+                    
+                    <!-- Financial Services Template -->
+                    <div style="background: #f8f9fa; border-left: 4px solid #28a745; padding: 25px; border-radius: 0 8px 8px 0;">
+                        <h3 style="color: #28a745; margin-bottom: 15px; display: flex; align-items: center;">
+                            <span style="margin-right: 10px;">💰</span> Investment Management Model
+                        </h3>
+                        <div style="background: white; padding: 15px; border-radius: 6px; margin-bottom: 15px;">
+                            <div style="font-size: 0.9rem; color: #6c757d; line-height: 1.6;">
+                                <strong>Investment Advisory Agreement</strong><br>
+                                ├── Portfolio Management Agreement<br>
+                                │   ├── Investment Policy Statement<br>
+                                │   │   └── Asset Allocation Model<br>
+                                │   └── Risk Parameters<br>
+                                │   &nbsp;&nbsp;&nbsp;&nbsp;└── Stop Loss Orders<br>
+                                └── Fee-Based Advisory Agreement<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;└── Fee Schedule
+                            </div>
+                        </div>
+                        <p style="color: #6c757d; font-size: 0.9rem; line-height: 1.5;"><strong>Best for:</strong> Wealth Management, Asset Management, Investment Banking prospects</p>
+                    </div>
+                    
+                    <!-- Manufacturing Template -->
+                    <div style="background: #f8f9fa; border-left: 4px solid #fd7e14; padding: 25px; border-radius: 0 8px 8px 0;">
+                        <h3 style="color: #fd7e14; margin-bottom: 15px; display: flex; align-items: center;">
+                            <span style="margin-right: 10px;">🏭</span> Supply Chain Model
+                        </h3>
+                        <div style="background: white; padding: 15px; border-radius: 6px; margin-bottom: 15px;">
+                            <div style="font-size: 0.9rem; color: #6c757d; line-height: 1.6;">
+                                <strong>Master Supply Agreement</strong><br>
+                                ├── Quality Assurance Agreement<br>
+                                │   ├── Testing Procedures<br>
+                                │   │   └── Inspection Protocol<br>
+                                │   └── Certification Requirements<br>
+                                └── Manufacturing Services Agreement<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;├── Production Schedule<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;│   └── Capacity Allocation<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;└── Delivery Terms
+                            </div>
+                        </div>
+                        <p style="color: #6c757d; font-size: 0.9rem; line-height: 1.5;"><strong>Best for:</strong> Automotive, Aerospace, Industrial Equipment prospects</p>
+                    </div>
+                </div>
+                
+                <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 20px; border-radius: 8px; margin-top: 30px;">
+                    <h4 style="color: #856404; margin-bottom: 10px;">📋 Complete Template Library</h4>
+                    <p style="color: #856404; margin: 0; font-size: 0.95rem;">ASDA includes 15+ industry-specific templates covering Technology, Healthcare, Financial Services, Manufacturing, Energy, Real Estate, and cross-industry patterns. Each template creates realistic business relationships with professional legal structures.</p>
+                </div>
+            </div>
+
+            <div style="background: white; border: 1px solid #e1e8ed; padding: 30px; border-radius: 12px;">
                 
                 <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-top: 25px; text-align: center;">
                     <h4 style="color: #2c3e50; margin-bottom: 10px;">Need Help?</h4>
@@ -2542,6 +3053,92 @@
                 "Real Estate": ["Office", "Retail", "Industrial", "Warehouse", "Commercial", "Residential", "Investment", "Development", "Mixed-Use", "REITs", "Construction", "Infrastructure"]
             };
 
+            // Document Set Templates (simplified subset for preview)
+            const documentSetTemplates = {
+                // Technology
+                "SaaS": {
+                    name: "SaaS Enterprise Stack",
+                    description: "Enterprise SaaS subscription model with API integration",
+                    hierarchy: `Master Subscription Agreement
+├── Service Schedule
+│   ├── API Terms of Service
+│   └── Support & Maintenance Agreement
+└── Data Processing Agreement (DPA)
+    ├── Security Exhibit
+    └── Privacy Notice`
+                },
+                "Cloud Infrastructure": {
+                    name: "Cloud Infrastructure Model", 
+                    description: "Infrastructure-as-a-Service relationships",
+                    hierarchy: `Cloud Services Agreement
+├── Infrastructure Schedule
+│   ├── Service Level Agreement
+│   │   └── Performance Credits
+│   └── Disaster Recovery Plan
+└── Data Warehouse Agreement`
+                },
+                // Healthcare
+                "Healthcare IT": {
+                    name: "Healthcare Network Model",
+                    description: "Hospital network affiliation structure", 
+                    hierarchy: `Master Affiliation Agreement
+├── Facility Service Agreement
+│   ├── Provider Agreement
+│   │   ├── Credentialing Exhibit
+│   │   └── Malpractice Coverage
+│   └── Compensation Schedule
+│       └── Payment Terms`
+                },
+                "Pharmaceuticals": {
+                    name: "Clinical Research Model",
+                    description: "Clinical trial and research agreements",
+                    hierarchy: `Master Research Agreement
+├── Clinical Trial Agreement
+│   ├── Protocol Amendment
+│   └── Site Agreement
+│       └── Principal Investigator Agreement
+└── Research Collaboration Agreement`
+                },
+                // Financial Services
+                "Banking": {
+                    name: "Banking Services Model",
+                    description: "Comprehensive banking relationship",
+                    hierarchy: `Master Banking Agreement
+├── Deposit Account Agreement
+│   ├── Account Terms
+│   └── Fee Schedule
+└── Credit Facility Agreement
+    ├── Security Agreement
+    │   └── UCC Filing
+    └── Guaranty Agreement`
+                },
+                "Wealth Management": {
+                    name: "Investment Management Model",
+                    description: "Investment advisory relationship structure",
+                    hierarchy: `Investment Advisory Agreement
+├── Portfolio Management Agreement
+│   ├── Investment Policy Statement
+│   │   └── Asset Allocation Model
+│   └── Risk Parameters
+│       └── Stop Loss Orders
+└── Fee-Based Advisory Agreement
+    ├── Fee Schedule
+    └── Performance Metrics`
+                },
+                // Default fallback
+                "default": {
+                    name: "Standard MSA Flow",
+                    description: "Traditional Master Service Agreement workflow",
+                    hierarchy: `Master Service Agreement (MSA)
+├── Statement of Work (SOW)
+│   ├── Change Order
+│   │   └── Amendment
+│   └── Change Order
+└── Statement of Work (SOW)
+    └── Change Order`
+                }
+            };
+
             // Handle industry change
             document.getElementById('industry').addEventListener('change', function() {
                 const industry = this.value;
@@ -2550,6 +3147,11 @@
                 
                 // Clear existing options
                 subindustrySelect.innerHTML = '<option value="">Select a subindustry</option>';
+                
+                // Hide dependent sections
+                document.getElementById('documentModeGroup').classList.add('hidden');
+                document.getElementById('quantitySelectionGroup').style.display = 'none';
+                document.getElementById('documentSetsGroup').style.display = 'none';
                 
                 if (industry && subindustries[industry]) {
                     // Show subindustry dropdown
@@ -2567,17 +3169,60 @@
                 }
             });
 
-            // Handle subindustry change - show quantity selectors
+            // Handle subindustry change - show document mode selection
             document.getElementById('subindustry').addEventListener('change', function() {
                 const industry = document.getElementById('industry').value;
                 const subindustry = this.value;
+                const documentModeGroup = document.getElementById('documentModeGroup');
+                
+                if (industry && subindustry) {
+                    // Show document mode selection
+                    documentModeGroup.classList.remove('hidden');
+                    
+                    // Update template preview for sets mode
+                    updateTemplatePreview(industry, subindustry);
+                    
+                    // Show appropriate section based on current mode
+                    const currentMode = document.querySelector('input[name="documentMode"]:checked').value;
+                    showDocumentModeSection(currentMode, industry, subindustry);
+                } else {
+                    documentModeGroup.classList.add('hidden');
+                    document.getElementById('quantitySelectionGroup').style.display = 'none';
+                    document.getElementById('documentSetsGroup').style.display = 'none';
+                }
+            });
+
+            // Handle document mode change
+            document.querySelectorAll('input[name="documentMode"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    const industry = document.getElementById('industry').value;
+                    const subindustry = document.getElementById('subindustry').value;
+                    showDocumentModeSection(this.value, industry, subindustry);
+                });
+            });
+
+            // Show appropriate section based on document mode
+            function showDocumentModeSection(mode, industry, subindustry) {
                 const quantityGroup = document.getElementById('quantitySelectionGroup');
+                const setsGroup = document.getElementById('documentSetsGroup');
+                
+                if (mode === 'individual') {
+                    quantityGroup.style.display = 'block';
+                    setsGroup.style.display = 'none';
+                    
+                    // Load individual document types (existing logic)
+                    loadIndividualDocumentTypes(industry, subindustry);
+                } else if (mode === 'sets') {
+                    quantityGroup.style.display = 'none';
+                    setsGroup.style.display = 'block';
+                }
+            }
+
+            // Load individual document types for quantity selection
+            function loadIndividualDocumentTypes(industry, subindustry) {
                 const quantitySelectors = document.getElementById('quantitySelectors');
                 
                 if (industry && subindustry && docTypesByIndustry[industry] && docTypesByIndustry[industry][subindustry]) {
-                    // Show the quantity selection section
-                    quantityGroup.style.display = 'block';
-                    
                     // Get document types for this combination
                     const specificDocTypes = docTypesByIndustry[industry][subindustry];
                     
@@ -2654,8 +3299,6 @@
                     quantitySelectors.innerHTML = selectorsHTML;
                     updateTotalCount();
                 } else {
-                    // Hide the quantity selection section
-                    quantityGroup.style.display = 'none';
                     quantitySelectors.innerHTML = `
                         <div style="text-align: center; color: #6c757d; padding: 20px;">
                             Please select an industry and subindustry to see available document types
@@ -2663,7 +3306,19 @@
                     `;
                     updateTotalCount();
                 }
-            });
+            }
+
+            // Update template preview for document sets
+            function updateTemplatePreview(industry, subindustry) {
+                const templatePreview = document.getElementById('templatePreview');
+                const template = documentSetTemplates[subindustry] || documentSetTemplates['default'];
+                
+                templatePreview.innerHTML = `
+                    <div class="template-name">📋 ${template.name}</div>
+                    <div class="template-description">${template.description}</div>
+                    <div class="document-hierarchy">${template.hierarchy}</div>
+                `;
+            }
 
             // Quantity selection functions
             window.adjustQuantity = function(docType, change) {
@@ -2698,7 +3353,8 @@
 
             window.updateTotalCount = function() {
                 let total = 0;
-                const inputs = document.querySelectorAll('.quantity-input');
+                // Only count individual document quantity inputs, not document sets quantity
+                const inputs = document.querySelectorAll('.quantity-input[data-doctype]');
                 inputs.forEach(input => {
                     total += parseInt(input.value) || 0;
                 });
@@ -2740,6 +3396,21 @@
                         minusBtn.disabled = currentValue <= 0;
                     }
                 });
+            };
+
+            // Document sets quantity adjustment function
+            window.adjustSetQuantity = function(change) {
+                const input = document.getElementById('setQuantity');
+                const currentValue = parseInt(input.value) || 1;
+                const newValue = Math.max(1, Math.min(5, currentValue + change));
+                input.value = newValue;
+                
+                // Update button states
+                const minusBtn = input.previousElementSibling;
+                const plusBtn = input.nextElementSibling;
+                
+                if (minusBtn) minusBtn.disabled = newValue <= 1;
+                if (plusBtn) plusBtn.disabled = newValue >= 5;
             };
 
             // Guide page filters
@@ -2788,30 +3459,55 @@
                     navigationMessage.style.display = 'block';
                 }, 15000);
                 
-                // Collect document type quantities
-                const docTypeQuantities = {};
-                let totalQuantity = 0;
-                const quantityInputs = document.querySelectorAll('.quantity-input');
+                // Check document generation mode
+                const documentMode = document.querySelector('input[name="documentMode"]:checked').value;
                 
-                quantityInputs.forEach(input => {
-                    const docType = input.getAttribute('data-doctype');
-                    const quantity = parseInt(input.value) || 0;
-                    if (quantity > 0) {
-                        docTypeQuantities[docType] = quantity;
-                        totalQuantity += quantity;
-                    }
-                });
+                let formData;
+                
+                if (documentMode === 'sets') {
+                    // Document Sets Mode
+                    const setQuantity = parseInt(document.getElementById('setQuantity').value) || 1;
+                    const estimatedDocsPerSet = 5; // Average documents per hierarchical set
+                    
+                    formData = {
+                        email: document.getElementById('email').value,
+                        firstParty: document.getElementById('firstParty').value || 'Fontara',
+                        geography: document.getElementById('geography').value,
+                        industry: document.getElementById('industry').value,
+                        subindustry: document.getElementById('subindustry').value,
+                        quantity: setQuantity * estimatedDocsPerSet, // Backend expects total quantity
+                        language: document.getElementById('language').value,
+                        createSets: true, // NEW: Flag to enable hierarchical document sets
+                        setQuantity: setQuantity // NEW: Number of sets to generate
+                    };
+                } else {
+                    // Individual Documents Mode (existing logic)
+                    const docTypeQuantities = {};
+                    let totalQuantity = 0;
+                    // Only collect individual document quantities, not document sets quantity
+                    const quantityInputs = document.querySelectorAll('.quantity-input[data-doctype]');
+                    
+                    quantityInputs.forEach(input => {
+                        const docType = input.getAttribute('data-doctype');
+                        const quantity = parseInt(input.value) || 0;
+                        if (quantity > 0) {
+                            docTypeQuantities[docType] = quantity;
+                            totalQuantity += quantity;
+                        }
+                    });
 
-                const formData = {
-                    email: document.getElementById('email').value,
-                    firstParty: document.getElementById('firstParty').value || 'Fontara',
-                    geography: document.getElementById('geography').value,
-                    industry: document.getElementById('industry').value,
-                    subindustry: document.getElementById('subindustry').value,
-                    quantity: totalQuantity, // Keep for backwards compatibility
-                    docTypeQuantities: docTypeQuantities, // New: specific quantities per doc type
-                    language: document.getElementById('language').value
-                };
+                    formData = {
+                        email: document.getElementById('email').value,
+                        firstParty: document.getElementById('firstParty').value || 'Fontara',
+                        geography: document.getElementById('geography').value,
+                        industry: document.getElementById('industry').value,
+                        subindustry: document.getElementById('subindustry').value,
+                        quantity: totalQuantity, // Keep for backwards compatibility
+                        docTypeQuantities: docTypeQuantities, // New: specific quantities per doc type
+                        language: document.getElementById('language').value,
+                        createSets: false // NEW: Ensure individual mode is explicit
+                    };
+                }
 
                 // Call Google Apps Script function
                 google.script.run

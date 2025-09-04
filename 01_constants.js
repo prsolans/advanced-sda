@@ -872,7 +872,7 @@ const DOC_TYPE_LIBRARY = {
     description: "Restricts employee's ability to compete post-employment.",
     controlledType: "Non-Compete",
     industries: ["HR"],
-    subindustries: ["Sales", "Technology", "Executive"],
+    subindustries: ["All"],
     obligations: ["Geographic Restrictions", "Time Limitations", "Scope Definition", "Consideration"],
     noTerm: true,
     category: "HR-Cross-Industry"
@@ -1269,3 +1269,616 @@ const OBL_TEXT = {
   "Scope Definition": "Scope Definition: Clear definition of restricted activities and competing businesses.",
   "Consideration": "Consideration: Adequate consideration provided for restrictive covenants including signing bonus or continued employment."
 };
+
+// === HIERARCHICAL DOCUMENT TYPES FOR DOCUMENT SETS ===
+// These document types are used in the new hierarchical document set templates
+
+// Add hierarchical document types to DOC_TYPE_LIBRARY
+const HIERARCHICAL_DOC_TYPES = {
+  // === GENERAL HIERARCHICAL DOCUMENT TYPES ===
+  "Statement of Work (SOW)": {
+    key: "SOW",
+    description: "Defines specific deliverables and implementation details.",
+    controlledType: "SOW",
+    industries: ["All"],
+    subindustries: ["All"],
+    obligations: ["Deliverables", "Timeline", "Acceptance_Criteria"],
+    noTerm: false,
+    category: "General"
+  },
+  "Change Order": {
+    key: "CHGORD",
+    description: "Modifications to existing agreements or work orders.",
+    controlledType: "CHGORD",
+    industries: ["All"],
+    subindustries: ["All"],
+    obligations: ["Scope_Change", "Cost_Adjustment", "Timeline_Impact"],
+    noTerm: false,
+    category: "General"
+  },
+  "Amendment": {
+    key: "AMEND",
+    description: "Formal modifications to contract terms and conditions.",
+    controlledType: "AMEND",
+    industries: ["All"],
+    subindustries: ["All"],
+    obligations: ["Term_Changes", "Documentation", "Compliance"],
+    noTerm: false,
+    category: "General"
+  },
+
+  // === TECHNOLOGY HIERARCHICAL DOCUMENT TYPES ===
+  "Master Subscription Agreement": {
+    key: "MSUB",
+    description: "Governing agreement for SaaS and subscription services.",
+    controlledType: "MSUB",
+    industries: ["Technology"],
+    subindustries: ["SaaS", "Enterprise Software", "Cloud Infrastructure"],
+    obligations: ["Service_Levels", "Usage_Rights", "Data_Processing"],
+    noTerm: false,
+    category: "Technology"
+  },
+  "Service Schedule": {
+    key: "SVCSCH",
+    description: "Detailed schedule of services and delivery terms.",
+    controlledType: "SVCSCH",
+    industries: ["Technology"],
+    subindustries: ["SaaS", "Enterprise Software"],
+    obligations: ["Service_Description", "Performance_Standards", "Delivery_Terms"],
+    noTerm: false,
+    category: "Technology"
+  },
+  "Security Exhibit": {
+    key: "SECEX",
+    description: "Security requirements and compliance standards.",
+    controlledType: "SECEX",
+    industries: ["Technology"],
+    subindustries: ["SaaS", "Cloud Infrastructure"],
+    obligations: ["Security_Standards", "Compliance", "Audit_Rights"],
+    noTerm: true,
+    category: "Technology"
+  },
+  "Privacy Notice": {
+    key: "PRIVNOT",
+    description: "Data privacy and protection notice.",
+    controlledType: "PRIVNOT",
+    industries: ["Technology"],
+    subindustries: ["SaaS", "Marketing Tech"],
+    obligations: ["Data_Privacy", "User_Rights", "Processing_Purposes"],
+    noTerm: true,
+    category: "Technology"
+  },
+  "Infrastructure Schedule": {
+    key: "INFRASCH",
+    description: "Infrastructure services and capacity definitions.",
+    controlledType: "INFRASCH",
+    industries: ["Technology"],
+    subindustries: ["Cloud Infrastructure", "Data Analytics"],
+    obligations: ["Resource_Allocation", "Performance_Metrics", "Scalability"],
+    noTerm: false,
+    category: "Technology"
+  },
+  "Service Level Agreement": {
+    key: "SLA_HIER",
+    description: "Service level commitments and performance guarantees.",
+    controlledType: "SLA_HIER",
+    industries: ["Technology"],
+    subindustries: ["Cloud Infrastructure", "SaaS"],
+    obligations: ["Uptime_Guarantees", "Response_Times", "Performance_Credits"],
+    noTerm: false,
+    category: "Technology"
+  },
+  "Disaster Recovery Plan": {
+    key: "DRP",
+    description: "Business continuity and disaster recovery procedures.",
+    controlledType: "DRP",
+    industries: ["Technology"],
+    subindustries: ["Cloud Infrastructure"],
+    obligations: ["Recovery_Procedures", "Backup_Requirements", "Testing_Schedule"],
+    noTerm: false,
+    category: "Technology"
+  },
+  "Performance Credits": {
+    key: "PERFCRED",
+    description: "Service credits for performance shortfalls.",
+    controlledType: "PERFCRED",
+    industries: ["Technology"],
+    subindustries: ["Cloud Infrastructure", "SaaS"],
+    obligations: ["Credit_Calculation", "Claim_Process", "Maximum_Credits"],
+    noTerm: false,
+    category: "Technology"
+  },
+  "Backup Procedures": {
+    key: "BACKUP",
+    description: "Data backup and restoration procedures.",
+    controlledType: "BACKUP",
+    industries: ["Technology"],
+    subindustries: ["Cloud Infrastructure", "Data Analytics"],
+    obligations: ["Backup_Frequency", "Restoration_Times", "Data_Integrity"],
+    noTerm: false,
+    category: "Technology"
+  },
+
+  // === HEALTHCARE HIERARCHICAL DOCUMENT TYPES ===
+  "Master Affiliation Agreement": {
+    key: "MAA_HEALTH",
+    description: "Governing agreement for healthcare network affiliations.",
+    controlledType: "MAA_HEALTH",
+    industries: ["Healthcare"],
+    subindustries: ["Healthcare IT", "Digital Health"],
+    obligations: ["Network_Participation", "Quality_Standards", "Compliance"],
+    noTerm: false,
+    category: "Healthcare"
+  },
+  "Facility Service Agreement": {
+    key: "FACSVC",
+    description: "Services provided at healthcare facilities.",
+    controlledType: "FSA",
+    industries: ["Healthcare"],
+    subindustries: ["Healthcare IT", "Digital Health"],
+    obligations: ["Service_Standards", "Facility_Access", "Equipment_Maintenance"],
+    noTerm: false,
+    category: "Healthcare"
+  },
+  "Credentialing Exhibit": {
+    key: "CREDEX",
+    description: "Provider credentialing requirements and documentation.",
+    controlledType: "CREDEX",
+    industries: ["Healthcare"],
+    subindustries: ["Healthcare IT", "Digital Health"],
+    obligations: ["Credential_Verification", "Ongoing_Monitoring", "Reporting"],
+    noTerm: true,
+    category: "Healthcare"
+  },
+  "Malpractice Coverage": {
+    key: "MALPRAC",
+    description: "Professional liability insurance requirements.",
+    controlledType: "MALPRAC",
+    industries: ["Healthcare"],
+    subindustries: ["Healthcare IT", "Digital Health"],
+    obligations: ["Insurance_Limits", "Coverage_Verification", "Claims_Reporting"],
+    noTerm: false,
+    category: "Healthcare"
+  },
+  "Payment Terms": {
+    key: "PAYTERMS",
+    description: "Payment schedules and compensation terms.",
+    controlledType: "PAYTERMS",
+    industries: ["Healthcare"],
+    subindustries: ["Healthcare IT"],
+    obligations: ["Payment_Schedule", "Rate_Structure", "Billing_Requirements"],
+    noTerm: false,
+    category: "Healthcare"
+  },
+  "Master Research Agreement": {
+    key: "MRA",
+    description: "Governing agreement for research collaborations.",
+    controlledType: "MRA",
+    industries: ["Healthcare"],
+    subindustries: ["Pharmaceuticals", "Biotechnology"],
+    obligations: ["Research_Standards", "IP_Rights", "Publication_Rights"],
+    noTerm: false,
+    category: "Healthcare"
+  },
+  "Protocol Amendment": {
+    key: "PROTAMEND",
+    description: "Modifications to research protocols.",
+    controlledType: "PROTAMEND",
+    industries: ["Healthcare"],
+    subindustries: ["Pharmaceuticals", "Biotechnology"],
+    obligations: ["Protocol_Changes", "Regulatory_Approval", "Documentation"],
+    noTerm: false,
+    category: "Healthcare"
+  },
+  "Site Agreement": {
+    key: "SITEAGR",
+    description: "Research site participation agreement.",
+    controlledType: "SITEAGR",
+    industries: ["Healthcare"],
+    subindustries: ["Pharmaceuticals", "Biotechnology"],
+    obligations: ["Site_Requirements", "Patient_Enrollment", "Data_Collection"],
+    noTerm: false,
+    category: "Healthcare"
+  },
+  "IP Assignment": {
+    key: "IPASSIGN",
+    description: "Intellectual property assignment and ownership.",
+    controlledType: "IPASSIGN",
+    industries: ["Healthcare"],
+    subindustries: ["Pharmaceuticals", "Biotechnology"],
+    obligations: ["IP_Transfer", "Patent_Rights", "Commercialization"],
+    noTerm: true,
+    category: "Healthcare"
+  },
+  "Publication Rights": {
+    key: "PUBRIGHTS",
+    description: "Research publication and disclosure rights.",
+    controlledType: "PUBRIGHTS",
+    industries: ["Healthcare"],
+    subindustries: ["Pharmaceuticals", "Biotechnology"],
+    obligations: ["Publication_Review", "Data_Sharing", "Confidentiality"],
+    noTerm: true,
+    category: "Healthcare"
+  },
+  "Principal Investigator Agreement": {
+    key: "PIA",
+    description: "Principal investigator responsibilities and obligations.",
+    controlledType: "PIA",
+    industries: ["Healthcare"],
+    subindustries: ["Pharmaceuticals", "Biotechnology"],
+    obligations: ["Research_Oversight", "Regulatory_Compliance", "Data_Integrity"],
+    noTerm: false,
+    category: "Healthcare"
+  },
+
+  // === FINANCIAL SERVICES HIERARCHICAL DOCUMENT TYPES ===
+  "Investment Policy Statement": {
+    key: "IPS",
+    description: "Investment objectives and policy guidelines.",
+    controlledType: "IPS",
+    industries: ["Financial Services"],
+    subindustries: ["Wealth Management", "Asset Management"],
+    obligations: ["Investment_Objectives", "Risk_Parameters", "Asset_Allocation"],
+    noTerm: false,
+    category: "Financial"
+  },
+  "Risk Parameters": {
+    key: "RISKPARAM",
+    description: "Risk tolerance and limitation parameters.",
+    controlledType: "RISKPARAM",
+    industries: ["Financial Services"],
+    subindustries: ["Wealth Management", "Asset Management"],
+    obligations: ["Risk_Limits", "Monitoring", "Reporting"],
+    noTerm: false,
+    category: "Financial"
+  },
+  "Fee Schedule": {
+    key: "FEESCH",
+    description: "Fee structure and billing arrangements.",
+    controlledType: "FEESCH",
+    industries: ["Financial Services"],
+    subindustries: ["Wealth Management", "Banking"],
+    obligations: ["Fee_Disclosure", "Billing_Terms", "Rate_Changes"],
+    noTerm: false,
+    category: "Financial"
+  },
+  "Performance Metrics": {
+    key: "PERFMET",
+    description: "Performance measurement and reporting standards.",
+    controlledType: "PERFMET",
+    industries: ["Financial Services"],
+    subindustries: ["Wealth Management", "Asset Management"],
+    obligations: ["Performance_Standards", "Reporting_Schedule", "Benchmarking"],
+    noTerm: false,
+    category: "Financial"
+  },
+  "Asset Allocation Model": {
+    key: "ASSETALLOC",
+    description: "Strategic asset allocation framework.",
+    controlledType: "ASSETALLOC",
+    industries: ["Financial Services"],
+    subindustries: ["Wealth Management"],
+    obligations: ["Allocation_Guidelines", "Rebalancing", "Risk_Management"],
+    noTerm: false,
+    category: "Financial"
+  },
+  "Stop Loss Orders": {
+    key: "STOPLOSS",
+    description: "Risk management stop loss procedures.",
+    controlledType: "STOPLOSS",
+    industries: ["Financial Services"],
+    subindustries: ["Wealth Management", "Investment Banking"],
+    obligations: ["Loss_Limits", "Execution_Procedures", "Monitoring"],
+    noTerm: false,
+    category: "Financial"
+  },
+  "Master Banking Agreement": {
+    key: "MBA",
+    description: "Governing agreement for banking relationships.",
+    controlledType: "MBA",
+    industries: ["Financial Services"],
+    subindustries: ["Banking", "Credit Unions"],
+    obligations: ["Banking_Services", "Account_Terms", "Regulatory_Compliance"],
+    noTerm: false,
+    category: "Financial"
+  },
+  "Account Terms": {
+    key: "ACCTTERMS",
+    description: "Specific account terms and conditions.",
+    controlledType: "ACCTTERMS",
+    industries: ["Financial Services"],
+    subindustries: ["Banking", "Credit Unions"],
+    obligations: ["Account_Features", "Access_Rights", "Fee_Structure"],
+    noTerm: false,
+    category: "Financial"
+  },
+  "Security Agreement": {
+    key: "SECAGR",
+    description: "Collateral security and pledge agreement.",
+    controlledType: "SECAGR",
+    industries: ["Financial Services"],
+    subindustries: ["Banking", "Credit Unions"],
+    obligations: ["Collateral_Requirements", "Security_Interest", "Default_Rights"],
+    noTerm: false,
+    category: "Financial"
+  },
+  "Guaranty Agreement": {
+    key: "GUAR",
+    description: "Third-party guarantee of obligations.",
+    controlledType: "GUAR",
+    industries: ["Financial Services"],
+    subindustries: ["Banking", "Credit Unions"],
+    obligations: ["Guarantee_Terms", "Liability_Limits", "Default_Triggers"],
+    noTerm: false,
+    category: "Financial"
+  },
+  "UCC Filing": {
+    key: "UCC",
+    description: "Uniform Commercial Code security interest filing.",
+    controlledType: "UCC",
+    industries: ["Financial Services"],
+    subindustries: ["Banking"],
+    obligations: ["Filing_Requirements", "Perfection", "Continuation"],
+    noTerm: true,
+    category: "Financial"
+  },
+  "Master Trading Agreement": {
+    key: "MTA",
+    description: "Master agreement for financial trading relationships.",
+    controlledType: "MTA",
+    industries: ["Financial Services"],
+    subindustries: ["Fintech", "Investment Banking"],
+    obligations: ["Trading_Terms", "Settlement", "Risk_Management"],
+    noTerm: false,
+    category: "Financial"
+  },
+  "Product Schedule": {
+    key: "PRODSCH",
+    description: "Schedule of tradeable products and instruments.",
+    controlledType: "PRODSCH",
+    industries: ["Financial Services"],
+    subindustries: ["Fintech", "Investment Banking"],
+    obligations: ["Product_Terms", "Trading_Limits", "Pricing"],
+    noTerm: false,
+    category: "Financial"
+  },
+  "Transaction Confirmation": {
+    key: "TRANSCONF",
+    description: "Trade confirmation and settlement instructions.",
+    controlledType: "TRANSCONF",
+    industries: ["Financial Services"],
+    subindustries: ["Fintech", "Investment Banking"],
+    obligations: ["Trade_Details", "Settlement_Instructions", "Confirmation_Timeline"],
+    noTerm: true,
+    category: "Financial"
+  },
+  "Novation": {
+    key: "NOVATION",
+    description: "Transfer of contractual obligations to third party.",
+    controlledType: "NOVATION",
+    industries: ["Financial Services"],
+    subindustries: ["Investment Banking"],
+    obligations: ["Transfer_Terms", "Consent_Requirements", "Liability_Transfer"],
+    noTerm: true,
+    category: "Financial"
+  },
+  "Settlement Instructions": {
+    key: "SETTLE",
+    description: "Detailed settlement and payment instructions.",
+    controlledType: "SETTLE",
+    industries: ["Financial Services"],
+    subindustries: ["Investment Banking", "Payment Processors"],
+    obligations: ["Payment_Methods", "Settlement_Timeline", "Default_Procedures"],
+    noTerm: false,
+    category: "Financial"
+  },
+
+  // === MANUFACTURING HIERARCHICAL DOCUMENT TYPES ===
+  "Master Supply Agreement": {
+    key: "MSUPPLY",
+    description: "Governing agreement for supply relationships.",
+    controlledType: "MSUPPLY",
+    industries: ["Manufacturing"],
+    subindustries: ["Automotive", "Aerospace", "Industrial Equipment"],
+    obligations: ["Supply_Terms", "Quality_Requirements", "Delivery_Standards"],
+    noTerm: false,
+    category: "Manufacturing"
+  },
+  "Testing Procedures": {
+    key: "TESTPROC",
+    description: "Quality testing and inspection procedures.",
+    controlledType: "TESTPROC",
+    industries: ["Manufacturing"],
+    subindustries: ["Automotive", "Aerospace"],
+    obligations: ["Testing_Standards", "Inspection_Rights", "Quality_Metrics"],
+    noTerm: false,
+    category: "Manufacturing"
+  },
+  "Certification Requirements": {
+    key: "CERTREQ",
+    description: "Industry certification and compliance requirements.",
+    controlledType: "CERTREQ",
+    industries: ["Manufacturing"],
+    subindustries: ["Automotive", "Aerospace"],
+    obligations: ["Certification_Standards", "Audit_Requirements", "Compliance_Monitoring"],
+    noTerm: false,
+    category: "Manufacturing"
+  },
+  "Production Schedule": {
+    key: "PRODSCH_MFG",
+    description: "Manufacturing production schedules and timelines.",
+    controlledType: "PRODSCH_MFG",
+    industries: ["Manufacturing"],
+    subindustries: ["Automotive", "Industrial Equipment"],
+    obligations: ["Production_Timeline", "Capacity_Planning", "Delivery_Schedules"],
+    noTerm: false,
+    category: "Manufacturing"
+  },
+  "Capacity Allocation": {
+    key: "CAPALLOC",
+    description: "Manufacturing capacity allocation and reservation.",
+    controlledType: "CAPALLOC",
+    industries: ["Manufacturing"],
+    subindustries: ["Automotive", "Industrial Equipment"],
+    obligations: ["Capacity_Commitment", "Allocation_Rights", "Utilization_Requirements"],
+    noTerm: false,
+    category: "Manufacturing"
+  },
+  "Inspection Protocol": {
+    key: "INSPROT",
+    description: "Quality inspection protocols and procedures.",
+    controlledType: "INSPROT",
+    industries: ["Manufacturing"],
+    subindustries: ["Automotive", "Aerospace"],
+    obligations: ["Inspection_Standards", "Documentation", "Nonconformance_Procedures"],
+    noTerm: false,
+    category: "Manufacturing"
+  },
+  "Delivery Terms": {
+    key: "DELTERMS",
+    description: "Shipping and delivery terms and conditions.",
+    controlledType: "DELTERMS",
+    industries: ["Manufacturing"],
+    subindustries: ["Automotive", "Industrial Equipment"],
+    obligations: ["Delivery_Schedule", "Shipping_Terms", "Risk_Transfer"],
+    noTerm: false,
+    category: "Manufacturing"
+  },
+
+  // === ENERGY HIERARCHICAL DOCUMENT TYPES ===
+  "Master Development Agreement": {
+    key: "MDA_ENERGY",
+    description: "Master agreement for energy project development.",
+    controlledType: "MDA_ENERGY",
+    industries: ["Energy"],
+    subindustries: ["Solar", "Wind", "Renewable Energy"],
+    obligations: ["Development_Terms", "Environmental_Compliance", "Project_Timeline"],
+    noTerm: false,
+    category: "Energy"
+  },
+  "Environmental Attributes": {
+    key: "ENVATTR",
+    description: "Renewable energy certificates and environmental attributes.",
+    controlledType: "ENVATTR",
+    industries: ["Energy"],
+    subindustries: ["Solar", "Wind", "Renewable Energy"],
+    obligations: ["REC_Transfer", "Environmental_Claims", "Verification"],
+    noTerm: false,
+    category: "Energy"
+  },
+  "Equipment Supply": {
+    key: "EQUIPSUP",
+    description: "Energy equipment supply and installation terms.",
+    controlledType: "EQUIPSUP",
+    industries: ["Energy"],
+    subindustries: ["Solar", "Wind"],
+    obligations: ["Equipment_Standards", "Installation_Requirements", "Performance_Warranties"],
+    noTerm: false,
+    category: "Energy"
+  },
+  "Warranty Terms": {
+    key: "WARRANTY",
+    description: "Equipment and performance warranty terms.",
+    controlledType: "WARRANTY",
+    industries: ["Energy"],
+    subindustries: ["Solar", "Wind"],
+    obligations: ["Warranty_Period", "Performance_Guarantees", "Remedy_Procedures"],
+    noTerm: false,
+    category: "Energy"
+  },
+  "Grid Compliance Certificate": {
+    key: "GRIDCERT",
+    description: "Utility grid compliance certification.",
+    controlledType: "GRIDCERT",
+    industries: ["Energy"],
+    subindustries: ["Solar", "Wind"],
+    obligations: ["Grid_Standards", "Compliance_Testing", "Certification_Maintenance"],
+    noTerm: true,
+    category: "Energy"
+  },
+  "Installation Services": {
+    key: "INSTALL",
+    description: "Equipment installation and commissioning services.",
+    controlledType: "INSTALL",
+    industries: ["Energy"],
+    subindustries: ["Solar", "Wind"],
+    obligations: ["Installation_Standards", "Safety_Requirements", "Commissioning_Tests"],
+    noTerm: false,
+    category: "Energy"
+  },
+
+  // === REAL ESTATE HIERARCHICAL DOCUMENT TYPES ===
+  "Master Development Agreement": {
+    key: "MDA_RE",
+    description: "Master agreement for real estate development projects.",
+    controlledType: "MDA_RE",
+    industries: ["Real Estate"],
+    subindustries: ["Commercial", "Mixed-Use"],
+    obligations: ["Development_Terms", "Construction_Requirements", "Timeline_Compliance"],
+    noTerm: false,
+    category: "Real Estate"
+  },
+  "General Contractor Agreement": {
+    key: "GENCON",
+    description: "General construction contractor agreement.",
+    controlledType: "GENCON",
+    industries: ["Real Estate"],
+    subindustries: ["Commercial", "Construction"],
+    obligations: ["Construction_Standards", "Performance_Bonds", "Safety_Requirements"],
+    noTerm: false,
+    category: "Real Estate"
+  },
+  "Design-Build Agreement": {
+    key: "DESBLD",
+    description: "Integrated design and construction services.",
+    controlledType: "DESBLD",
+    industries: ["Real Estate"],
+    subindustries: ["Commercial", "Construction"],
+    obligations: ["Design_Standards", "Construction_Quality", "Project_Delivery"],
+    noTerm: false,
+    category: "Real Estate"
+  },
+  "Subcontractor Agreement": {
+    key: "SUBCON",
+    description: "Specialized trade subcontractor agreement.",
+    controlledType: "SUBCON",
+    industries: ["Real Estate"],
+    subindustries: ["Construction"],
+    obligations: ["Work_Standards", "Schedule_Compliance", "Safety_Protocols"],
+    noTerm: false,
+    category: "Real Estate"
+  },
+  "Performance Bond": {
+    key: "PERFBOND",
+    description: "Construction performance bond guarantee.",
+    controlledType: "PERFBOND",
+    industries: ["Real Estate"],
+    subindustries: ["Construction"],
+    obligations: ["Performance_Guarantee", "Bond_Amount", "Claim_Procedures"],
+    noTerm: true,
+    category: "Real Estate"
+  },
+  "Tenant Services": {
+    key: "TENSVC",
+    description: "Additional tenant services and amenities.",
+    controlledType: "TENSVC",
+    industries: ["Real Estate"],
+    subindustries: ["Commercial", "Office"],
+    obligations: ["Service_Standards", "Access_Rights", "Service_Fees"],
+    noTerm: false,
+    category: "Real Estate"
+  },
+  "Lease Amendment": {
+    key: "LEASEAMEND",
+    description: "Modifications to existing lease terms.",
+    controlledType: "LEASEAMEND",
+    industries: ["Real Estate"],
+    subindustries: ["Commercial", "Office", "Retail"],
+    obligations: ["Term_Changes", "Rent_Adjustments", "Space_Modifications"],
+    noTerm: false,
+    category: "Real Estate"
+  }
+};
+
+// Merge hierarchical document types into main library
+Object.assign(DOC_TYPE_LIBRARY, HIERARCHICAL_DOC_TYPES);

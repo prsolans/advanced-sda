@@ -1,5 +1,21 @@
 // 04_documentBuilder.js (Refactored)
 
+/**
+ * Check if a document type is an HR document that should use person names as counterparties
+ * @param {string} agreementType - Document type to check
+ * @returns {boolean} - True if HR document type
+ */
+function isHRDocumentType(agreementType) {
+    const meta = getDocMetaByName(agreementType);
+    if (meta && meta.category === "HR-Cross-Industry") {
+        return true;
+    }
+    if (meta && meta.industries && meta.industries.includes("HR")) {
+        return true;
+    }
+    return false;
+}
+
 function buildAgreementDetails(agreementType, contractNumber) {
     const today = new Date();
     const pick = arr => arr[Math.floor(Math.random() * arr.length)];
@@ -54,13 +70,18 @@ function generateSetDocumentRow(requestData, agreementType, counterparty) {
     const addDays = (date, days) => new Date(date.getTime() + days * 24 * 60 * 60 * 1000);
     const fmt = date => Utilities.formatDate(date, Session.getScriptTimeZone(), "MM/dd/yyyy");
 
+    // For HR documents, use individual person names instead of shared set counterparty
+    const actualCounterparty = isHRDocumentType(agreementType) ? 
+        generateRandomPersonName() : 
+        counterparty;
+
     const contractNumber = generateContractNumber(agreementType);
     const detailsObject = buildAgreementDetails(agreementType, contractNumber);
     const parts = detailsObject.parts;
 
     // Check if this document type should include financial values
     if (shouldIncludeFinancialValuesLegacy(agreementType)) {
-        const financialValues = generateFinancialValuesLegacy(agreementType, docData.industry, docData.geography);
+        const financialValues = generateFinancialValuesLegacy(agreementType, requestData.industry, requestData.geography);
         parts.push(
             `Total Contract Value: ${financialValues.contractValue}`,
             `Deposit Amount: ${financialValues.depositAmount}, Deposit Due: ${financialValues.depositDue}`,
@@ -80,14 +101,25 @@ function generateSetDocumentRow(requestData, agreementType, counterparty) {
         email: requestData.email,
         language: requestData.language,
         firstParty: requestData.firstParty,
-        counterparty,
+        counterparty: actualCounterparty,
         agreementType,
         industry: requestData.industry || "Technology",
         subindustry: requestData.subindustry || "SaaS",
         geography: requestData.geography || "NAMER",
         specialInstructions: parts.join(", "),
         effectiveDate: detailsObject.effectiveDate,
-        contractNumber
+        contractNumber,
+        // Enhanced: Add hierarchy metadata structure
+        hierarchy: {
+            level: null,
+            parentId: null,
+            rootId: null,
+            ancestorPath: [],
+            children: [],
+            relationshipType: null
+        },
+        setId: null,
+        template: null
     };
 }
 
@@ -103,8 +135,13 @@ function generateRandomDocumentRow(requestData) {
     if (customConfig.documentType) {
         // Override the document type selection
         const firstParty = requestData.firstParty;
-        const counterparty = pick(COUNTERPARTIES);
         const agreementType = customConfig.documentType; // Use override type
+        
+        // Use person name for HR documents, company name for others
+        const counterparty = isHRDocumentType(agreementType) ? 
+            generateRandomPersonName() : 
+            pick(COUNTERPARTIES);
+            
         const contractNumber = generateContractNumber(agreementType);
         const detailsObject = buildAgreementDetails(agreementType, contractNumber);
 
@@ -124,30 +161,32 @@ function generateRandomDocumentRow(requestData) {
     }
 
     const firstParty = requestData.firstParty;
-    const counterparty = pick(COUNTERPARTIES);
-
+    
     // Check for document type override in special instructions
     const docTypeOverride = parseDocumentTypeOverride(requestData.specialInstructions);
+    let agreementType;
     if (docTypeOverride) {
-        return generateCustomDocumentRow(requestData, docTypeOverride);
+        agreementType = docTypeOverride;
+    } else {
+        const validTypes = getDocTypesForSubindustry(requestData.subindustry);
+        if (validTypes.length === 0) {
+            Logger.log("No valid document types found for subindustry: " + requestData.subindustry);
+            return null;
+        }
+        agreementType = pick(validTypes);
     }
-
-    const validTypes = getDocTypesForSubindustry(requestData.subindustry);
-
-    if (validTypes.length === 0) {
-        Logger.log("No valid document types found for subindustry: " + requestData.subindustry);
-        return null;
-    }
-
-
-    const agreementType = pick(validTypes);
+    
+    // Use person name for HR documents, company name for others
+    const counterparty = isHRDocumentType(agreementType) ? 
+        generateRandomPersonName() : 
+        pick(COUNTERPARTIES);
     const contractNumber = generateContractNumber(agreementType);
     const detailsObject = buildAgreementDetails(agreementType, contractNumber);
     const parts = detailsObject.parts;
 
     // Check if this document type should include financial values
     if (shouldIncludeFinancialValuesLegacy(agreementType)) {
-        const financialValues = generateFinancialValuesLegacy(agreementType, docData.industry, docData.geography);
+        const financialValues = generateFinancialValuesLegacy(agreementType, requestData.industry, requestData.geography);
         parts.push(
             `Total Contract Value: ${financialValues.contractValue}`,
             `Deposit Amount: ${financialValues.depositAmount}, Deposit Due: ${financialValues.depositDue}`,
@@ -220,7 +259,11 @@ function parseDocumentTypeOverride(specialInstructions) {
  */
 function generateCustomDocumentRow(requestData, documentType) {
     const pick = arr => arr[Math.floor(Math.random() * arr.length)];
-    const counterparty = pick(COUNTERPARTIES);
+    
+    // Use person name for HR documents, company name for others
+    const counterparty = isHRDocumentType(documentType) ? 
+        generateRandomPersonName() : 
+        pick(COUNTERPARTIES);
     const contractNumber = generateContractNumber(documentType);
 
     return {
@@ -234,8 +277,232 @@ function generateCustomDocumentRow(requestData, documentType) {
         geography: requestData.geography || "NAMER",
         specialInstructions: requestData.specialInstructions, // Pass through for prompt building
         effectiveDate: new Date(),
-        contractNumber
+        contractNumber,
+        // Enhanced: Add hierarchy metadata structure
+        hierarchy: {
+            level: null,
+            parentId: null,
+            rootId: null,
+            ancestorPath: [],
+            children: [],
+            relationshipType: null
+        },
+        setId: null,
+        template: null
     };
+}
+
+// ========================================
+// HIERARCHICAL DOCUMENT SET GENERATION
+// ========================================
+
+/**
+ * Generate a complete hierarchical document set based on a template
+ * @param {Object} requestData - Request data from spreadsheet
+ * @param {string} templateName - Name of the template to use
+ * @returns {Object} - Document tree with all generated documents
+ */
+function generateHierarchicalDocumentSet(requestData, templateName) {
+    const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+    
+    const template = DOCUMENT_SET_TEMPLATES[templateName];
+    if (!template) {
+        throw new Error(`Template not found: ${templateName}`);
+    }
+    
+    const setId = generateSetId();
+    const setCounterparty = pick(COUNTERPARTIES);
+    
+    const documentTree = {
+        setId,
+        templateName,
+        industry: requestData.industry,
+        subindustry: requestData.subindustry,
+        counterparty: setCounterparty,
+        documents: new Map(), // contractNumber -> docData
+        hierarchy: new Map(), // level -> [contractNumbers]
+        rootDocuments: []
+    };
+    
+    // Find root documents (level 0)
+    const rootTypes = Object.keys(template.structure).filter(
+        docType => template.structure[docType].level === 0
+    );
+    
+    Logger.log(`DEBUG: Template structure keys: ${Object.keys(template.structure).join(', ')}`);
+    Logger.log(`DEBUG: Root document types (level 0): ${rootTypes.join(', ')}`);
+    
+    // Generate each root document and its children
+    for (const rootType of rootTypes) {
+        Logger.log(`DEBUG: Generating root document: ${rootType}`);
+        const rootDoc = buildDocumentBranch(
+            documentTree, 
+            template, 
+            rootType, 
+            null, // no parent
+            0,    // level 0
+            requestData
+        );
+        documentTree.rootDocuments.push(rootDoc.contractNumber);
+        Logger.log(`DEBUG: Generated root document: ${rootDoc.agreementType} (${rootDoc.contractNumber})`);
+    }
+    
+    return documentTree;
+}
+
+/**
+ * Recursively build a document branch in the hierarchy
+ * @param {Object} tree - The document tree being built
+ * @param {Object} template - Template structure
+ * @param {string} docType - Document type to create
+ * @param {string} parentId - Parent contract number (null for root)
+ * @param {number} level - Hierarchy level
+ * @param {Object} requestData - Request data
+ * @returns {Object} - Generated document data
+ */
+function buildDocumentBranch(tree, template, docType, parentId, level, requestData) {
+    const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+    
+    Logger.log(`DEBUG: buildDocumentBranch called with docType: "${docType}", level: ${level}, parentId: ${parentId}`);
+    
+    // Generate base document data
+    const docData = generateSetDocumentRow(requestData, docType, tree.counterparty);
+    
+    Logger.log(`DEBUG: generateSetDocumentRow returned agreementType: "${docData.agreementType}"`);
+    
+    // Get template definition for this document type
+    const templateDef = template.structure[docType];
+    
+    if (!templateDef) {
+        Logger.log(`ERROR: No template definition found for docType: "${docType}"`);
+        Logger.log(`Available document types in template: ${Object.keys(template.structure).join(', ')}`);
+        throw new Error(`Template definition not found for document type: ${docType}`);
+    }
+    
+    // Set hierarchy metadata
+    docData.hierarchy = {
+        level,
+        parentId,
+        rootId: parentId ? tree.documents.get(parentId).hierarchy.rootId : docData.contractNumber,
+        ancestorPath: parentId ? 
+            [...tree.documents.get(parentId).hierarchy.ancestorPath, parentId] : 
+            [],
+        children: [],
+        relationshipType: templateDef.relationshipType
+    };
+    
+    // Set document tree metadata
+    docData.setId = tree.setId;
+    docData.template = tree.templateName;
+    
+    // Store document in tree
+    tree.documents.set(docData.contractNumber, docData);
+    
+    // Add to hierarchy level tracking
+    if (!tree.hierarchy.has(level)) {
+        tree.hierarchy.set(level, []);
+    }
+    tree.hierarchy.get(level).push(docData.contractNumber);
+    
+    // Update parent's children array
+    if (parentId && tree.documents.has(parentId)) {
+        tree.documents.get(parentId).hierarchy.children.push(docData.contractNumber);
+    }
+    
+    // Generate children recursively
+    const childTypes = templateDef.allowedChildren || [];
+    if (childTypes.length > 0) {
+        const maxChildren = templateDef.maxChildren;
+        
+        // Determine number of children to generate
+        let numChildren;
+        if (maxChildren === 0) {
+            numChildren = 0; // No children allowed
+        } else if (maxChildren === -1) {
+            // Unlimited: use template default or random 1-2
+            const defaultQuantities = template.defaultQuantities || {};
+            numChildren = Math.min(childTypes.length, 
+                Object.keys(defaultQuantities).length > 0 ? 1 : Math.floor(Math.random() * 2) + 1
+            );
+        } else {
+            // Limited: random up to max
+            numChildren = Math.min(maxChildren, Math.floor(Math.random() * maxChildren) + 1);
+        }
+        
+        // Generate children
+        const selectedChildTypes = [];
+        for (let i = 0; i < numChildren && childTypes.length > 0; i++) {
+            // For templates with default quantities, use those preferentially
+            const childType = template.defaultQuantities && 
+                Object.keys(template.defaultQuantities).some(key => childTypes.includes(key)) ?
+                childTypes.find(type => template.defaultQuantities[type] && !selectedChildTypes.includes(type)) ||
+                pick(childTypes.filter(type => !selectedChildTypes.includes(type))) :
+                pick(childTypes.filter(type => !selectedChildTypes.includes(type)));
+            
+            if (childType) {
+                selectedChildTypes.push(childType);
+                buildDocumentBranch(
+                    tree, 
+                    template, 
+                    childType, 
+                    docData.contractNumber, 
+                    level + 1, 
+                    requestData
+                );
+            }
+        }
+    }
+    
+    return docData;
+}
+
+/**
+ * Get all documents in a set as a flat array
+ * @param {Object} documentTree - The document tree
+ * @returns {Array} - Array of all document data objects
+ */
+function flattenDocumentTree(documentTree) {
+    return Array.from(documentTree.documents.values());
+}
+
+/**
+ * Get documents by hierarchy level
+ * @param {Object} documentTree - The document tree
+ * @param {number} level - Hierarchy level to retrieve
+ * @returns {Array} - Array of document data objects at the specified level
+ */
+function getDocumentsByLevel(documentTree, level) {
+    const contractNumbers = documentTree.hierarchy.get(level) || [];
+    return contractNumbers.map(contractNumber => documentTree.documents.get(contractNumber));
+}
+
+/**
+ * Select the best template for given industry and subindustry
+ * @param {string} industry - Industry name
+ * @param {string} subindustry - Subindustry name
+ * @returns {string} - Template name
+ */
+function selectDocumentSetTemplate(industry, subindustry) {
+    // Get available templates for this industry/subindustry combination
+    const available = Object.entries(DOCUMENT_SET_TEMPLATES)
+        .filter(([name, template]) => {
+            if (template.subindustries && template.subindustries.includes(subindustry)) return true;
+            if (template.industry === industry) return true;
+            if (template.industry === "All") return true;
+            return false;
+        })
+        .map(([name, template]) => ({ name, ...template }));
+    
+    // Priority: subindustry-specific > industry-specific > default
+    const subindustrySpecific = available.find(t => 
+        t.subindustries && t.subindustries.includes(subindustry) && t.industry !== "All"
+    );
+    if (subindustrySpecific) return subindustrySpecific.name;
+    
+    const industrySpecific = available.find(t => t.industry === industry);
+    if (industrySpecific) return industrySpecific.name;
+    
+    return "Standard MSA Flow"; // Default fallback
 }
 
 // Helper functions for enhanced financial value generation in legacy system

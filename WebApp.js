@@ -59,7 +59,7 @@ function processFormSubmission(formData) {
     formData.geography, // Geography (Column H)
     formData.industry, // Industry (Column I)
     formData.subindustry || '', // Subindustry (Column J)
-    false, // Create Sets (Column K) - default to false for now
+    formData.createSets === true, // Create Sets (Column K) - NEW: Use value from form
     'Pending' // Status (Column L)
   ];
 
@@ -93,6 +93,7 @@ function processFormSubmission(formData) {
 }
 
 function processRowDirectly(sheet, rowNumber, formData) {
+  // Utility functions
   const pick = arr => arr[Math.floor(Math.random() * arr.length)];
 
   try {
@@ -143,33 +144,124 @@ function processRowDirectly(sheet, rowNumber, formData) {
     }
 
     if (requestData.createSets === true) {
-      // Document sets logic
-      const numSets = Math.floor(requestData.quantity / 5);
-      const docCount = numSets * 5;
-      if (numSets < 1) throw new Error("Quantity must be 5 or more to create sets.");
+      Logger.log(`DEBUG: WebApp.js - Document sets requested. Using hierarchical system.`);
+      
+      // Use the hierarchical document set system from 07_main.js logic
+      const useHierarchicalSets = true;
+      
+      if (useHierarchicalSets) {
+        // Check if DOCUMENT_SET_TEMPLATES is available
+        Logger.log(`DEBUG: WebApp DOCUMENT_SET_TEMPLATES available: ${typeof DOCUMENT_SET_TEMPLATES !== 'undefined'}`);
+        
+        // Define utility functions for hierarchical generation
+        const pickUtil = arr => arr[Math.floor(Math.random() * arr.length)];
+        
+        try {
+          const templateName = selectDocumentSetTemplate(requestData.industry, requestData.subindustry);
+          Logger.log(`DEBUG: WebApp selected template: ${templateName}`);
+          
+          const template = DOCUMENT_SET_TEMPLATES[templateName];
+          
+          if (!template) {
+            throw new Error(`No suitable template found for ${requestData.industry} - ${requestData.subindustry}`);
+          }
+          
+          // Calculate number of sets and documents
+          const avgDocsPerSet = Object.keys(template.defaultQuantities || {}).length || 5;
+          const numSets = Math.max(1, Math.floor(requestData.quantity / avgDocsPerSet));
+          let totalDocCount = 0;
+          
+          Logger.log(`DEBUG: WebApp will generate ${numSets} sets, estimated ${avgDocsPerSet} docs per set`);
+          
+          // Generate each hierarchical document set
+          for (let setIndex = 0; setIndex < numSets; setIndex++) {
+            Logger.log(`DEBUG: WebApp generating hierarchical set ${setIndex + 1}/${numSets}`);
+            
+            // Generate the complete document tree
+            const documentTree = generateHierarchicalDocumentSet(requestData, templateName);
+            Logger.log(`DEBUG: WebApp generated document tree with ${documentTree.documents.size} documents`);
+            
+            // Link all parent-child relationships
+            linkAllHierarchicalParents(documentTree);
+            
+            // Process all documents in the tree
+            const allDocs = flattenDocumentTree(documentTree);
+            totalDocCount += allDocs.length;
+            
+            Logger.log(`DEBUG: WebApp flattened tree to ${allDocs.length} documents`);
+            
+            // Log document types generated
+            const docTypes = allDocs.map(doc => doc.agreementType).join(', ');
+            Logger.log(`DEBUG: WebApp document types in set: ${docTypes}`);
+            
+            // Create files for each document
+            for (const docData of allDocs) {
+              Logger.log(`DEBUG: WebApp creating file for ${docData.agreementType} (${docData.contractNumber})`);
+              processAndCreateFile(docData, subfolder);
+            }
+          }
+          
+          successMessage = `Success! ${totalDocCount} documents (${numSets} hierarchical sets) created using template: ${templateName}.`;
+          
+        } catch (hierarchicalError) {
+          Logger.log(`ERROR in WebApp hierarchical generation: ${hierarchicalError.message}`);
+          Logger.log(`DEBUG: WebApp falling back to legacy document set generation`);
+          
+          // Fall back to legacy system
+          const numSets = Math.floor(requestData.quantity / 5);
+          const docCount = numSets * 5;
+          if (numSets < 1) throw new Error("Quantity must be 5 or more to create sets.");
 
-      const allSetTypes = getDocTypesForIndustry(requestData.industry);
-      const DOCUMENT_SET_TYPES = [
-        allSetTypes.find(t => t.includes("NDA")) || "Non-Disclosure Agreement (NDA)",
-        allSetTypes.find(t => t.includes("MSA")) || "Master Service Agreement (MSA)",
-        allSetTypes.find(t => t.includes("SOW")) || "Statement Of Work (SOW)",
-        allSetTypes.find(t => t.includes("SOW")) || "Statement Of Work (SOW)",
-        allSetTypes.find(t => t.includes("Change Order")) || "Change Order"
-      ];
+          const allSetTypes = getDocTypesForIndustry(requestData.industry);
+          const DOCUMENT_SET_TYPES = [
+            allSetTypes.find(t => t.includes("NDA")) || "Non-Disclosure Agreement (NDA)",
+            allSetTypes.find(t => t.includes("MSA")) || "Master Service Agreement (MSA)",
+            allSetTypes.find(t => t.includes("SOW")) || "Statement Of Work (SOW)",
+            allSetTypes.find(t => t.includes("SOW")) || "Statement Of Work (SOW)",
+            allSetTypes.find(t => t.includes("Change Order")) || "Change Order"
+          ];
 
-      let parents = {};
-      const setCounterparty = pick(COUNTERPARTIES);
+          let parents = {};
+          const setCounterparty = pick(COUNTERPARTIES);
 
-      for (const docType of DOCUMENT_SET_TYPES) {
-        const docData = generateSetDocumentRow(requestData, docType, setCounterparty);
-        if (docType.includes("MSA")) parents.MSA = docData;
-        if (docType.includes("SOW")) parents.SOW = docData;
-        linkParentContracts(docData, parents);
-        Logger.log("Doc Data: " + JSON.stringify(docData, null, 2));
-        processAndCreateFile(docData, subfolder);
+          for (const docType of DOCUMENT_SET_TYPES) {
+            const docData = generateSetDocumentRow(requestData, docType, setCounterparty);
+            if (docType.includes("MSA")) parents.MSA = docData;
+            if (docType.includes("SOW")) parents.SOW = docData;
+            linkParentContracts(docData, parents);
+            processAndCreateFile(docData, subfolder);
+          }
+
+          successMessage = `Success! ${docCount} documents (${numSets} legacy sets) created (fallback from hierarchical error).`;
+        }
+      } else {
+        // Legacy system (kept for reference)
+        const numSets = Math.floor(requestData.quantity / 5);
+        const docCount = numSets * 5;
+        if (numSets < 1) throw new Error("Quantity must be 5 or more to create sets.");
+
+        const allSetTypes = getDocTypesForIndustry(requestData.industry);
+        const DOCUMENT_SET_TYPES = [
+          allSetTypes.find(t => t.includes("NDA")) || "Non-Disclosure Agreement (NDA)",
+          allSetTypes.find(t => t.includes("MSA")) || "Master Service Agreement (MSA)",
+          allSetTypes.find(t => t.includes("SOW")) || "Statement Of Work (SOW)",
+          allSetTypes.find(t => t.includes("SOW")) || "Statement Of Work (SOW)",
+          allSetTypes.find(t => t.includes("Change Order")) || "Change Order"
+        ];
+
+        let parents = {};
+        const setCounterparty = pick(COUNTERPARTIES);
+
+        for (const docType of DOCUMENT_SET_TYPES) {
+          const docData = generateSetDocumentRow(requestData, docType, setCounterparty);
+          if (docType.includes("MSA")) parents.MSA = docData;
+          if (docType.includes("SOW")) parents.SOW = docData;
+          linkParentContracts(docData, parents);
+          processAndCreateFile(docData, subfolder);
+        }
+
+        successMessage = `Success! ${docCount} documents (${numSets} legacy sets) created.`;
       }
-
-      successMessage = `Success! ${docCount} documents (${numSets} sets) created.`;
 
     } else {
       // Individual documents - Handle specific quantities per document type
@@ -182,7 +274,10 @@ function processRowDirectly(sheet, rowNumber, formData) {
         // Generate documents based on specific quantities
         for (const [agreementType, quantity] of Object.entries(formData.docTypeQuantities)) {
           for (let i = 0; i < quantity; i++) {
-            const counterparty = pick(COUNTERPARTIES);
+            // Use person name for HR documents, company name for others
+            const counterparty = isHRDocumentType(agreementType) ? 
+                generateRandomPersonName() : 
+                pick(COUNTERPARTIES);
 
             Logger.log(`Creating document ${i + 1}/${quantity} of type: ${agreementType}`);
 
@@ -255,8 +350,12 @@ function processRowDirectly(sheet, rowNumber, formData) {
 
         // Generate documents randomly
         for (let i = 0; i < docCount; i++) {
-          const counterparty = pick(COUNTERPARTIES);
           const agreementType = pick(validDocTypes);
+          
+          // Use person name for HR documents, company name for others
+          const counterparty = isHRDocumentType(agreementType) ? 
+              generateRandomPersonName() : 
+              pick(COUNTERPARTIES);
 
           Logger.log(`Creating document ${i + 1}: ${agreementType}`);
 

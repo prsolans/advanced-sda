@@ -70,41 +70,155 @@ function submitSampleRequest(e) {
         }
 
         if (requestData.createSets === true) {
-            const numSets = Math.floor(requestData.quantity / 5);
-            const docCount = numSets * 5;
-            if (numSets < 1) throw new Error("Quantity must be 5 or more to create sets.");
+            Logger.log(`DEBUG: Document sets requested. createSets = ${requestData.createSets}`);
+            Logger.log(`DEBUG: Request data: ${JSON.stringify(requestData, null, 2)}`);
+            
+            // Enhanced: Support both legacy and hierarchical document sets
+            const useHierarchicalSets = true; // Feature flag for gradual rollout
+            Logger.log(`DEBUG: useHierarchicalSets = ${useHierarchicalSets}`);
+            
+            if (useHierarchicalSets) {
+                // NEW: Hierarchical Document Set Generation
+                Logger.log(`DEBUG: Starting hierarchical document set generation for ${requestData.industry} - ${requestData.subindustry}`);
+                
+                // Check if DOCUMENT_SET_TEMPLATES is available
+                Logger.log(`DEBUG: DOCUMENT_SET_TEMPLATES available: ${typeof DOCUMENT_SET_TEMPLATES !== 'undefined'}`);
+                if (typeof DOCUMENT_SET_TEMPLATES !== 'undefined') {
+                    Logger.log(`DEBUG: Available templates: ${Object.keys(DOCUMENT_SET_TEMPLATES).join(', ')}`);
+                } else {
+                    Logger.log(`ERROR: DOCUMENT_SET_TEMPLATES is undefined!`);
+                    throw new Error('DOCUMENT_SET_TEMPLATES constant not available');
+                }
+                
+                try {
+                    const templateName = selectDocumentSetTemplate(requestData.industry, requestData.subindustry);
+                    Logger.log(`DEBUG: Selected template: ${templateName}`);
+                    
+                    const template = DOCUMENT_SET_TEMPLATES[templateName];
+                    
+                    if (!template) {
+                        Logger.log(`ERROR: Template not found: ${templateName}`);
+                        Logger.log(`DEBUG: Available templates: ${Object.keys(DOCUMENT_SET_TEMPLATES).join(', ')}`);
+                        throw new Error(`No suitable template found for ${requestData.industry} - ${requestData.subindustry}`);
+                    }
+                    
+                    Logger.log(`DEBUG: Template found: ${template.description}`);
+                    
+                    // Calculate number of sets and documents
+                    const avgDocsPerSet = Object.keys(template.defaultQuantities || {}).length || 5;
+                    const numSets = Math.max(1, Math.floor(requestData.quantity / avgDocsPerSet));
+                    let totalDocCount = 0;
+                    
+                    Logger.log(`DEBUG: Will generate ${numSets} sets, estimated ${avgDocsPerSet} docs per set`);
+                    
+                    // Generate each hierarchical document set
+                    for (let setIndex = 0; setIndex < numSets; setIndex++) {
+                        Logger.log(`DEBUG: Generating hierarchical set ${setIndex + 1}/${numSets}`);
+                        
+                        // Generate the complete document tree
+                        const documentTree = generateHierarchicalDocumentSet(requestData, templateName);
+                        Logger.log(`DEBUG: Generated document tree with ${documentTree.documents.size} documents`);
+                        
+                        // Link all parent-child relationships
+                        linkAllHierarchicalParents(documentTree);
+                        Logger.log(`DEBUG: Linked all parent-child relationships`);
+                        
+                        // Process all documents in the tree
+                        const allDocs = flattenDocumentTree(documentTree);
+                        totalDocCount += allDocs.length;
+                        
+                        Logger.log(`DEBUG: Flattened tree to ${allDocs.length} documents in set ${documentTree.setId}`);
+                        
+                        // Log document types generated
+                        const docTypes = allDocs.map(doc => doc.agreementType).join(', ');
+                        Logger.log(`DEBUG: Document types in set: ${docTypes}`);
+                        
+                        // Create files for each document
+                        for (const docData of allDocs) {
+                            Logger.log(`DEBUG: Creating file for ${docData.agreementType} (${docData.contractNumber})`);
+                            processAndCreateFile(docData, subfolder);
+                        }
+                    }
+                    
+                    successMessage = `Success! ${totalDocCount} documents (${numSets} hierarchical sets) created using template: ${templateName}.`;
+                    Logger.log(`DEBUG: Hierarchical generation completed successfully`);
+                    
+                } catch (hierarchicalError) {
+                    Logger.log(`ERROR in hierarchical generation: ${hierarchicalError.message}`);
+                    Logger.log(`DEBUG: Falling back to legacy document set generation`);
+                    
+                    // Fall back to legacy system
+                    const numSets = Math.floor(requestData.quantity / 5);
+                    const docCount = numSets * 5;
+                    if (numSets < 1) throw new Error("Quantity must be 5 or more to create sets.");
 
-            // Process each set separately to create reference documents for each
-            for (let setIndex = 0; setIndex < numSets; setIndex++) {
-                const allSetTypes = getDocTypesForIndustry(requestData.industry);
-                const DOCUMENT_SET_TYPES = [
-                    allSetTypes.find(t => t.includes("NDA")) || "Non-Disclosure Agreement (NDA)",
-                    allSetTypes.find(t => t.includes("MSA")) || "Master Service Agreement (MSA)",
-                    allSetTypes.find(t => t.includes("SOW")) || "Statement Of Work (SOW)",
-                    allSetTypes.find(t => t.includes("SOW")) || "Statement Of Work (SOW)",
-                    allSetTypes.find(t => t.includes("Change Order")) || "Change Order"
-                ];
+                    // Process each set separately to create reference documents for each
+                    for (let setIndex = 0; setIndex < numSets; setIndex++) {
+                        const allSetTypes = getDocTypesForIndustry(requestData.industry);
+                        const DOCUMENT_SET_TYPES = [
+                            allSetTypes.find(t => t.includes("NDA")) || "Non-Disclosure Agreement (NDA)",
+                            allSetTypes.find(t => t.includes("MSA")) || "Master Service Agreement (MSA)",
+                            allSetTypes.find(t => t.includes("SOW")) || "Statement Of Work (SOW)",
+                            allSetTypes.find(t => t.includes("SOW")) || "Statement Of Work (SOW)",
+                            allSetTypes.find(t => t.includes("Change Order")) || "Change Order"
+                        ];
 
-                let parents = {};
-                const setCounterparty = pick(COUNTERPARTIES);
-                const setDocuments = []; // Store all documents in this set for reference doc
+                        let parents = {};
+                        const setCounterparty = pick(COUNTERPARTIES);
+                        const setDocuments = []; // Store all documents in this set for reference doc
 
-                for (const docType of DOCUMENT_SET_TYPES) {
-                    const docData = generateSetDocumentRow(requestData, docType, setCounterparty);
+                        for (const docType of DOCUMENT_SET_TYPES) {
+                            const docData = generateSetDocumentRow(requestData, docType, setCounterparty);
 
-                    if (docType.includes("MSA")) parents.MSA = docData;
-                    if (docType.includes("SOW")) parents.SOW = docData;
+                            if (docType.includes("MSA")) parents.MSA = docData;
+                            if (docType.includes("SOW")) parents.SOW = docData;
 
-                    linkParentContracts(docData, parents);
-                    setDocuments.push(docData); // Add to set documents array
+                            linkParentContracts(docData, parents);
+                            setDocuments.push(docData); // Add to set documents array
 
-                    processAndCreateFile(docData, subfolder);
+                            processAndCreateFile(docData, subfolder);
+                        }
+                    }
+
+                    successMessage = `Success! ${docCount} documents (${numSets} legacy sets) created (fallback from hierarchical error).`;
+                }
+                
+            } else {
+                // LEGACY: Original fixed 5-document sets (maintained for backward compatibility)
+                const numSets = Math.floor(requestData.quantity / 5);
+                const docCount = numSets * 5;
+                if (numSets < 1) throw new Error("Quantity must be 5 or more to create sets.");
+
+                // Process each set separately to create reference documents for each
+                for (let setIndex = 0; setIndex < numSets; setIndex++) {
+                    const allSetTypes = getDocTypesForIndustry(requestData.industry);
+                    const DOCUMENT_SET_TYPES = [
+                        allSetTypes.find(t => t.includes("NDA")) || "Non-Disclosure Agreement (NDA)",
+                        allSetTypes.find(t => t.includes("MSA")) || "Master Service Agreement (MSA)",
+                        allSetTypes.find(t => t.includes("SOW")) || "Statement Of Work (SOW)",
+                        allSetTypes.find(t => t.includes("SOW")) || "Statement Of Work (SOW)",
+                        allSetTypes.find(t => t.includes("Change Order")) || "Change Order"
+                    ];
+
+                    let parents = {};
+                    const setCounterparty = pick(COUNTERPARTIES);
+                    const setDocuments = []; // Store all documents in this set for reference doc
+
+                    for (const docType of DOCUMENT_SET_TYPES) {
+                        const docData = generateSetDocumentRow(requestData, docType, setCounterparty);
+
+                        if (docType.includes("MSA")) parents.MSA = docData;
+                        if (docType.includes("SOW")) parents.SOW = docData;
+
+                        linkParentContracts(docData, parents);
+                        setDocuments.push(docData); // Add to set documents array
+
+                        processAndCreateFile(docData, subfolder);
+                    }
                 }
 
-                // Contract set reference documents are now replaced by the user guide URL
+                successMessage = `Success! ${docCount} documents (${numSets} legacy sets) created.`;
             }
-
-            successMessage = `Success! ${docCount} documents (${numSets} sets) created.`;
 
         } else {
             // For individual documents, user guide provides document type details
