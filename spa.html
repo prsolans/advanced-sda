@@ -863,6 +863,7 @@
                                 <option value="Financial Services">Financial Services</option>
                                 <option value="Manufacturing">Manufacturing</option>
                                 <option value="Energy">Energy</option>
+                                <option value="Procurement">Procurement</option>
                                 <option value="HR">Human Resources</option>
                                 <option value="Real Estate">Real Estate</option>
                             </select>
@@ -983,7 +984,7 @@
                     <div class="feedback-section" style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #667eea;">
                         <h3 style="color: #2c3e50; margin-bottom: 10px;">Have Feedback?</h3>
                         <p style="margin-bottom: 15px; color: #6c757d;">Help us improve Advanced Sample Document Assistant (ASDA) by sharing your thoughts and suggestions.</p>
-                        <a href="#" onclick="showPage('feedback')" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 14px; transition: all 0.3s ease;">
+                        <a href="javascript:void(0)" onclick="showPage('feedback')" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 14px; transition: all 0.3s ease;">
                             Submit Feedback
                         </a>
                     </div>
@@ -1020,6 +1021,7 @@
                             <option value="Financial Services">Financial Services</option>
                             <option value="Manufacturing">Manufacturing</option>
                             <option value="Energy">Energy</option>
+                            <option value="Procurement">Procurement</option>
                             <option value="HR">Human Resources</option>
                             <option value="Real Estate">Real Estate</option>
                         </select>
@@ -1218,7 +1220,7 @@
                         
                         <div class="feedback-cta">
                             <strong>To request custom documents:</strong><br>
-                            Submit a <a href="#" onclick="showPage('feedback')" class="feedback-link">feedback request</a> with details about your specific requirements. Our team will review your request and work with you to create custom templates or modify existing ones to meet your business needs.
+                            Submit a <a href="javascript:void(0)" onclick="showPage('feedback')" class="feedback-link">feedback request</a> with details about your specific requirements. Our team will review your request and work with you to create custom templates or modify existing ones to meet your business needs.
                         </div>
                         
                         <p><strong>What to include in your custom request:</strong></p>
@@ -1250,7 +1252,7 @@
                             <li><strong>HR</strong> - Employment, Benefits, Training, etc.</li>
                         </ul>
                         
-                        <p>Each industry includes dozens of specialized document types with appropriate legal obligations and clauses. Visit the <a href="#" onclick="showPage('doctypes')" class="feedback-link">Document Types</a> to explore all available options or the <a href="#" onclick="showPage('guide')" class="feedback-link">User Guide</a> to learn how to use ASDA effectively.</p>
+                        <p>Each industry includes dozens of specialized document types with appropriate legal obligations and clauses. Visit the <a href="javascript:void(0)" onclick="showPage('doctypes')" class="feedback-link">Document Types</a> to explore all available options or the <a href="javascript:void(0)" onclick="showPage('guide')" class="feedback-link">User Guide</a> to learn how to use ASDA effectively.</p>
                     </div>
                 </div>
 
@@ -1456,7 +1458,7 @@
                             <li><strong>Document sets:</strong> Minimum 5 documents (generates in multiples of 5)</li>
                         </ul>
                         
-                        <p>For enterprise or high-volume usage requirements, please <a href="#" onclick="showPage('feedback')" class="feedback-link">submit a feedback request</a> with your specific needs and we'll work with you to accommodate them.</p>
+                        <p>For enterprise or high-volume usage requirements, please <a href="javascript:void(0)" onclick="showPage('feedback')" class="feedback-link">submit a feedback request</a> with your specific needs and we'll work with you to accommodate them.</p>
                     </div>
                 </div>
 
@@ -1469,7 +1471,7 @@
                         
                         <div class="feedback-cta">
                             <strong>Submit Feedback:</strong><br>
-                            Use the <a href="#" onclick="showPage('feedback')" class="feedback-link">feedback form</a> to report issues, request features, or share suggestions for improvement.
+                            Use the <a href="javascript:void(0)" onclick="showPage('feedback')" class="feedback-link">feedback form</a> to report issues, request features, or share suggestions for improvement.
                         </div>
                         
                         <p><strong>What to include:</strong></p>
@@ -2808,6 +2810,9 @@
                 "Smart Grid": ["Energy Services Agreement", "Smart Grid Integration Agreement", "Demand Response Agreement"],
                 "Energy Storage": ["Energy Services Agreement", "Battery Storage Agreement", "Grid-Scale Storage Agreement"]
             },
+            "Procurement": {
+                "All": ["Purchase Order", "Invoice"]
+            },
             "HR": {
                 "All": ["Offer Letter", "Employee Separation Agreement", "Stock Option Agreement", "Non-Compete Agreement"]
             },
@@ -3049,6 +3054,7 @@
                 "Financial Services": ["Banking", "Credit Unions", "Alternative Lending", "Wealth Management", "Investment Banking", "Asset Management", "Fintech", "Payment Processors", "Insurance", "Insurtech", "Risk Management"],
                 "Manufacturing": ["Automotive", "Aerospace", "Consumer Goods", "Industrial Equipment", "Contract Manufacturing", "Private Label", "Electronics", "Industrial Products", "Food & Beverage"],
                 "Energy": ["Renewable Energy", "Solar", "Wind", "Utilities", "Oil & Gas", "Exploration", "Production", "Energy Management", "Smart Grid", "Energy Storage"],
+                "Procurement": ["All"],
                 "HR": ["All"],
                 "Real Estate": ["Office", "Retail", "Industrial", "Warehouse", "Commercial", "Residential", "Investment", "Development", "Mixed-Use", "REITs", "Construction", "Infrastructure"]
             };
@@ -3230,7 +3236,10 @@
                     const commonDocTypes = [
                         "Non-Disclosure Agreement (NDA)",
                         "Master Service Agreement (MSA)", 
-                        "Consulting Agreement"
+                        "Consulting Agreement",
+                        "Statement of Work (SOW)",
+                        "Change Order",
+                        "Amendment"
                     ];
                     
                     // Generate quantity selectors HTML with sections

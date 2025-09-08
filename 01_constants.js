@@ -836,6 +836,28 @@ const DOC_TYPE_LIBRARY = {
     category: "Energy-Specific"
   },
 
+  // === PROCUREMENT DOCUMENTS (Cross-Industry) ===
+  "Purchase Order": {
+    key: "PO",
+    description: "Formal offer to purchase specific products or services at specified terms.",
+    controlledType: "Purchase Order",
+    industries: ["Procurement"],
+    subindustries: ["All"],
+    obligations: ["Delivery Schedules", "Quality Standards", "Payment Terms", "Compliance"],
+    noTerm: false,
+    category: "Procurement-Cross-Industry"
+  },
+  "Invoice": {
+    key: "INV",
+    description: "Request for payment for delivered goods or services.",
+    controlledType: "Invoice",
+    industries: ["Procurement"],
+    subindustries: ["All"],
+    obligations: ["Payment Terms", "Delivery Confirmation", "Tax Compliance", "Documentation"],
+    noTerm: true,
+    category: "Procurement-Cross-Industry"
+  },
+
   // === HR DOCUMENTS (Cross-Industry) ===
   "Offer Letter": {
     key: "OFFER",
@@ -1130,7 +1152,7 @@ const DOC_TYPE_LIBRARY = {
 };
 
 // Enhanced industry and subindustry mapping
-const INDUSTRIES = ["Technology", "Healthcare", "Financial Services", "Manufacturing", "Energy", "HR", "Real Estate"];
+const INDUSTRIES = ["Technology", "Healthcare", "Financial Services", "Manufacturing", "Energy", "Procurement", "HR", "Real Estate"];
 
 const SUBINDUSTRIES = {
   "Technology": ["SaaS", "Enterprise Software", "Mobile Apps", "Gaming", "Cloud Infrastructure", "Fintech", "E-commerce", "Marketing Tech", "HR Tech", "Data Analytics"],
@@ -1138,6 +1160,7 @@ const SUBINDUSTRIES = {
   "Financial Services": ["Banking", "Credit Unions", "Alternative Lending", "Wealth Management", "Investment Banking", "Asset Management", "Fintech", "Payment Processors", "Insurance", "Insurtech", "Risk Management"],
   "Manufacturing": ["Automotive", "Aerospace", "Consumer Goods", "Industrial Equipment", "Contract Manufacturing", "Private Label", "Electronics", "Industrial Products", "Food & Beverage"],
   "Energy": ["Renewable Energy", "Solar", "Wind", "Utilities", "Oil & Gas", "Exploration", "Production", "Energy Management", "Smart Grid", "Energy Storage"],
+  "Procurement": ["All"],
   "HR": ["All"],
   "Real Estate": ["Office", "Retail", "Industrial", "Warehouse", "Commercial", "Residential", "Investment", "Development", "Mixed-Use", "REITs", "Construction", "Infrastructure"]
 };
@@ -1267,7 +1290,12 @@ const OBL_TEXT = {
   "Geographic Restrictions": "Geographic Restrictions: Non-compete applies within specified geographic area around company locations.",
   "Time Limitations": "Time Limitations: Restrictive covenants limited to reasonable time period following employment termination.",
   "Scope Definition": "Scope Definition: Clear definition of restricted activities and competing businesses.",
-  "Consideration": "Consideration: Adequate consideration provided for restrictive covenants including signing bonus or continued employment."
+  "Consideration": "Consideration: Adequate consideration provided for restrictive covenants including signing bonus or continued employment.",
+  
+  // Procurement-specific obligations
+  "Delivery Confirmation": "Delivery Confirmation: Verification and acceptance procedures for delivered goods or services with quality inspection requirements.",
+  "Tax Compliance": "Tax Compliance: All applicable taxes, duties, and regulatory fees must be properly calculated and documented according to jurisdiction requirements.",
+  "Documentation": "Documentation: Complete and accurate record-keeping requirements including receipts, certifications, and compliance documentation."
 };
 
 // === HIERARCHICAL DOCUMENT TYPES FOR DOCUMENT SETS ===
